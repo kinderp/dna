@@ -11,9 +11,9 @@ and from historical foundation records.
 
 ## Foundation records
 
-- [`foundation-report-v0.md`](foundation-report-v0.md): scope, decisions, open
+- [`FOUNDATION-REPORT.md`](FOUNDATION-REPORT.md): scope, decisions, open
   questions and validation results for the first documentation foundation.
-- [`manifest.md`](manifest.md): inventory and purpose of the initial package.
+- [`MANIFEST.md`](MANIFEST.md): inventory and purpose of the initial package.
 - [`PUBLISHING.md`](PUBLISHING.md): repository visibility and publication gate.
 
 Stable architecture and product contracts live in `docs/it`. Individual
