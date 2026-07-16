@@ -36,6 +36,7 @@ codebase. I commenti nel codice restano in inglese e più sintetici.
 | [40 - Mappa codice e stati](40-mappa-codice-e-stati.md) | Percorsi logici e futuri call graph. | Studenti e reviewer. | Per orientarsi nella codebase. |
 | [41 - Tracepoint Model v0](41-tracepoint-model-v0.md) | Nomi logici stabili per spiegare gli stage. | Lab e test. | Prima di creare scenari Lab. |
 | [42 - Travel DNA Lab](42-traveldna-lab-roadmap.md) | Scenari didattici riproducibili. | Docenti e studenti. | Per laboratori e walkthrough. |
+| [43 - Routing Java/Rust](43-reference-routing-java-rust.md) | Primo capitolo sostenuto da codice: fixture, Dijkstra, A*, determinismo e contract test. | Studenti Java/Rust e contributori. | Per eseguire il primo Lab e leggere codice reale. |
 | [50 - Registro milestone](50-registro-milestone.md) | Evoluzione e dipendenze del progetto. | Maintainer. | Quando si pianifica. |
 | [51 - Roadmap librerie open source](51-roadmap-librerie-open-source.md) | Cosa possedere, sostituire o contribuire upstream. | Architettura. | Prima di riscrivere una dipendenza. |
 | [52 - Matrice tecnologie](52-matrice-tecnologie-decisioni.md) | Alternative, pro, contro e stato delle scelte. | Tutti. | Prima di riaprire una decisione. |

@@ -1,0 +1,47 @@
+name: Foundation CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  foundation:
+    name: Docs, Java, Rust and contract tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install stable Rust toolchain
+        run: |
+          rustup toolchain install stable --profile minimal --component rustfmt
+          rustup default stable
+
+      - name: Show toolchain
+        run: sh tools/tdna doctor
+
+      - name: Run foundation checks
+        run: sh tools/tdna check
+
+      - name: Upload diagnostic output on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: foundation-diagnostics
+          if-no-files-found: ignore
+          path: build/

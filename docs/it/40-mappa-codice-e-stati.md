@@ -2,9 +2,14 @@
 
 ## Stato del documento
 
-La codebase non è ancora stata creata. Questo capitolo definisce la mappa logica
-che dovrà essere aggiornata con funzioni, package e call graph reali dopo ogni
-vertical slice architetturale.
+La mappa contiene ora due livelli distinti:
+
+- un percorso reale ed eseguibile per il routing di riferimento Java/Rust;
+- le mappe target dei futuri runtime mobile, chat, diario e presenza.
+
+Le sezioni target non devono essere lette come codice già disponibile. Il
+[capitolo sullo stato delle funzionalità](12-stato-funzionalita.md) indica quali
+percorsi sono soltanto documentali.
 
 ## Obiettivo
 
@@ -15,6 +20,96 @@ Aiutare lo studente a vedere Travel DNA come:
 - responsabilità separate;
 - percorsi caldi e percorsi asincroni;
 - contratti protetti da test.
+
+## Percorso reale: routing di riferimento
+
+### Vista comune
+
+```mermaid
+flowchart LR
+    F[reference-network-v0.tdna] --> P1[Java fixture parser]
+    F --> P2[Rust fixture parser]
+    P1 --> G1[Java RoadGraph]
+    P2 --> G2[Rust RoadGraph]
+    G1 --> A1[Dijkstra / A*]
+    G2 --> A2[Dijkstra / A*]
+    A1 --> R1[Java canonical report]
+    A2 --> R2[Rust canonical report]
+    R1 --> D[diff -u]
+    R2 --> D
+```
+
+### Percorso Java
+
+```text
+ReferenceRoutingCli.main()
+-> ReferenceFixtureParser.parse()
+-> RoadGraph.addNode()/addBidirectionalRoad()
+-> DijkstraRouter oppure AStarRouter
+-> AbstractBestFirstRouter.route()
+-> reconstructPath()
+-> RouteReport.canonicalLine()
+```
+
+Responsabilità:
+
+| Componente | Responsabilità | Stato modificato |
+| --- | --- | --- |
+| `ReferenceFixtureParser` | Validare sintassi, versione, query e ground truth. | Costruisce scenario e grafo. |
+| `RoadGraph` | Possedere nodi e liste di adiacenza ordinate. | Mutabile solo durante il caricamento. |
+| `AbstractBestFirstRouter` | Eseguire best-first search deterministica. | `frontier`, `bestCost`, `previous`. |
+| `DijkstraRouter` | Fornire euristica zero. | Nessuno stato aggiuntivo. |
+| `AStarRouter` | Fornire distanza WGS84 floored. | Nessuno stato aggiuntivo. |
+| `RouteReport` | Produrre una riga JSON fixture-scoped. | Nessuno. |
+
+### Percorso Rust
+
+```text
+main()
+-> parse_fixture()
+-> RoadGraph::add_node()/add_bidirectional_road()
+-> route()
+-> heuristic_metres()
+-> reconstruct_path()
+-> canonical_report()
+```
+
+La crate usa:
+
+- `BTreeMap` per stato con ordine stabile;
+- `BinaryHeap` con ordinamento invertito per estrarre la priorità minima;
+- `checked_add` per intercettare overflow;
+- nessuna dipendenza esterna;
+- nessun blocco `unsafe`.
+
+### Percorso degli strumenti
+
+```text
+sh tools/tdna check
+-> check_docs.py
+-> javac + Java test suite
+-> cargo fmt + cargo test
+-> Java/Rust report
+-> diff -u
+```
+
+### Stato dell'algoritmo
+
+```text
+fixture text
+-> parsed graph
+-> best_cost[origin] = 0
+-> frontier seeded
+-> node selected
+-> outgoing edges relaxed
+-> destination reached
+-> predecessor chain reversed
+-> route result
+-> deterministic report
+```
+
+Questo percorso non contiene GPS, provider, rete, database o UI. È la prima
+mappa di codice verificabile del repository.
 
 ## Vista: avvio viaggio
 
@@ -215,9 +310,9 @@ NOT_CREATED -> AUTO_DRAFT -> USER_EDITED -> CONFIRMED -> ARCHIVED
 | DnaCard | Travel DNA | recipients | revocable |
 | Place | Guide | map/journal | catalog/cache |
 
-## Aggiornamento futuro
+## Regola di aggiornamento
 
-Quando esiste codice, aggiungere per ogni scenario:
+Per ogni nuova vertical slice aggiungere:
 
 - package e file;
 - entry point;

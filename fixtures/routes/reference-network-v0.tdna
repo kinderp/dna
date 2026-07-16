@@ -1,0 +1,17 @@
+# Travel DNA deterministic reference-routing fixture.
+TDNA_REFERENCE_GRAPH_V0
+scenario reference-network-v0
+node A 0.000000 0.000000
+node B 0.000000 0.010000
+node C 0.010000 0.000000
+node D 0.010000 0.010000
+node E 0.010000 0.020000
+road A B 2500
+road A C 1200
+road C D 1200
+road B D 1200
+road D E 1200
+road B E 4000
+road C E 4000
+query A E
+expect 3600 A,C,D,E

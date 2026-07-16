@@ -1,0 +1,23 @@
+id: reference-network-v0
+kind: synthetic
+format: TDNA_REFERENCE_GRAPH_V0
+coordinate_reference: WGS84
+cost_unit: metres
+roads: bidirectional
+source: project-generated
+privacy: public-synthetic
+license: project-internal-pending-ADR-0009
+purpose: >-
+  Teach deterministic graph loading, Dijkstra, A*, route reconstruction and
+  cross-language contract comparison without OpenStreetMap or provider SDKs.
+ground_truth:
+  origin: A
+  destination: E
+  total_cost_m: 3600
+  path: [A, C, D, E]
+non_goals:
+  - production routing
+  - turn restrictions
+  - traffic
+  - map matching
+  - GPS replay

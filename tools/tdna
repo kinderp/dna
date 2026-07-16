@@ -1,0 +1,185 @@
+#!/usr/bin/env sh
+set -eu
+
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+BUILD_DIR="$ROOT/build"
+JAVA_BUILD="$BUILD_DIR/java/reference-routing"
+JAVA_MAIN="$ROOT/java/reference-routing/src/main/java"
+JAVA_TEST="$ROOT/java/reference-routing/src/test/java"
+JAVA_MAIN_CLASS="org.traveldna.reference.routing.ReferenceRoutingCli"
+JAVA_TEST_CLASS="org.traveldna.reference.routing.ReferenceRoutingTestSuite"
+RUST_MANIFEST="$ROOT/crates/tdna-reference-routing/Cargo.toml"
+FIXTURE="$ROOT/fixtures/routes/reference-network-v0.tdna"
+
+say() {
+    printf '%s\n' "$*"
+}
+
+need() {
+    if ! command -v "$1" >/dev/null 2>&1; then
+        say "ERROR: required command '$1' is not available."
+        return 1
+    fi
+}
+
+version_line() {
+    name=$1
+    shift
+    if command -v "$name" >/dev/null 2>&1; then
+        version=$($@ 2>&1 | sed -n '1p')
+        printf '%-10s %s\n' "$name" "$version"
+    else
+        printf '%-10s %s\n' "$name" "MISSING"
+    fi
+}
+
+compile_java() {
+    need javac
+    rm -rf "$JAVA_BUILD"
+    mkdir -p "$JAVA_BUILD/classes"
+    find "$JAVA_MAIN" "$JAVA_TEST" -type f -name '*.java' | sort > "$JAVA_BUILD/sources.txt"
+    javac --release 21 -Xlint:all -Werror \
+        -d "$JAVA_BUILD/classes" \
+        @"$JAVA_BUILD/sources.txt"
+}
+
+java_report() {
+    algorithm=$1
+    java -cp "$JAVA_BUILD/classes" "$JAVA_MAIN_CLASS" "$FIXTURE" "$algorithm"
+}
+
+rust_report() {
+    algorithm=$1
+    CARGO_TARGET_DIR="$BUILD_DIR/rust" cargo run --quiet \
+        --manifest-path "$RUST_MANIFEST" -- "$FIXTURE" "$algorithm"
+}
+
+check_java() {
+    say "== Java reference routing =="
+    need java
+    compile_java
+    java -cp "$JAVA_BUILD/classes" "$JAVA_TEST_CLASS" "$FIXTURE"
+    java_report dijkstra > "$JAVA_BUILD/java-dijkstra.json"
+    java_report astar > "$JAVA_BUILD/java-astar.json"
+    say "PASS Java reports written under build/java/reference-routing"
+}
+
+check_rust() {
+    say "== Rust reference routing =="
+    need cargo
+    need rustc
+    CARGO_TARGET_DIR="$BUILD_DIR/rust" cargo fmt --manifest-path "$RUST_MANIFEST" -- --check
+    CARGO_TARGET_DIR="$BUILD_DIR/rust" cargo test --manifest-path "$RUST_MANIFEST"
+    mkdir -p "$BUILD_DIR/rust/reports"
+    rust_report dijkstra > "$BUILD_DIR/rust/reports/rust-dijkstra.json"
+    rust_report astar > "$BUILD_DIR/rust/reports/rust-astar.json"
+    say "PASS Rust reports written under build/rust/reports"
+}
+
+check_contract() {
+    say "== Cross-language route report contract =="
+    need diff
+    if [ ! -d "$JAVA_BUILD/classes" ]; then
+        compile_java
+    fi
+    need cargo
+    mkdir -p "$BUILD_DIR/contract"
+    for algorithm in dijkstra astar; do
+        java_report "$algorithm" > "$BUILD_DIR/contract/java-$algorithm.json"
+        rust_report "$algorithm" > "$BUILD_DIR/contract/rust-$algorithm.json"
+        diff -u \
+            "$BUILD_DIR/contract/java-$algorithm.json" \
+            "$BUILD_DIR/contract/rust-$algorithm.json"
+    done
+    say "PASS Java and Rust emitted byte-identical reports"
+}
+
+check_docs() {
+    say "== Documentation links and fences =="
+    need python3
+    python3 "$ROOT/tools/check_docs.py" "$ROOT"
+}
+
+run_lab() {
+    scenario=${1:-}
+    algorithm=${2:-dijkstra}
+    case "$scenario" in
+        reference-routing)
+            case "$algorithm" in
+                dijkstra|astar) ;;
+                *) say "ERROR: algorithm must be dijkstra or astar"; exit 2 ;;
+            esac
+            compile_java
+            say "Java:"
+            java_report "$algorithm"
+            if command -v cargo >/dev/null 2>&1; then
+                say "Rust:"
+                rust_report "$algorithm"
+            else
+                say "Rust: skipped because cargo is not installed"
+            fi
+            ;;
+        *)
+            say "usage: sh tools/tdna lab reference-routing [dijkstra|astar]"
+            exit 2
+            ;;
+    esac
+}
+
+command=${1:-help}
+case "$command" in
+    doctor)
+        say "Travel DNA foundation toolchain"
+        version_line java java -version
+        version_line javac javac -version
+        version_line python3 python3 --version
+        version_line cargo cargo --version
+        version_line rustc rustc --version
+        ;;
+    check-java)
+        check_java
+        ;;
+    check-rust)
+        check_rust
+        ;;
+    check-contract)
+        check_contract
+        ;;
+    check-docs)
+        check_docs
+        ;;
+    check)
+        check_docs
+        check_java
+        check_rust
+        check_contract
+        say "PASS foundation checks"
+        ;;
+    lab)
+        shift
+        run_lab "$@"
+        ;;
+    clean)
+        rm -rf "$BUILD_DIR"
+        say "Removed $BUILD_DIR"
+        ;;
+    help|-h|--help)
+        cat <<'HELP'
+Usage: sh tools/tdna COMMAND
+
+Commands:
+  doctor                              show required tool versions
+  check-docs                          validate Markdown links and code fences
+  check-java                          compile and test Java reference routing
+  check-rust                          format and test Rust reference routing
+  check-contract                      compare Java/Rust reports byte-for-byte
+  check                               run the complete foundation verification
+  lab reference-routing [algorithm]   run the first executable Lab scenario
+  clean                               remove generated build output
+HELP
+        ;;
+    *)
+        say "ERROR: unknown command '$command'"
+        exit 2
+        ;;
+esac

@@ -85,6 +85,24 @@ esiste in documentazione e test runner. Se diventa runtime:
 
 ## Tracepoint iniziali
 
+### Reference routing Lab
+
+Questi tracepoint sono `stable-doc` per il primo scenario eseguibile. Non sono
+log runtime e non aggiungono istruzioni di tracing agli algoritmi.
+
+| Nome | Stato | Significato |
+| --- | --- | --- |
+| `REFERENCE_FIXTURE_PARSED` | stable-doc | La fixture v0 è stata validata e trasformata in grafo/query/ground truth. |
+| `REFERENCE_FRONTIER_NODE_SELECTED` | stable-doc | La priority queue ha restituito il candidato deterministico corrente. |
+| `REFERENCE_EDGE_RELAXED` | stable-doc | Un costo migliore e il predecessore sono stati registrati. |
+| `REFERENCE_ROUTE_RECONSTRUCTED` | stable-doc | La catena dei predecessori è stata invertita in origine-destinazione. |
+| `REFERENCE_REPORT_EMITTED` | stable-doc | Una implementazione ha prodotto il report fixture-scoped. |
+| `REFERENCE_REPORTS_MATCHED` | stable-doc | Il contract test ha verificato report Java/Rust byte-identici. |
+
+Il tracepoint `REFERENCE_ROUTE_COMPUTED` può essere usato come fatto narrativo
+nello scenario, ma non è necessario come stage separato: la route è dimostrata
+da ricostruzione più report.
+
 ### Navigation
 
 | Nome | Stato | Significato |
