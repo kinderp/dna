@@ -46,7 +46,11 @@ jobs:
         run: sh tools/tdna check-java
 
       - name: Check Rust reference routing
-        run: sh tools/tdna check-rust
+        shell: bash
+        run: |
+          mkdir -p build
+          set -o pipefail
+          sh tools/tdna check-rust 2>&1 | tee build/rust-check.log
 
       - name: Check Java and Rust contract
         run: sh tools/tdna check-contract
