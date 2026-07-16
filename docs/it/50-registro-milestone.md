@@ -48,6 +48,7 @@ La milestone 1 è iniziata il 16 luglio 2026 con la issue
 
 Avvio: **2026-07-16**  
 Issue attiva: [#3 — executable Java/Rust reference-routing Lab](https://github.com/kinderp/tdna/issues/3)  
+Pull request draft: [#4 — executable Java/Rust routing Lab](https://github.com/kinderp/tdna/pull/4)  
 Branch di lavoro: `agent/foundation-reference-routing`
 
 Prima vertical slice:
@@ -60,12 +61,13 @@ Prima vertical slice:
 - [x] ricostruzione route deterministica;
 - [x] report fixture-scoped confrontabile;
 - [x] test Java;
-- [x] test Rust predisposti;
+- [x] test Rust;
 - [x] contract test Java/Rust;
 - [x] wrapper `sh tools/tdna`;
 - [x] CI foundation;
 - [x] capitolo didattico e scenario Lab eseguibile;
-- [ ] CI verde osservata sulla pull request;
+- [x] CI verde osservata sulla pull request, run `#13`;
+- [x] review finding corretti e due round consecutivi senza nuovi finding;
 - [ ] merge della vertical slice.
 
 La slice chiude il **reference routing**, non la milestone intera. Restano fuori:

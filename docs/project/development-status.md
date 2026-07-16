@@ -11,7 +11,7 @@ SDK integration.
 
 ## Active vertical slice
 
-**Executable Java/Rust reference-routing Lab — implementation complete, draft PR under review**
+**Executable Java/Rust reference-routing Lab — implementation and autonomous review complete**
 
 Tracking:
 
@@ -27,10 +27,12 @@ Tracking:
 - strict fixture parsers in Java and Rust;
 - Dijkstra implementations;
 - A* implementations with admissible WGS84 heuristic;
+- numerically bounded Haversine computation for extreme valid coordinates;
+- expected-path adjacency and checked-cost validation;
 - deterministic route reconstruction;
 - byte-comparable Lab report;
-- dependency-free Java 21 test suite;
-- Rust unit tests;
+- six Java reference scenarios;
+- six Rust unit scenarios;
 - cross-language contract script;
 - project command `tools/tdna`;
 - documentation link/fence checker;
@@ -47,7 +49,7 @@ sh tools/tdna check-java
 sh tools/tdna lab reference-routing astar
 ```
 
-GitHub Actions run `#10` passed on Ubuntu 24.04 with Java 21 and stable Rust:
+GitHub Actions run `#13` passed on Ubuntu 24.04 with Java 21 and stable Rust:
 
 ```text
 Check documentation             success
@@ -56,9 +58,22 @@ Check Rust reference routing    success
 Check Java and Rust contract    success
 ```
 
-The CI result proves that `rustfmt`, Rust unit tests and byte-identical Java/Rust
-reports pass on the committed branch. The local absence of Rust remains only an
-environment limitation of the interactive development container.
+The CI result proves that `rustfmt`, Rust unit tests, the Java regression suite
+and byte-identical Java/Rust reports pass on commit
+`3d19262e3a4f48bbc6eacad408be2c2e6665b3c9`.
+
+## Review status
+
+Autonomous review round 1 found and fixed two issues:
+
+1. clamp the Haversine intermediate value to prevent floating-point drift from
+   producing an invalid square root for extreme valid coordinates;
+2. validate that every consecutive edge in fixture ground truth exists and that
+   its checked total equals the declared expected cost.
+
+Review rounds 2 and 3 found no new correctness, architecture, documentation,
+privacy or scope issues. The pull request remains draft because merge is a
+maintainer decision under the repository rules.
 
 ## Milestone still missing
 
@@ -78,5 +93,5 @@ Lab fixture model to become the mobile API accidentally.
 
 ## Decisions currently required from the maintainer
 
-None. The current slice does not change product scope, licensing, provider
-strategy or public architecture.
+None for continued development. Merge of pull request `#4` remains intentionally
+separate from implementation work.
