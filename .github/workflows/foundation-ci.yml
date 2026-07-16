@@ -36,7 +36,11 @@ jobs:
         run: sh tools/tdna doctor
 
       - name: Check documentation
-        run: sh tools/tdna check-docs
+        shell: bash
+        run: |
+          mkdir -p build
+          set -o pipefail
+          sh tools/tdna check-docs 2>&1 | tee build/docs-check.log
 
       - name: Check Java reference routing
         run: sh tools/tdna check-java
