@@ -11,11 +11,12 @@ SDK integration.
 
 ## Active vertical slice
 
-**Executable Java/Rust reference-routing Lab**
+**Executable Java/Rust reference-routing Lab — implementation complete, draft PR under review**
 
 Tracking:
 
 - GitHub issue: `#3`;
+- draft pull request: `#4`;
 - branch: `agent/foundation-reference-routing`;
 - primary teaching chapter: `docs/it/43-reference-routing-java-rust.md`;
 - executable scenario: `docs/it/lab/scenarios/reference-routing-java-rust.md`.
@@ -36,10 +37,9 @@ Tracking:
 - GitHub Actions foundation workflow;
 - teaching chapter and executable Lab scenario.
 
-## Local verification
+## Verification
 
-The current execution environment contains Java 21 and Python, but no Rust
-compiler. These checks passed locally:
+Passed locally in the available Java/Python environment:
 
 ```text
 sh tools/tdna check-docs
@@ -47,9 +47,18 @@ sh tools/tdna check-java
 sh tools/tdna lab reference-routing astar
 ```
 
-Rust and the cross-language contract are delegated to the pull-request CI. A
-missing local toolchain is recorded as an environment limitation, not hidden as
-a successful test.
+GitHub Actions run `#10` passed on Ubuntu 24.04 with Java 21 and stable Rust:
+
+```text
+Check documentation             success
+Check Java reference routing    success
+Check Rust reference routing    success
+Check Java and Rust contract    success
+```
+
+The CI result proves that `rustfmt`, Rust unit tests and byte-identical Java/Rust
+reports pass on the committed branch. The local absence of Rust remains only an
+environment limitation of the interactive development container.
 
 ## Milestone still missing
 
