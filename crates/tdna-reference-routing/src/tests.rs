@@ -58,8 +58,7 @@ fn malformed_fixture_is_rejected() {
         std::process::id()
     ));
     let mut file = fs::File::create(&path).expect("create fixture");
-    writeln!(file, "TDNA_REFERENCE_GRAPH_V0\nscenario broken\nunknown x")
-        .expect("write fixture");
+    writeln!(file, "TDNA_REFERENCE_GRAPH_V0\nscenario broken\nunknown x").expect("write fixture");
     let result = parse_fixture(&path);
     fs::remove_file(&path).expect("remove fixture");
     assert!(result.is_err());
