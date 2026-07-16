@@ -62,6 +62,6 @@ Ogni capitolo dovrebbe contenere, quando utile:
 
 ## Stato
 
-Vedere [documentation-status.md](documentation-status.md). Il codice non è ancora
-implementato: molte mappe descrivono contratti e responsabilità target, non
-funzioni già presenti.
+Vedere [documentation-status.md](documentation-status.md). Il repository contiene
+il primo Lab eseguibile Java/Rust; molte altre mappe descrivono ancora contratti
+e responsabilità target che verranno promossi a codice nelle milestone future.
