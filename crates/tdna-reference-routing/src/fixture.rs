@@ -114,7 +114,8 @@ pub fn parse_fixture(path: &Path) -> Result<ReferenceScenario, String> {
             .ok_or_else(|| "fixture is missing query destination".to_owned())?,
         expected_cost_metres: expected_cost
             .ok_or_else(|| "fixture is missing expected cost".to_owned())?,
-        expected_path: expected_path.ok_or_else(|| "fixture is missing expected path".to_owned())?,
+        expected_path: expected_path
+            .ok_or_else(|| "fixture is missing expected path".to_owned())?,
     };
     if !version_seen {
         return Err("fixture is missing version header".to_owned());
@@ -125,8 +126,7 @@ pub fn parse_fixture(path: &Path) -> Result<ReferenceScenario, String> {
         return Err("fixture expectation must contain a positive route".to_owned());
     }
     if scenario.expected_path.first().map(String::as_str) != Some(scenario.origin.as_str())
-        || scenario.expected_path.last().map(String::as_str)
-            != Some(scenario.destination.as_str())
+        || scenario.expected_path.last().map(String::as_str) != Some(scenario.destination.as_str())
     {
         return Err(
             "expected path must start at the query origin and end at the destination".to_owned(),
