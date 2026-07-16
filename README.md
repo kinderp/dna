@@ -74,7 +74,7 @@ Scenario Lab:
 - Navigazione: [docs/it/24-routing-e-navigazione.md](docs/it/24-routing-e-navigazione.md)
 - Travel DNA Lab: [docs/it/lab/README.md](docs/it/lab/README.md)
 - Decisioni architetturali: [docs/adr/README.md](docs/adr/README.md)
-- Rapporto della fondazione v0: [docs/project/foundation-report-v0.md](docs/project/foundation-report-v0.md)
+- Rapporto della fondazione v0: [docs/project/FOUNDATION-REPORT.md](docs/project/FOUNDATION-REPORT.md)
 
 ## Principi
 
