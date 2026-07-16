@@ -35,8 +35,17 @@ jobs:
       - name: Show toolchain
         run: sh tools/tdna doctor
 
-      - name: Run foundation checks
-        run: sh tools/tdna check
+      - name: Check documentation
+        run: sh tools/tdna check-docs
+
+      - name: Check Java reference routing
+        run: sh tools/tdna check-java
+
+      - name: Check Rust reference routing
+        run: sh tools/tdna check-rust
+
+      - name: Check Java and Rust contract
+        run: sh tools/tdna check-contract
 
       - name: Upload diagnostic output on failure
         if: failure()
