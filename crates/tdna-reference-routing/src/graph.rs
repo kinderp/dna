@@ -76,12 +76,7 @@ impl RoadGraph {
         self.add_directed_road(second, first, cost_metres)
     }
 
-    fn add_directed_road(
-        &mut self,
-        from: &str,
-        to: &str,
-        cost_metres: u64,
-    ) -> Result<(), String> {
+    fn add_directed_road(&mut self, from: &str, to: &str, cost_metres: u64) -> Result<(), String> {
         let outgoing = self
             .adjacency
             .get_mut(from)
