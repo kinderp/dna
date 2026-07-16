@@ -32,8 +32,10 @@ fn both_algorithms_match_ground_truth() {
         .expect("route must exist");
         assert_eq!(result.total_cost_metres, scenario.expected_cost_metres);
         assert_eq!(result.path, scenario.expected_path);
-        assert!(canonical_report(&scenario, algorithm, &result)
-            .contains(&format!("\"algorithm\":\"{}\"", algorithm.id())));
+        assert!(
+            canonical_report(&scenario, algorithm, &result)
+                .contains(&format!("\"algorithm\":\"{}\"", algorithm.id()))
+        );
     }
 }
 
@@ -56,11 +58,8 @@ fn malformed_fixture_is_rejected() {
         std::process::id()
     ));
     let mut file = fs::File::create(&path).expect("create fixture");
-    writeln!(
-        file,
-        "TDNA_REFERENCE_GRAPH_V0\nscenario broken\nunknown x"
-    )
-    .expect("write fixture");
+    writeln!(file, "TDNA_REFERENCE_GRAPH_V0\nscenario broken\nunknown x")
+        .expect("write fixture");
     let result = parse_fixture(&path);
     fs::remove_file(&path).expect("remove fixture");
     assert!(result.is_err());
