@@ -28,7 +28,9 @@ public record GeoPoint(double latitude, double longitude) {
         final double a = sinLatitude * sinLatitude
                 + Math.cos(latitude1) * Math.cos(latitude2)
                 * sinLongitude * sinLongitude;
-        final double centralAngle = 2.0 * Math.atan2(Math.sqrt(a), Math.sqrt(1.0 - a));
+        final double boundedA = Math.clamp(a, 0.0, 1.0);
+        final double centralAngle = 2.0 * Math.atan2(
+                Math.sqrt(boundedA), Math.sqrt(1.0 - boundedA));
         return (long) Math.floor(earthRadiusMetres * centralAngle);
     }
 }

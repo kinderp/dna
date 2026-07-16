@@ -36,7 +36,8 @@ impl GeoPoint {
         let sin_longitude = (delta_longitude / 2.0).sin();
         let a = sin_latitude * sin_latitude
             + latitude_1.cos() * latitude_2.cos() * sin_longitude * sin_longitude;
-        let central_angle = 2.0 * a.sqrt().atan2((1.0 - a).sqrt());
+        let bounded_a = a.clamp(0.0, 1.0);
+        let central_angle = 2.0 * bounded_a.sqrt().atan2((1.0 - bounded_a).sqrt());
         (EARTH_RADIUS_METRES * central_angle).floor() as u64
     }
 }

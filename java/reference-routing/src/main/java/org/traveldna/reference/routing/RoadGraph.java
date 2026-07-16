@@ -66,4 +66,26 @@ public final class RoadGraph {
     public Collection<RoadNode> nodes() {
         return Collections.unmodifiableCollection(nodes.values());
     }
+
+    /** Returns the checked sum of the roads traversed by {@code path}. */
+    long pathCostMetres(List<String> path) {
+        Objects.requireNonNull(path, "path");
+        if (path.size() < 2) {
+            throw new IllegalArgumentException("a path must contain at least two nodes");
+        }
+        long total = 0L;
+        for (int index = 0; index < path.size() - 1; index++) {
+            final String from = path.get(index);
+            final String to = path.get(index + 1);
+            requireNode(from);
+            requireNode(to);
+            final RoadEdge edge = adjacency.get(from).stream()
+                    .filter(candidate -> candidate.to().equals(to))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "expected path uses a missing road: " + from + " -> " + to));
+            total = Math.addExact(total, edge.costMetres());
+        }
+        return total;
+    }
 }

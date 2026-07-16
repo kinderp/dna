@@ -19,7 +19,8 @@ public final class ReferenceRoutingTestSuite {
         testNoRoute();
         testMalformedFixture();
         testInvalidExpectation();
-        System.out.println("PASS java reference-routing: 5 scenarios");
+        testInconsistentExpectedCost();
+        System.out.println("PASS java reference-routing: 6 scenarios");
     }
 
     private static void testGeoValidation() {
@@ -27,6 +28,9 @@ public final class ReferenceRoutingTestSuite {
         expectThrows(IllegalArgumentException.class, () -> new GeoPoint(0.0, 181.0));
         final long distance = new GeoPoint(0.0, 0.0).distanceMetresTo(new GeoPoint(0.0, 0.01));
         check(distance >= 1_110 && distance <= 1_113, "unexpected haversine distance: " + distance);
+        final long antipodal = new GeoPoint(0.0, 0.0).distanceMetresTo(new GeoPoint(0.0, 180.0));
+        check(antipodal >= 20_015_000 && antipodal <= 20_016_000,
+                "unexpected antipodal distance: " + antipodal);
     }
 
     private static void testFixtureAndAlgorithms(Path fixture) throws Exception {
@@ -73,6 +77,24 @@ public final class ReferenceRoutingTestSuite {
                     "road A B 1200",
                     "query A B",
                     "expect 1200 B,A",
+                    ""));
+            expectThrows(IllegalArgumentException.class, () -> ReferenceFixtureParser.parse(malformed));
+        } finally {
+            Files.deleteIfExists(malformed);
+        }
+    }
+
+    private static void testInconsistentExpectedCost() throws Exception {
+        final Path malformed = Files.createTempFile("tdna-reference-routing", ".tdna");
+        try {
+            Files.writeString(malformed, String.join("\n",
+                    "TDNA_REFERENCE_GRAPH_V0",
+                    "scenario inconsistent-cost",
+                    "node A 0.0 0.0",
+                    "node B 0.0 0.01",
+                    "road A B 1200",
+                    "query A B",
+                    "expect 1300 A,B",
                     ""));
             expectThrows(IllegalArgumentException.class, () -> ReferenceFixtureParser.parse(malformed));
         } finally {

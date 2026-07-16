@@ -135,6 +135,13 @@ pub fn parse_fixture(path: &Path) -> Result<ReferenceScenario, String> {
     for node in &scenario.expected_path {
         scenario.graph.require_node(node)?;
     }
+    let expected_path_cost = scenario.graph.path_cost_metres(&scenario.expected_path)?;
+    if expected_path_cost != scenario.expected_cost_metres {
+        return Err(format!(
+            "expected cost {} does not match expected path cost {expected_path_cost}",
+            scenario.expected_cost_metres
+        ));
+    }
     Ok(scenario)
 }
 

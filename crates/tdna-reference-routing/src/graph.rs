@@ -105,6 +105,28 @@ impl RoadGraph {
             .map(Vec::as_slice)
             .ok_or_else(|| format!("missing adjacency list: {id}"))
     }
+
+    pub(crate) fn path_cost_metres(&self, path: &[String]) -> Result<u64, String> {
+        if path.len() < 2 {
+            return Err("a path must contain at least two nodes".to_owned());
+        }
+        let mut total = 0_u64;
+        for pair in path.windows(2) {
+            let from = &pair[0];
+            let to = &pair[1];
+            self.require_node(from)?;
+            self.require_node(to)?;
+            let edge = self
+                .outgoing(from)?
+                .iter()
+                .find(|candidate| candidate.to.as_str() == to.as_str())
+                .ok_or_else(|| format!("expected path uses a missing road: {from} -> {to}"))?;
+            total = total
+                .checked_add(edge.cost_metres)
+                .ok_or_else(|| "expected path cost overflow".to_owned())?;
+        }
+        Ok(total)
+    }
 }
 
 pub(crate) fn validate_id(value: &str, field: &str) -> Result<(), String> {

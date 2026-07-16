@@ -17,6 +17,10 @@ fn validates_geo_points() {
         .expect("point")
         .distance_metres_to(GeoPoint::new(0.0, 0.01).expect("point"));
     assert!((1_110..=1_113).contains(&distance));
+    let antipodal = GeoPoint::new(0.0, 0.0)
+        .expect("point")
+        .distance_metres_to(GeoPoint::new(0.0, 180.0).expect("point"));
+    assert!((20_015_000..=20_016_000).contains(&antipodal));
 }
 
 #[test]
@@ -74,6 +78,23 @@ fn invalid_expectation_is_rejected() {
     writeln!(
         file,
         "TDNA_REFERENCE_GRAPH_V0\nscenario broken-expectation\nnode A 0.0 0.0\nnode B 0.0 0.01\nroad A B 1200\nquery A B\nexpect 1200 B,A"
+    )
+    .expect("write fixture");
+    let result = parse_fixture(&path);
+    fs::remove_file(&path).expect("remove fixture");
+    assert!(result.is_err());
+}
+
+#[test]
+fn inconsistent_expected_cost_is_rejected() {
+    let path = std::env::temp_dir().join(format!(
+        "tdna-reference-routing-{}-inconsistent-cost.tdna",
+        std::process::id()
+    ));
+    let mut file = fs::File::create(&path).expect("create fixture");
+    writeln!(
+        file,
+        "TDNA_REFERENCE_GRAPH_V0\nscenario inconsistent-cost\nnode A 0.0 0.0\nnode B 0.0 0.01\nroad A B 1200\nquery A B\nexpect 1300 A,B"
     )
     .expect("write fixture");
     let result = parse_fixture(&path);

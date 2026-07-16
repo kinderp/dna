@@ -28,6 +28,8 @@ Properties:
 - each road cost must be no shorter than the direct WGS84 distance, preserving
   the admissibility of the A* heuristic used in the Lab;
 - `expect` is ground truth and turns the fixture into a reproducible test;
+- parsers verify that every consecutive expected-path road exists and that the
+  checked sum of its costs equals `TOTAL_COST_METRES`;
 - identifiers are restricted so the small canonical JSON report needs no
   general-purpose escaping library.
 

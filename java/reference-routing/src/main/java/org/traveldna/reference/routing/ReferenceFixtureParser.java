@@ -103,6 +103,12 @@ public final class ReferenceFixtureParser {
                     "expected path must start at the query origin and end at the destination");
         }
         expectedPath.forEach(graph::requireNode);
+        final long expectedPathCost = graph.pathCostMetres(expectedPath);
+        if (expectedPathCost != expectedCost) {
+            throw new IllegalArgumentException(
+                    "expected cost " + expectedCost
+                            + " does not match expected path cost " + expectedPathCost);
+        }
         return new ReferenceScenario(
                 scenarioId, graph, origin, destination, expectedCost, expectedPath);
     }
