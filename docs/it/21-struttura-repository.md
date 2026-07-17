@@ -5,6 +5,29 @@
 Travel DNA usa un monorepo per mantenere vicini contratti, adapter, fixture,
 documentazione e test. Il monorepo non significa un unico modulo senza confini.
 
+## Stato concreto della milestone corrente
+
+Il repository non ha ancora l'intero albero target. Il primo codice eseguibile è
+volutamente più piccolo:
+
+```text
+java/reference-routing/            reference implementation Java 21
+crates/tdna-reference-routing/     implementation Rust indipendente
+fixtures/routes/                   grafo sintetico e metadati
+tests/contract/                    confronto osservabile Java/Rust
+tools/tdna                         entry point locale e CI
+tools/check_docs.py                controllo documentale
+.github/workflows/foundation-ci.yml
+```
+
+Questo percorso dimostra un principio importante: la struttura target guida la
+crescita, ma una directory nasce soltanto quando contiene un contratto o un
+comportamento reale. Non creiamo moduli vuoti per simulare avanzamento.
+
+Il modello Java/Rust corrente è **fixture-scoped**. Non coincide con i futuri
+`shared/contracts` Kotlin Multiplatform. La separazione impedisce che un
+laboratorio didattico diventi accidentalmente l'API mobile di produzione.
+
 ## Albero target
 
 ```text
@@ -163,19 +186,37 @@ deve poter eseguire lo stesso contratto.
 
 ## `java/reference-routing`
 
-Reference implementation didattica:
+Prima reference implementation didattica già presente:
 
-- grafo piccolo;
-- Dijkstra e A*;
-- euristiche;
-- costi;
-- route reconstruction;
-- test comuni;
-- benchmark comparativo prudente.
+```text
+src/main/java/org/traveldna/reference/routing/
+  GeoPoint, RoadNode, RoadEdge, RoadGraph
+  ReferenceFixtureParser, ReferenceScenario
+  DijkstraRouter, AStarRouter
+  RouteResult, RouteReport, ReferenceRoutingCli
 
-Non è automaticamente il router di produzione.
+src/test/java/org/traveldna/reference/routing/
+  ReferenceRoutingTestSuite
+```
+
+Responsabilità:
+
+- caricare il grafo sintetico v0;
+- eseguire Dijkstra e A*;
+- ricostruire una route deterministica;
+- emettere il report confrontato con Rust;
+- rendere leggibili strutture dati e algoritmi agli studenti.
+
+Non è automaticamente il router di produzione e non esporta ancora i contratti
+canonici mobile.
 
 ## `crates`
+
+### `tdna-reference-routing`
+
+Prima crate già presente. Replica in modo indipendente il contratto della fixture
+Java usando solo la standard library Rust. Contiene parser, grafo, Dijkstra, A*,
+report e test. È un laboratorio, non ancora `tdna-guidance`.
 
 ### `tdna-geo`
 
@@ -247,8 +288,17 @@ al modulo quando lo strumento lo richiede.
 
 ## `tools`
 
-Wrapper `tdna`, generatori, link checker, fixture builder, benchmark runner,
-licence audit e strumenti di documentazione.
+Il primo wrapper è già presente e si invoca con:
+
+```bash
+sh tools/tdna doctor
+sh tools/tdna check
+sh tools/tdna lab reference-routing astar
+```
+
+`tools/check_docs.py` valida link Markdown locali e code fence. Generator,
+benchmark runner, licence audit e strumenti mobili verranno aggiunti soltanto
+quando esiste un caso d'uso reale.
 
 ## `docs`
 

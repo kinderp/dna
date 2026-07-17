@@ -1,13 +1,21 @@
-# Project foundation records
+# Project records
 
-Questa cartella conserva i documenti che descrivono la prima fondazione del
-repository:
+This directory separates live development coordination from stable architecture
+and from historical foundation records.
 
-- [Foundation report](FOUNDATION-REPORT.md): copertura, decisioni e verifiche
-  della fondazione documentale v0;
-- [Manifest](MANIFEST.md): struttura e scopo dei materiali iniziali;
-- [Publishing](PUBLISHING.md): procedura per creare e pubblicare `kinderp/tdna`.
+## Live records
 
-Questi file sono memoria storica della nascita del repository. Le regole e i
-contratti correnti vivono nei documenti tematici sotto `docs/it/`, `docs/adr/`
-e negli altri percorsi indicati da [docs/README.md](../README.md).
+- [`development-status.md`](development-status.md): current milestone, active
+  vertical slice, verified capabilities, gaps and next executable step.
+- [`daily/`](daily/): one report for each autonomous development session.
+
+## Foundation records
+
+- [`FOUNDATION-REPORT.md`](FOUNDATION-REPORT.md): scope, decisions, open
+  questions and validation results for the first documentation foundation.
+- [`MANIFEST.md`](MANIFEST.md): inventory and purpose of the initial package.
+- [`PUBLISHING.md`](PUBLISHING.md): repository visibility and publication gate.
+
+Stable architecture and product contracts live in `docs/it`. Individual
+architecture decisions live in `docs/adr`. GitHub issues and pull requests keep
+the operational trace of concrete work.

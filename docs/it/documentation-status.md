@@ -2,8 +2,9 @@
 
 ## Stati
 
-- `Foundation complete`: il capitolo definisce una base utilizzabile prima del codice.
-- `Partial`: utile ma richiede dati o implementazione futura.
+- `Foundation complete`: il capitolo definisce una base utilizzabile;
+- `Implementation-backed`: il capitolo è collegato a codice e test correnti;
+- `Partial`: utile ma richiede dati o implementazione futura;
 - `Planned`: struttura prevista, contenuto da costruire nella milestone indicata.
 
 ## Capitoli
@@ -13,14 +14,14 @@
 | Foundation complete | `00-regole-operative.md` | Costituzione operativa v0. |
 | Foundation complete | `01-visione-prodotto.md` | Consolida la visione iniziale. |
 | Foundation complete | `02-glossario.md` | Glossario iniziale, da estendere con il codice. |
-| Foundation complete | `03-guida-lettura-documentazione.md` | Percorsi per obiettivo. |
+| Implementation-backed | `03-guida-lettura-documentazione.md` | Include il percorso eseguibile Java/Rust. |
 | Foundation complete | `04-come-contribuire.md` | Flusso contributivo v0. |
 | Foundation complete | `05-tracciabilita-conversazione.md` | Mappa completa dei temi iniziali. |
 | Foundation complete | `10-ddd-bounded-context.md` | Confini strategici v0. |
 | Foundation complete | `11-use-case-principali.md` | Use case prioritari. |
-| Foundation complete | `12-stato-funzionalita.md` | Evita promesse premature. |
+| Implementation-backed | `12-stato-funzionalita.md` | Distingue il Lab eseguibile dalle capacità di prodotto. |
 | Foundation complete | `20-architettura-generale.md` | Architettura target documentale. |
-| Foundation complete | `21-struttura-repository.md` | Monorepo target. |
+| Implementation-backed | `21-struttura-repository.md` | Albero target più primo percorso reale. |
 | Foundation complete | `22-architettura-plugin-provider.md` | Contratti e sostituzione. |
 | Foundation complete | `23-openstreetmap-e-cartografia.md` | Uso corretto di OSM. |
 | Foundation complete | `24-routing-e-navigazione.md` | Spiegazione didattica del navigatore. |
@@ -33,17 +34,26 @@
 | Foundation complete | `31-gps-replay-e-fixture.md` | Contratto replay v0. |
 | Foundation complete | `32-performance-budget.md` | Budget e metodo v0. |
 | Foundation complete | `33-privacy-security-driving-safety.md` | Threat model iniziale. |
-| Partial | `34-debugging-e-strumenti.md` | I comandi reali arriveranno con il codice. |
+| Implementation-backed | `34-debugging-e-strumenti.md` | Comandi reali Java/Rust/docs e roadmap mobile. |
 | Foundation complete | `35-qualita-prodotto-software.md` | Matrice qualità v0. |
 | Foundation complete | `36-licenze-dati-supply-chain.md` | Policy iniziale. |
-| Partial | `40-mappa-codice-e-stati.md` | Funzioni reali da aggiungere dopo il bootstrap. |
-| Foundation complete | `41-tracepoint-model-v0.md` | Contratto documentale. |
-| Foundation complete | `42-traveldna-lab-roadmap.md` | Primo set di scenari. |
-| Foundation complete | `50-registro-milestone.md` | Prima milestone proposta. |
+| Implementation-backed | `40-mappa-codice-e-stati.md` | Call path reale del reference routing più mappe target. |
+| Implementation-backed | `41-tracepoint-model-v0.md` | Include tracepoint stable-doc del primo Lab. |
+| Implementation-backed | `42-traveldna-lab-roadmap.md` | Primo scenario promosso a executable. |
+| Implementation-backed | `43-reference-routing-java-rust.md` | Primo capitolo-libro sostenuto da codice, test e fixture. |
+| Implementation-backed | `50-registro-milestone.md` | Milestone 1 in corso e issue #3 tracciata. |
 | Foundation complete | `51-roadmap-librerie-open-source.md` | Sostituzione progressiva. |
 | Foundation complete | `52-matrice-tecnologie-decisioni.md` | Scelte e alternative. |
 | Foundation complete | `53-riferimenti-tecnici.md` | Fonti ufficiali. |
 | Planned | `54-spike-lora-roadmap.md` | Nessuna decisione prima dello spike. |
+
+## Documenti di progetto vivi
+
+| Stato | Documento | Nota |
+| --- | --- | --- |
+| Implementation-backed | `../project/development-status.md` | Milestone e prossimo passo. |
+| Implementation-backed | `../project/daily/2026-07-16.md` | Primo report di sviluppo autonomo. |
+| Implementation-backed | `lab/scenarios/reference-routing-java-rust.md` | Primo scenario Lab eseguibile. |
 
 Aggiornare questa tabella quando un capitolo cambia stato o quando il codice rende
 obsolete parti della spiegazione.

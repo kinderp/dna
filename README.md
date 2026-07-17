@@ -15,27 +15,66 @@ Il progetto nasce da quattro idee unite:
 
 ## Stato
 
-Questo repository è uno **scheletro documentale v0**. Contiene decisioni,
-contratti, percorsi di lettura, scenari Lab e roadmap. Non contiene ancora un
-navigatore di produzione.
+La **Documentation Foundation v0** è presente e la milestone
+**Foundations and Travel DNA Lab v0** è in corso.
 
-La documentazione consolida tutte le decisioni emerse durante la progettazione
-iniziale: visione del prodotto, diario, OpenStreetMap, MapLibre, Valhalla,
-Ferrostar, navigatori esterni, Android Auto, CarPlay, chat durante la guida,
-architettura a plugin, Kotlin, Java, Swift, Rust, DDD, TDD, Unified Process
-leggero, performance, privacy e progetto didattico.
+Il repository contiene ora anche il primo laboratorio eseguibile:
+
+```text
+rete stradale sintetica
+-> parser Java e Rust
+-> Dijkstra / A*
+-> percorso deterministico
+-> report confrontato fra i due linguaggi
+```
+
+Non contiene ancora un navigatore mobile di produzione. Il laboratorio serve a
+stabilire metodo, fixture, test, strumenti e documentazione prima di introdurre
+OpenStreetMap, MapLibre, Valhalla, Ferrostar, Android o iOS.
+
+## Primo esperimento
+
+Prerequisiti minimi per la parte Java:
+
+- Java 21;
+- Python 3;
+- shell POSIX.
+
+Dalla root del repository:
+
+```bash
+sh tools/tdna doctor
+sh tools/tdna check-java
+sh tools/tdna lab reference-routing astar
+```
+
+Con Rust stable installato si può eseguire l'intera verifica:
+
+```bash
+sh tools/tdna check
+```
+
+Il comando completo controlla documentazione, implementazione Java,
+implementazione Rust e conformità byte-per-byte dei report.
+
+Capitolo didattico:
+[Primo laboratorio eseguibile: routing in Java e Rust](docs/it/43-reference-routing-java-rust.md).
+
+Scenario Lab:
+[Reference routing Java/Rust](docs/it/lab/scenarios/reference-routing-java-rust.md).
 
 ## Da dove iniziare
 
+- Indice della documentazione: [docs/README.md](docs/README.md)
 - Studente o nuovo lettore: [docs/it/03-guida-lettura-documentazione.md](docs/it/03-guida-lettura-documentazione.md)
 - Contributore: [docs/it/00-regole-operative.md](docs/it/00-regole-operative.md)
+- Stato dello sviluppo: [docs/project/development-status.md](docs/project/development-status.md)
 - Architettura: [docs/it/20-architettura-generale.md](docs/it/20-architettura-generale.md)
 - Tecnologie: [docs/it/52-matrice-tecnologie-decisioni.md](docs/it/52-matrice-tecnologie-decisioni.md)
 - Navigazione: [docs/it/24-routing-e-navigazione.md](docs/it/24-routing-e-navigazione.md)
-- Primo percorso didattico: [docs/it/42-traveldna-lab-roadmap.md](docs/it/42-traveldna-lab-roadmap.md)
+- Travel DNA Lab: [docs/it/lab/README.md](docs/it/lab/README.md)
 - Decisioni architetturali: [docs/adr/README.md](docs/adr/README.md)
-- Scenari Lab: [docs/it/lab/README.md](docs/it/lab/README.md)
-- Rapporto della fondazione: [docs/project/FOUNDATION-REPORT.md](docs/project/FOUNDATION-REPORT.md)
+- Rapporto della fondazione v0: [docs/project/FOUNDATION-REPORT.md](docs/project/FOUNDATION-REPORT.md)
 
 ## Principi
 

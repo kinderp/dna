@@ -31,12 +31,21 @@ documentazione.
 
 ## Percorso 3: imparare come funziona un navigatore
 
-1. [OpenStreetMap e cartografia](23-openstreetmap-e-cartografia.md)
-2. [Routing e navigazione](24-routing-e-navigazione.md)
-3. [GPS replay e fixture](31-gps-replay-e-fixture.md)
-4. [Prestazioni](32-performance-budget.md)
-5. [Tracepoint Model](41-tracepoint-model-v0.md)
-6. [Scenario missed exit e reroute](lab/scenarios/navigation-missed-exit-reroute.md)
+1. [Primo routing eseguibile in Java e Rust](43-reference-routing-java-rust.md)
+2. [Scenario Lab eseguibile](lab/scenarios/reference-routing-java-rust.md)
+3. [OpenStreetMap e cartografia](23-openstreetmap-e-cartografia.md)
+4. [Routing e navigazione](24-routing-e-navigazione.md)
+5. [GPS replay e fixture](31-gps-replay-e-fixture.md)
+6. [Prestazioni](32-performance-budget.md)
+7. [Tracepoint Model](41-tracepoint-model-v0.md)
+8. [Scenario futuro missed exit e reroute](lab/scenarios/navigation-missed-exit-reroute.md)
+
+Per iniziare dal codice invece che dalla teoria:
+
+```bash
+sh tools/tdna check-java
+sh tools/tdna lab reference-routing astar
+```
 
 Ordine concettuale:
 
@@ -96,20 +105,27 @@ Travel DNA usa Java come linguaggio didattico e di interoperabilità, non come
 duplicazione inutile della UI Android.
 
 1. [Stack linguaggi e GUI](28-stack-linguaggi-e-gui.md)
-2. [DDD e bounded context](10-ddd-bounded-context.md)
-3. [Plugin e provider](22-architettura-plugin-provider.md)
-4. [Routing e navigazione](24-routing-e-navigazione.md)
-5. futura reference implementation Java di Dijkstra/A*
-6. contract test comuni contro provider Java e Rust
+2. [Primo routing eseguibile in Java e Rust](43-reference-routing-java-rust.md)
+3. aprire `java/reference-routing/src/main/java`;
+4. seguire parser, grafo, Dijkstra/A* e report con la
+   [mappa del codice](40-mappa-codice-e-stati.md);
+5. eseguire `sh tools/tdna check-java`;
+6. modificare una copia della fixture e osservare i test;
+7. leggere [DDD e bounded context](10-ddd-bounded-context.md) e
+   [Plugin e provider](22-architettura-plugin-provider.md) prima dei futuri
+   contratti di produzione.
 
 ## Percorso 7: imparare Rust
 
 1. [Stack linguaggi e GUI](28-stack-linguaggi-e-gui.md)
-2. [Routing e navigazione](24-routing-e-navigazione.md)
-3. [GPS replay](31-gps-replay-e-fixture.md)
-4. [Prestazioni](32-performance-budget.md)
-5. [Roadmap librerie open source](51-roadmap-librerie-open-source.md)
-6. scenario Lab di navigation runtime
+2. [Primo routing eseguibile in Java e Rust](43-reference-routing-java-rust.md)
+3. aprire `crates/tdna-reference-routing/src/lib.rs`;
+4. eseguire `sh tools/tdna check-rust` con Rust stable installato;
+5. eseguire `sh tools/tdna check-contract` per confrontare Java e Rust;
+6. [Routing e navigazione](24-routing-e-navigazione.md);
+7. [GPS replay](31-gps-replay-e-fixture.md);
+8. [Prestazioni](32-performance-budget.md);
+9. [Roadmap librerie open source](51-roadmap-librerie-open-source.md).
 
 L'ordine didattico consigliato è:
 
@@ -157,7 +173,21 @@ Non iniziare dall'FFI: prima dimostrare il core in isolamento.
 5. issue madre e PR della milestone corrente;
 6. documenti del task.
 
-## Percorso 12: futuro studio LoRa
+## Percorso 12: eseguire il primo Lab da zero
+
+1. installare Java 21 e Python 3;
+2. eseguire `sh tools/tdna doctor`;
+3. leggere [il capitolo 43](43-reference-routing-java-rust.md);
+4. aprire `fixtures/routes/reference-network-v0.tdna`;
+5. eseguire `sh tools/tdna lab reference-routing dijkstra`;
+6. eseguire `sh tools/tdna check-java`;
+7. con Rust stable, eseguire `sh tools/tdna check`;
+8. confrontare i due percorsi nel codice e rispondere agli esercizi del capitolo.
+
+Questo percorso non richiede Android Studio, Xcode, OpenStreetMap o servizi di
+rete.
+
+## Percorso 13: futuro studio LoRa
 
 Per ora leggere soltanto [Spike LoRa](54-spike-lora-roadmap.md). Il documento è
 una lista di domande e non contiene ancora una decisione. La valutazione deve

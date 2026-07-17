@@ -3,7 +3,7 @@
 ## Obiettivo
 
 Travel DNA Lab trasforma architettura e test in percorsi didattici. Uno studente
-deve poter seguire un fatto dall'input alla UI, capire gli stati, eseguire una
+deve poter seguire un fatto dall'input all'output, capire gli stati, eseguire una
 fixture e modificare un componente senza conoscere tutto il sistema.
 
 ## Cosa non è il Lab v0
@@ -12,8 +12,21 @@ fixture e modificare un componente senza conoscere tutto il sistema.
 - tracing sempre attivo;
 - simulatore 3D;
 - generatore automatico perfetto;
-- secondo modello dati;
-- scusa per aggiungere I/O al hot path.
+- secondo modello dati del prodotto;
+- scusa per aggiungere I/O al percorso caldo.
+
+## Stati degli scenari
+
+| Stato | Significato |
+| --- | --- |
+| `draft` | Struttura o semantica ancora incompleta. |
+| `stable-doc` | Percorso didattico consolidato, codice non necessariamente presente. |
+| `executable` | Comando, fixture e test esistono nel repository. |
+| `public-output` | Eventuale formato macchina versionato; non ancora usato. |
+| `deprecated` | Scenario sostituito, con indicazione del successore. |
+
+La promozione `stable-doc -> executable` richiede che il documento venga
+riallineato ai nomi reali di moduli, funzioni, test e artifact.
 
 ## Formato scenario
 
@@ -46,15 +59,27 @@ non-goals
 related docs
 ```
 
-## Primo set
+## Primo scenario eseguibile
 
-| Scenario | Cosa insegna |
-| --- | --- |
-| [Missed exit and reroute](lab/scenarios/navigation-missed-exit-reroute.md) | GPS, map matching, state machine e route replacement. |
-| [Chat with external navigation](lab/scenarios/chat-with-external-navigation.md) | Waze foreground, push, local store, driving policy e voice reply. |
-| [Daily page photos and thoughts](lab/scenarios/daily-page-photos-thoughts.md) | Eventi, proiezione, media e controllo utente. |
-| [DNA exchange privacy](lab/scenarios/dna-exchange-privacy.md) | Approssimazione, consenso, Cartolina e revoca. |
-| [Render canonical route](lab/scenarios/render-canonical-route.md) | Contratto map scene e adapter MapLibre. |
+| Scenario | Stato | Cosa insegna | Comando |
+| --- | --- | --- | --- |
+| [Reference routing Java/Rust](lab/scenarios/reference-routing-java-rust.md) | executable | Grafo, parser, Dijkstra, A*, euristica, determinismo e contract test cross-language. | `sh tools/tdna lab reference-routing astar` |
+
+Il capitolo di accompagnamento è
+[Primo laboratorio eseguibile: routing di riferimento](43-reference-routing-java-rust.md).
+
+Il primo scenario non usa Android, iOS, OpenStreetMap o provider. Questa scelta
+riduce il numero di variabili e rende osservabile l'algoritmo.
+
+## Scenari `stable-doc` successivi
+
+| Scenario | Cosa insegna | Dipendenza per diventare eseguibile |
+| --- | --- | --- |
+| [Missed exit and reroute](lab/scenarios/navigation-missed-exit-reroute.md) | GPS, map matching, state machine e route replacement. | Replay clock, fake guidance e route model. |
+| [Chat with external navigation](lab/scenarios/chat-with-external-navigation.md) | Navigatore foreground, push, local store, driving policy e voice reply. | Conversation core e platform fake. |
+| [Daily page photos and thoughts](lab/scenarios/daily-page-photos-thoughts.md) | Eventi, proiezione, media e controllo utente. | Journey event store e media fake. |
+| [DNA exchange privacy](lab/scenarios/dna-exchange-privacy.md) | Approssimazione, consenso, Cartolina e revoca. | Privacy filter e presence fake. |
+| [Render canonical route](lab/scenarios/render-canonical-route.md) | Contratto map scene e adapter MapLibre. | Canonical route/map contracts e fake renderer. |
 
 ## Livelli didattici
 
@@ -67,16 +92,16 @@ related docs
 
 ### Livello B: eseguire
 
-- replay;
+- fixture;
 - test;
 - report;
-- visualizer.
+- replay o CLI.
 
 ### Livello C: modificare
 
-- cambiare soglia;
-- implementare fake;
-- aggiungere provider;
+- cambiare una strada sintetica;
+- aggiungere un caso limite;
+- implementare un fake;
 - confrontare output.
 
 ### Livello D: misurare
@@ -84,13 +109,13 @@ related docs
 - benchmark;
 - memoria;
 - frame;
-- battery;
+- batteria;
 - FFI.
 
 ### Livello E: progettare
 
 - riaprire un ADR;
-- definire nuovo contract;
+- definire un nuovo contratto;
 - threat model;
 - provider replacement.
 
@@ -109,31 +134,45 @@ use case
 -> issue/PR
 ```
 
+Per il reference routing:
+
+```text
+issue #3
+-> fixture reference-network-v0
+-> Java/Rust parser
+-> Dijkstra/A*
+-> report
+-> contract diff
+-> capitolo 43
+-> scenario executable
+```
+
 ## Evoluzione strumenti
 
-Fase 1:
+### Fase 1 — corrente
 
 - Markdown;
 - Mermaid;
 - fixture;
-- CLI replay;
-- report JSON/CSV.
+- CLI;
+- report JSON ristretto;
+- test e CI.
 
-Fase 2:
+### Fase 2
 
-- visualizer web/local;
-- timeline interattiva;
-- map raw vs matched;
+- GPS replay con clock virtuale;
+- timeline degli stati;
+- visualizzazione raw vs matched;
 - state inspector.
 
-Fase 3:
+### Fase 3
 
-- generated code links;
+- link generati al codice;
 - call graph mirati;
 - benchmark comparison;
-- PR preview.
+- preview nelle pull request.
 
-Fase 4:
+### Fase 4
 
 - esercizi autovalutativi;
 - notebook didattici;

@@ -19,15 +19,16 @@ dipendenze e risultati consolidati.
 | GitHub | Milestone/issue/PR future. |
 | Documenti | Contratti e roadmap. |
 
-Le date vengono assegnate quando la milestone viene aperta su GitHub. Questo
-pacchetto non inventa date senza team e repository operativo.
+Le date sono orientative e vengono registrate quando il lavoro parte davvero.
+La milestone 1 è iniziata il 16 luglio 2026 con la issue
+[`#3`](https://github.com/kinderp/tdna/issues/3).
 
 ## Registro iniziale
 
 | Ordine | Milestone | Stato | Perché ora | Dipendenze | Deliverable principali | Non-obiettivi | Documenti |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 0 | Documentation Foundation v0 | done | Serve una fonte stabile prima del codice e prima di coinvolgere studenti. | Progettazione iniziale. | Regole, architettura, tracepoint, Lab, ADR, roadmap. | Codice mobile/backend. | Tutto il pacchetto v0. |
-| 1 | Foundations and Travel DNA Lab v0 | planned | Dimostrare contratti, replay e struttura multi-language senza dipendere da SDK reali. | Milestone 0. | Monorepo bootstrap, canonical geo, plugin SDK, fake providers, Java reference graph, Rust replay CLI, CI. | GPS reale, MapLibre, Valhalla, chat. | `20`, `21`, `22`, `30`, `31`, `41`, `42`. |
+| 1 | Foundations and Travel DNA Lab v0 | in-progress | Dimostrare contratti, replay e struttura multi-language senza dipendere da SDK reali. | Milestone 0. | Monorepo bootstrap, canonical geo, plugin SDK, fake providers, Java reference graph, Rust replay CLI, CI. | GPS reale, MapLibre, Valhalla, chat. | `20`, `21`, `22`, `30`, `31`, `41`, `42`, `43`; issue [#3](https://github.com/kinderp/tdna/issues/3). |
 | 2 | Canonical Route and Map Slice | planned | Verificare rendering nativo e provider isolation. | 1. | RoutePlan, MapScene, fake route, MapLibre adapters Android/iOS, benchmark base. | Turn-by-turn completo. | `23`, `24`, scenario render. |
 | 3 | Navigation Runtime Replay v0 | planned | Eliminare rischio guidance prima della strada. | 1–2. | Ferrostar adapter, replay missed exit, state machine, voice fake, performance report. | Produzione, traffic live. | `24`, `31`, `32`, scenario reroute. |
 | 4 | External Navigation Companion v0 | planned | Garantire valore con Waze/Maps prima del navigatore interno maturo. | 1, Journey session. | handoff adapters, shadow route v0, background recorder fake/integration, return flow. | Android Auto/CarPlay completi. | `25`, ADR 0003. |
@@ -43,6 +44,36 @@ pacchetto non inventa date senza team e repository operativo.
 | 14 | Travel DNA Guidance Core | future | Ridurre dipendenza Ferrostar solo se valore misurato. | replay maturity, shadow comparison. | Rust core in shadow, rollout, fallback. | Map renderer rewrite. | `51`. |
 | 15 | LoRa Communication Spike | future/open | Valutare casi senza copertura con vincoli reali. | Discussione dedicata. | experiment report and ADR. | Produzione prima di prove. | `54`. |
 
+## Milestone 1: avanzamento corrente
+
+Avvio: **2026-07-16**  
+Issue attiva: [#3 — executable Java/Rust reference-routing Lab](https://github.com/kinderp/tdna/issues/3)  
+Pull request draft: [#4 — executable Java/Rust routing Lab](https://github.com/kinderp/tdna/pull/4)  
+Branch di lavoro: `agent/foundation-reference-routing`
+
+Prima vertical slice:
+
+- [x] fixture di grafo sintetica, versionata e con ground truth;
+- [x] parser rigoroso Java;
+- [x] parser rigoroso Rust;
+- [x] Dijkstra Java e Rust;
+- [x] A* Java e Rust;
+- [x] ricostruzione route deterministica;
+- [x] report fixture-scoped confrontabile;
+- [x] test Java;
+- [x] test Rust;
+- [x] contract test Java/Rust;
+- [x] wrapper `sh tools/tdna`;
+- [x] CI foundation;
+- [x] capitolo didattico e scenario Lab eseguibile;
+- [x] CI verde osservata sulla pull request, run `#13`;
+- [x] review finding corretti e due round consecutivi senza nuovi finding;
+- [ ] merge della vertical slice.
+
+La slice chiude il **reference routing**, non la milestone intera. Restano fuori:
+contratti canonici KMP, plugin SDK, fake provider, GPS replay, missed-exit state
+machine e benchmark strutturato.
+
 ## Milestone 1: criteri di chiusura
 
 `Foundations and Travel DNA Lab v0` è conclusa quando esistono:
@@ -53,7 +84,7 @@ pacchetto non inventa date senza team e repository operativo.
 - plugin descriptor e capability;
 - fake route planner;
 - fake map renderer;
-- Java A* reference su piccolo grafo;
+- Java/Rust Dijkstra e A* reference su piccolo grafo;
 - Rust replay runner con clock virtuale;
 - scenario missed exit eseguibile con fake guidance;
 - contract test;
