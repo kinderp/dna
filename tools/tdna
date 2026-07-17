@@ -9,7 +9,8 @@ JAVA_TEST="$ROOT/java/reference-routing/src/test/java"
 JAVA_MAIN_CLASS="org.traveldna.reference.routing.ReferenceRoutingCli"
 JAVA_TEST_CLASS="org.traveldna.reference.routing.ReferenceRoutingTestSuite"
 RUST_MANIFEST="$ROOT/crates/tdna-reference-routing/Cargo.toml"
-FIXTURE="$ROOT/fixtures/routes/reference-network-v0.tdna"
+ROUTE_FIXTURE="$ROOT/fixtures/routes/reference-network-v0.tdna"
+LOCATION_FIXTURE="$ROOT/fixtures/gps/reference-location-replay-v0.tdna"
 
 say() {
     printf '%s\n' "$*"
@@ -45,20 +46,20 @@ compile_java() {
 
 java_report() {
     algorithm=$1
-    java -cp "$JAVA_BUILD/classes" "$JAVA_MAIN_CLASS" "$FIXTURE" "$algorithm"
+    java -cp "$JAVA_BUILD/classes" "$JAVA_MAIN_CLASS" "$ROUTE_FIXTURE" "$algorithm"
 }
 
 rust_report() {
     algorithm=$1
     CARGO_TARGET_DIR="$BUILD_DIR/rust" cargo run --quiet \
-        --manifest-path "$RUST_MANIFEST" -- "$FIXTURE" "$algorithm"
+        --manifest-path "$RUST_MANIFEST" -- "$ROUTE_FIXTURE" "$algorithm"
 }
 
 check_java() {
     say "== Java reference routing =="
     need java
     compile_java
-    java -cp "$JAVA_BUILD/classes" "$JAVA_TEST_CLASS" "$FIXTURE"
+    java -cp "$JAVA_BUILD/classes" "$JAVA_TEST_CLASS" "$ROUTE_FIXTURE"
     java_report dijkstra > "$JAVA_BUILD/java-dijkstra.json"
     java_report astar > "$JAVA_BUILD/java-astar.json"
     say "PASS Java reports written under build/java/reference-routing"
@@ -107,7 +108,7 @@ check_architecture() {
 }
 
 check_kotlin() {
-    say "== Kotlin Multiplatform contracts and fake providers =="
+    say "== Kotlin Multiplatform contracts, fakes and replay =="
     need gradle
     gradle --no-daemon --stacktrace check
     mkdir -p "$BUILD_DIR/kotlin"
@@ -115,6 +116,9 @@ check_kotlin() {
         > "$BUILD_DIR/kotlin/routing-contracts-lab.json"
     gradle --no-daemon --quiet :labs:map-scene-cli:run \
         > "$BUILD_DIR/kotlin/map-scene-lab.json"
+    gradle --no-daemon --quiet :labs:location-replay-cli:run \
+        --args="$LOCATION_FIXTURE" \
+        > "$BUILD_DIR/kotlin/location-replay-lab.json"
     say "PASS Kotlin reports written under build/kotlin"
 }
 
@@ -145,8 +149,30 @@ run_lab() {
             need gradle
             gradle --no-daemon --quiet :labs:map-scene-cli:run
             ;;
+        location-replay)
+            need gradle
+            gradle --no-daemon --quiet :labs:location-replay-cli:run \
+                --args="$LOCATION_FIXTURE"
+            ;;
         *)
-            say "usage: sh tools/tdna lab {reference-routing [dijkstra|astar]|routing-contracts|map-scene}"
+            say "usage: sh tools/tdna lab {reference-routing [dijkstra|astar]|routing-contracts|map-scene|location-replay}"
+            exit 2
+            ;;
+    esac
+}
+
+run_benchmark() {
+    family=${1:-}
+    case "$family" in
+        location-replay)
+            samples=${2:-10000}
+            iterations=${3:-7}
+            need gradle
+            gradle --no-daemon --quiet :labs:location-replay-cli:run \
+                --args="--benchmark $samples $iterations"
+            ;;
+        *)
+            say "usage: sh tools/tdna bench location-replay [sample-count] [iterations]"
             exit 2
             ;;
     esac
@@ -194,6 +220,10 @@ case "$command" in
         shift
         run_lab "$@"
         ;;
+    bench)
+        shift
+        run_benchmark "$@"
+        ;;
     clean)
         rm -rf "$BUILD_DIR"
         say "Removed $BUILD_DIR"
@@ -209,11 +239,13 @@ Commands:
   check-java                          compile and test Java reference routing
   check-rust                          format and test Rust reference routing
   check-contract                      compare Java/Rust reports byte-for-byte
-  check-kotlin                        test KMP contracts and fake providers
+  check-kotlin                        test KMP contracts, fakes and replay
   check                               run the complete foundation verification
   lab reference-routing [algorithm]   run the Java/Rust routing Lab
   lab routing-contracts               run the KMP routing-provider Lab
   lab map-scene                       run the KMP map-scene Lab
+  lab location-replay                 run the deterministic location replay Lab
+  bench location-replay [n] [runs]    run a diagnostic replay microbenchmark
   clean                               remove generated build output
 HELP
         ;;

@@ -15,40 +15,59 @@ CHAR = re.compile(r"'(?:\\.|[^'\\])'")
 
 RULES = {
     "shared/plugin-sdk": ("kotlin.",),
-    "shared/routing-contracts": ("kotlin.", "org.traveldna.plugin.sdk."),
+    "shared/geo-contracts": ("kotlin.",),
+    "shared/routing-contracts": (
+        "kotlin.",
+        "org.traveldna.plugin.sdk.",
+        "org.traveldna.geo.contracts.",
+    ),
     "shared/routing-testkit": (
         "kotlin.",
         "org.traveldna.plugin.sdk.",
+        "org.traveldna.geo.contracts.",
         "org.traveldna.routing.contracts.",
     ),
     "shared/fake-route-planner": (
         "kotlin.",
         "org.traveldna.plugin.sdk.",
+        "org.traveldna.geo.contracts.",
         "org.traveldna.routing.contracts.",
         "org.traveldna.routing.testkit.",
     ),
     "shared/map-contracts": (
         "kotlin.",
         "org.traveldna.plugin.sdk.",
+        "org.traveldna.geo.contracts.",
         "org.traveldna.routing.contracts.",
     ),
     "shared/map-testkit": (
         "kotlin.",
         "org.traveldna.plugin.sdk.",
+        "org.traveldna.geo.contracts.",
         "org.traveldna.routing.contracts.",
         "org.traveldna.map.contracts.",
     ),
     "shared/fake-map-renderer": (
         "kotlin.",
         "org.traveldna.plugin.sdk.",
+        "org.traveldna.geo.contracts.",
         "org.traveldna.routing.contracts.",
         "org.traveldna.map.contracts.",
         "org.traveldna.map.testkit.",
     ),
     "shared/route-map-projector": (
         "kotlin.",
+        "org.traveldna.geo.contracts.",
         "org.traveldna.routing.contracts.",
         "org.traveldna.map.contracts.",
+    ),
+    "shared/location-contracts": (
+        "kotlin.",
+        "org.traveldna.geo.contracts.",
+    ),
+    "shared/location-replay": (
+        "kotlin.",
+        "org.traveldna.location.contracts.",
     ),
 }
 FORBIDDEN_CODE_TOKENS = (
@@ -58,18 +77,20 @@ FORBIDDEN_CODE_TOKENS = (
     "google.maps",
     "waze",
     "sygic",
+    "android.location",
+    "corelocation",
+    "cllocation",
     "org.traveldna.reference.routing",
 )
 
 
 def strip_non_code(text: str) -> str:
-    """Remove comments and literals before scanning for fully qualified code use.
+    """Remove comments and literals before scanning fully qualified code use.
 
     Imports are checked separately on the original source. This lightweight
-    sanitizer intentionally protects architecture comments such as "implemented
-    by MapLibre" while still finding provider tokens used in executable code.
-    It is not a Kotlin parser and is complemented by Gradle dependency checks in
-    future hardening work.
+    sanitizer allows architecture comments to name a provider or platform while
+    still finding those tokens in executable common code. It is not a Kotlin
+    parser and remains a first guard beside Gradle dependency checks.
     """
 
     stripped = TRIPLE_STRING.sub('""', text)
@@ -98,7 +119,7 @@ def main(argv: list[str]) -> int:
             for token in FORBIDDEN_CODE_TOKENS:
                 if token in code_lower:
                     errors.append(
-                        f"{path.relative_to(root)}: forbidden provider/Lab code token: {token}"
+                        f"{path.relative_to(root)}: forbidden provider/platform/Lab code token: {token}"
                     )
             for imported in IMPORT.findall(text):
                 if not imported.startswith(prefixes):

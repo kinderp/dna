@@ -10,7 +10,6 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                api(project(":shared:plugin-sdk"))
                 api(project(":shared:geo-contracts"))
             }
         }
