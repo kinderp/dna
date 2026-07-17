@@ -119,6 +119,11 @@ check_kotlin() {
     gradle --no-daemon --quiet :labs:location-replay-cli:run \
         --args="$LOCATION_FIXTURE" \
         > "$BUILD_DIR/kotlin/location-replay-lab.json"
+    gradle --no-daemon --quiet :labs:location-replay-cli:run \
+        --args="--benchmark 10000 7" \
+        > "$BUILD_DIR/kotlin/location-replay-benchmark.json"
+    say "Diagnostic location-replay benchmark:"
+    cat "$BUILD_DIR/kotlin/location-replay-benchmark.json"
     say "PASS Kotlin reports written under build/kotlin"
 }
 
