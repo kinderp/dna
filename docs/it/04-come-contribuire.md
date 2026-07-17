@@ -9,12 +9,18 @@ repository upstream
 -> issue o sub-issue
 -> draft pull request
 -> CI
--> review
+-> review e fix
+-> due review round consecutivi senza finding
+-> ready
 -> merge
+-> chiusura issue
 ```
 
 Il branch `main` deve restare stabile e studiabile. I nuovi contributori non
 lavorano direttamente su `main`.
+
+La procedura normativa di review è descritta in
+[06-review-e-merge.md](06-review-e-merge.md).
 
 ## Prima di iniziare
 
@@ -92,25 +98,24 @@ scope
 
 ## Test locali
 
-I comandi definitivi arriveranno con il bootstrap del monorepo. L'obiettivo è
-fornire un wrapper coerente:
+Il wrapper corrente è:
 
 ```text
-./tdna doctor
-./tdna format
-./tdna lint
-./tdna build
-./tdna test shared
-./tdna test rust
-./tdna test android
-./tdna test ios
-./tdna replay <scenario>
-./tdna bench <family>
-./tdna docs
+sh tools/tdna doctor
+sh tools/tdna check-docs
+sh tools/tdna check-architecture
+sh tools/tdna check-java
+sh tools/tdna check-rust
+sh tools/tdna check-contract
+sh tools/tdna check-kotlin
+sh tools/tdna check
 ```
 
 La CI deve chiamare gli stessi comandi o gli stessi task sottostanti. Non deve
 esistere una procedura segreta disponibile soltanto al server.
+
+Con la crescita del monorepo verranno aggiunti comandi mirati per Android, iOS,
+replay, benchmark e documentazione.
 
 ## Aggiungere un test
 
@@ -138,15 +143,18 @@ La PR deve spiegare:
 
 - comportamento utente;
 - bounded context e piattaforme;
+- livello di rischio;
 - contratti modificati;
 - provider coinvolti;
 - impatto su prestazioni e batteria;
 - privacy, permessi e guida;
 - test eseguiti;
 - documentazione aggiornata;
+- non-obiettivi;
 - punti di attenzione per il reviewer.
 
-Restare in draft finché la slice non è verificabile.
+Restare in draft finché la slice non è verificabile e non sono completati i due
+round puliti richiesti.
 
 ## Review
 
@@ -166,8 +174,90 @@ Il reviewer controlla almeno:
 - documentazione e tracciabilità;
 - licenza delle dipendenze.
 
-I finding importanti vanno lasciati inline. Il fix deve essere collegato al
-finding e accompagnato da un test quando possibile.
+I finding importanti vanno lasciati inline o descritti chiaramente nella PR. Il
+fix deve essere collegato al finding e accompagnato da un test quando possibile.
+
+### Due round consecutivi obbligatori
+
+Ogni PR, compresa una PR `R0` di sola documentazione, richiede due review round
+consecutivi senza nuovi finding prima del passaggio a ready o del merge.
+
+Ogni round registra:
+
+```text
+head SHA
+focus
+file e contratti controllati
+CI e test osservati
+finding oppure no new findings
+clean round count
+```
+
+Se un round trova un problema:
+
+```text
+fix
+-> test
+-> nuovo substantive head
+-> CI
+-> clean round count = 0
+```
+
+Dopo il fix servono due nuovi round puliti. I round precedenti al fix non contano.
+
+### Commit che invalidano la review
+
+Invalidano i round puliti le modifiche a:
+
+- codice;
+- test;
+- fixture;
+- contratti;
+- build e workflow;
+- documentazione stabile;
+- report tecnico della slice.
+
+Non li invalidano da soli:
+
+- aggiornamento della descrizione della PR;
+- commento di review;
+- label o milestone;
+- rerun CI sullo stesso SHA.
+
+I due round puliti devono quindi riferirsi allo stesso substantive head.
+
+### Focus consigliati
+
+Per evitare due passaggi identici:
+
+```text
+Round 1
+correttezza, invarianti, ownership, error model, test
+
+Round 2
+architettura, concorrenza, performance, privacy, documentazione, CI e scope
+```
+
+Per `R3` entrambi i round devono includere una verifica esplicita di threat model,
+abuso, dati, retention e sicurezza durante la guida.
+
+## Gate di merge
+
+Prima del merge verificare:
+
+- [ ] CI verde sul substantive head corrente;
+- [ ] nessun finding aperto;
+- [ ] review round pulito 1 registrato;
+- [ ] review round pulito 2 registrato;
+- [ ] nessun commit sostanziale successivo ai round;
+- [ ] PR body aggiornato;
+- [ ] report giornaliero aggiornato;
+- [ ] documentazione e milestone coerenti;
+- [ ] issue pronta a chiudersi con il merge.
+
+Il merge resta una decisione del maintainer quando il repository lo prevede.
+L'issue non viene chiusa soltanto perché il codice è pronto: si chiude con il
+merge o subito dopo.
 
 ## Commit
 
