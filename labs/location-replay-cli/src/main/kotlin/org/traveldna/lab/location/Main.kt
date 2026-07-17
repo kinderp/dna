@@ -24,7 +24,7 @@ fun main(args: Array<String>) {
         }
         else -> {
             System.err.println(
-                "usage: location-replay-cli FIXTURE | --benchmark SAMPLE_COUNT [ITERATIONS]",
+                "usage: location-replay-cli FIXTURE | --benchmark SAMPLE_COUNT [ODD_ITERATIONS]",
             )
             kotlin.system.exitProcess(2)
         }
@@ -39,12 +39,7 @@ private fun runFixture(path: Path) {
 }
 
 private fun runBenchmark(sampleCount: Int, iterations: Int) {
-    require(sampleCount in 1..LocationReplayScenario.MaxSamples) {
-        "benchmark sample count must be within [1, ${LocationReplayScenario.MaxSamples}]"
-    }
-    require(iterations in 1..MaxBenchmarkIterations) {
-        "benchmark iterations must be within [1, $MaxBenchmarkIterations]"
-    }
+    validateBenchmarkArguments(sampleCount, iterations)
     val scenario = benchmarkScenario(sampleCount)
 
     repeat(BenchmarkWarmups) {
@@ -71,6 +66,15 @@ private fun runBenchmark(sampleCount: Int, iterations: Int) {
             "\"max_elapsed_ns\":$maximum," +
             "\"median_ns_per_sample\":${"%.2f".format(Locale.ROOT, medianPerSample)}}",
     )
+}
+
+internal fun validateBenchmarkArguments(sampleCount: Int, iterations: Int) {
+    require(sampleCount in 1..LocationReplayScenario.MaxSamples) {
+        "benchmark sample count must be within [1, ${LocationReplayScenario.MaxSamples}]"
+    }
+    require(iterations in 1..MaxBenchmarkIterations && iterations % 2 == 1) {
+        "benchmark iterations must be an odd number within [1, $MaxBenchmarkIterations]"
+    }
 }
 
 private fun benchmarkScenario(sampleCount: Int): LocationReplayScenario {
@@ -123,4 +127,4 @@ fun canonicalReplayReport(
 
 private const val BenchmarkWarmups: Int = 3
 private const val DefaultBenchmarkIterations: Int = 7
-private const val MaxBenchmarkIterations: Int = 25
+internal const val MaxBenchmarkIterations: Int = 25
