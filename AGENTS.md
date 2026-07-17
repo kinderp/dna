@@ -73,7 +73,7 @@ Answer these questions in the issue, PR, work log or task note:
 Every pull request requires **two consecutive clean review rounds** before it can
 be marked ready, closed as complete or merged.
 
-For each round record in the PR:
+For each round record in the PR review timeline or body:
 
 ```text
 substantive head SHA
@@ -92,10 +92,16 @@ Rules:
 - fixes need regression evidence when applicable;
 - both clean rounds must inspect the same substantive head SHA;
 - the two rounds must use distinct or complementary review focus;
-- a CI rerun, PR-body edit, label or comment does not reset the count by itself;
+- a CI rerun, PR-body edit, review comment, label or milestone change does not
+  reset the count by itself;
 - code, tests, contracts, fixtures, workflows, stable docs and technical reports
   are substantive changes;
-- the final daily report must record the review evidence;
+- the PR review timeline/body is the authoritative same-head review ledger;
+- the committed daily report records context, finding history, review plan and a
+  link to that ledger, but is not changed after clean rounds merely to copy their
+  outcome;
+- final review and merge status is reconciled into the historical report through
+  a later reviewed documentation change;
 - agents must not merge when merge authority remains with the maintainer.
 
 A green CI run is necessary but does not count as a review round. Two clean
@@ -104,14 +110,15 @@ reviews are necessary but do not replace CI.
 ## Source of truth
 
 ```text
-Discussion  = open reasoning and alternatives
-ADR         = a specific architectural decision
-Docs        = consolidated current explanation and teaching material
-Issue       = work to perform
-Pull request= concrete reviewable change
-Tests       = executable evidence
-Benchmarks  = measured cost under a declared scenario
-Git history = chronological evidence
+Discussion      = open reasoning and alternatives
+ADR             = a specific architectural decision
+Docs            = consolidated current explanation and teaching material
+Issue           = work to perform
+Pull request    = concrete reviewable change
+PR review ledger= same-head evidence for ready and merge
+Tests           = executable evidence
+Benchmarks      = measured cost under a declared scenario
+Git history     = chronological evidence
 ```
 
 ## Scope guard
