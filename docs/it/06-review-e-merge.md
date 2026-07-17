@@ -73,6 +73,43 @@ Un'osservazione puramente editoriale che non richiede modifica può essere
 registrata come nota e non resetta automaticamente il contatore. Se il testo
 viene però modificato nella PR, il commit è sostanziale e la sequenza riparte.
 
+## Fonti di evidenza della review
+
+Per evitare un ciclo impossibile fra report e review, Travel DNA separa due
+fonti con ruoli diversi.
+
+### Ledger autorevole della PR
+
+La timeline delle review GitHub e la descrizione della PR conservano l'evidenza
+sullo stesso head senza creare un nuovo commit:
+
+```text
+head SHA
+focus
+file/contratti controllati
+CI e test osservati
+finding oppure no new findings
+clean-round count
+```
+
+Questo è il ledger autorevole per decidere ready e merge.
+
+### Report storico nel repository
+
+Il report Markdown committato prima dei round finali contiene:
+
+- contesto della giornata;
+- issue e PR;
+- substantive head previsto;
+- finding e fix già avvenuti;
+- piano e focus dei round finali;
+- link stabile al ledger della PR.
+
+Non deve essere modificato dopo i round soltanto per copiare gli esiti: quel
+commit cambierebbe lo SHA e invaliderebbe i round. Dopo il merge, una successiva
+PR documentale può riconciliare il report storico con risultato finale, merge
+commit e review ledger. Anche tale PR segue la stessa policy.
+
 ## Sequenza normativa
 
 ### 1. PR draft
@@ -95,7 +132,7 @@ pulita finché la verifica richiesta non è conclusa.
 
 ### 3. Review round
 
-Ogni round registra:
+Ogni round viene registrato nel ledger della PR:
 
 ```text
 Review round N
@@ -116,7 +153,7 @@ Il finding deve essere:
 1. descritto con effetto osservabile;
 2. corretto nel repository;
 3. protetto da test o altra evidenza quando applicabile;
-4. documentato nel report;
+4. collegato nel report o nel ledger della PR;
 5. verificato dalla CI sul nuovo head.
 
 Il conteggio torna a zero.
@@ -172,7 +209,7 @@ Non reset automatico:
 
 ```text
 PR description only
-review comment only
+review submission or comment only
 labels/milestone
 CI rerun on the same SHA
 ```
@@ -187,15 +224,17 @@ Checklist minima:
 - [ ] substantive head SHA registrato;
 - [ ] CI richiesta verde su quello SHA;
 - [ ] nessun finding aperto;
-- [ ] round pulito 1 registrato;
-- [ ] round pulito 2 registrato;
+- [ ] round pulito 1 registrato nel ledger della PR;
+- [ ] round pulito 2 registrato nel ledger della PR;
 - [ ] nessun commit sostanziale fra i due round e il merge;
-- [ ] PR body aggiornato;
-- [ ] report giornaliero aggiornato;
-- [ ] documentazione e stato milestone coerenti;
+- [ ] PR body aggiornato senza cambiare il head;
+- [ ] report giornaliero presente con link al ledger, finding history e review plan;
+- [ ] documentazione e stato milestone coerenti con lo stato pre-merge;
 - [ ] issue collegata pronta a chiudersi con il merge.
 
 Solo dopo questi gate la PR può passare da draft a ready e può essere mergiata.
+Il risultato definitivo viene riconciliato nei report storici dopo il merge,
+tramite una successiva modifica documentale soggetta a review.
 
 ## Esempio con finding
 
@@ -223,7 +262,11 @@ Clean count: 1
 Round 5: no finding
 Clean count: 2
 
+PR body aggiornato sullo stesso Head C
 PR ready e merge consentito
+
+Dopo il merge:
+PR documentale separata aggiorna il report storico con merge commit ed esito
 ```
 
 ## Esempio documentale `R0`
@@ -254,15 +297,23 @@ Servono entrambe.
 
 ## Rapporto con i report giornalieri
 
-Il report finale della giornata contiene:
+Prima dei round finali il report della sessione contiene:
 
-- head finale;
-- run CI finale;
+- substantive head o branch finale previsto;
 - finding e fix;
-- review round effettuati;
-- conteggio pulito finale;
-- stato draft/ready/merged;
+- link alla PR;
+- focus dei round da svolgere;
 - decisioni ancora richieste.
+
+Dopo i round, gli esiti esatti vengono aggiunti alla descrizione o alle review
+della PR, che non modificano lo SHA. Dopo il merge, una successiva modifica
+storicizza nel report:
+
+- CI finale;
+- due round puliti;
+- merge commit;
+- stato issue;
+- lavoro rimandato.
 
 L'indice permanente vive in
 [`docs/project/daily/README.md`](../project/daily/README.md).
@@ -275,6 +326,7 @@ Un agente può implementare, correggere e svolgere entrambi i round, ma deve:
 - usare focus diversi;
 - non dichiarare pulito un round senza aver riesaminato il substantive head;
 - resettare il conteggio dopo ogni finding o commit sostanziale;
+- registrare gli esiti finali nel ledger PR, non con un commit auto-invalidante;
 - non mergiare autonomamente se il repository riserva il merge al maintainer.
 
 La velocità non modifica il gate di qualità.
