@@ -30,9 +30,10 @@ data class RoutePlanningError(
     init {
         require(message.isNotBlank()) { "routing error message must not be blank" }
         require(message.length <= 512) { "routing error message is too long" }
-        require(providerDiagnosticCode == null || providerDiagnosticCode.isNotBlank()) {
-            "provider diagnostic code must be null or non-blank"
-        }
+        require(
+            providerDiagnosticCode == null ||
+                (providerDiagnosticCode.isNotBlank() && providerDiagnosticCode.length <= 128),
+        ) { "provider diagnostic code must be null or non-blank and at most 128 characters" }
         if (code == RoutePlanningErrorCode.InvalidRequest || code == RoutePlanningErrorCode.NoRoute) {
             require(!retryable) { "$code errors are not retryable without changing the request" }
         }
@@ -47,6 +48,9 @@ sealed interface RoutePlanningResult {
         init {
             require(this.routes.isNotEmpty()) {
                 "successful route planning needs at least one route"
+            }
+            require(this.routes.size <= RouteRequest.MaxAlternatives) {
+                "successful route planning may contain at most ${RouteRequest.MaxAlternatives} routes"
             }
             require(this.routes.map(RoutePlan::id).toSet().size == this.routes.size) {
                 "successful route planning must not contain duplicate route ids"

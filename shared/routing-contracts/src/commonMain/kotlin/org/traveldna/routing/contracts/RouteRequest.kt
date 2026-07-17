@@ -19,8 +19,11 @@ class RouteRequest(
     val waypoints: List<GeoPoint> = waypoints.toList()
 
     init {
-        require(requestedAlternatives in 1..3) {
-            "requested alternatives must be within [1, 3]"
+        require(requestedAlternatives in 1..MaxAlternatives) {
+            "requested alternatives must be within [1, $MaxAlternatives]"
+        }
+        require(this.waypoints.size <= MaxWaypoints) {
+            "a route request may contain at most $MaxWaypoints waypoints"
         }
         val points = stops
         require(points.zipWithNext().none { (first, second) -> first == second }) {
@@ -50,4 +53,9 @@ class RouteRequest(
     override fun toString(): String =
         "RouteRequest(origin=$origin, destination=$destination, waypoints=$waypoints, " +
             "profile=$profile, requestedAlternatives=$requestedAlternatives)"
+
+    companion object {
+        const val MaxAlternatives: Int = 3
+        const val MaxWaypoints: Int = 32
+    }
 }

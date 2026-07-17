@@ -74,7 +74,6 @@ class FakeRoutePlanner(
                 RoutingCapabilities.Deterministic,
             ),
             supportedPlatforms = setOf(
-                KnownPlatforms.KotlinCommon,
                 KnownPlatforms.Jvm,
                 KnownPlatforms.LinuxX64,
             ),

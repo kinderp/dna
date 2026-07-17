@@ -13,16 +13,18 @@ tracepoint logici, test, prestazioni e proprietà di sicurezza.
 6. rispondere alle domande di ripasso;
 7. provare una variante senza modificare il contratto stabile.
 
-## Scenario eseguibile
+## Scenari eseguibili
 
 | Scenario | Stato | Cosa insegna |
 | --- | --- | --- |
 | [Reference routing Java/Rust](scenarios/reference-routing-java-rust.md) | executable | Grafo, Dijkstra, A*, fixture, determinismo e contract test cross-language. |
+| [Routing contracts e fake provider](scenarios/routing-contracts-fake-provider.md) | executable | Porte, modelli canonici, capability, provenance, invarianti e provider conformance. |
 
-Comando minimo:
+Comandi minimi:
 
 ```bash
 sh tools/tdna lab reference-routing astar
+sh tools/tdna lab routing-contracts
 ```
 
 ## Scenari documentali pianificati

@@ -21,6 +21,15 @@ class RouteContractsTest {
         assertFailsWith<IllegalArgumentException> {
             RouteRequest(origin = a, destination = c, requestedAlternatives = 4)
         }
+        assertFailsWith<IllegalArgumentException> {
+            RouteRequest(
+                origin = a,
+                destination = c,
+                waypoints = List(RouteRequest.MaxWaypoints + 1) { index ->
+                    GeoPoint(0.1 + index * 0.001, 0.1)
+                },
+            )
+        }
     }
 
     @Test
@@ -105,6 +114,31 @@ class RouteContractsTest {
         val success = RoutePlanningResult.Success(mutableRoutes)
         mutableRoutes.clear()
         assertEquals(listOf(route), success.routes)
+    }
+
+    @Test
+    fun boundedResponseAndProvenanceMetadataAreEnforced() {
+        val route = validRoute()
+        val alternatives = (0..RouteRequest.MaxAlternatives).map { index ->
+            reidentified(route, "route-$index")
+        }
+        assertFailsWith<IllegalArgumentException> {
+            RoutePlanningResult.Success(alternatives)
+        }
+        assertFailsWith<IllegalArgumentException> {
+            RouteProvenance(
+                providerId = providerId,
+                dataSources = (0..RouteProvenance.MaxDataSources).map { "source.$it" }.toSet(),
+            )
+        }
+        assertFailsWith<IllegalArgumentException> {
+            RoutePlanningError(
+                code = RoutePlanningErrorCode.Internal,
+                message = "Internal",
+                retryable = false,
+                providerDiagnosticCode = "x".repeat(129),
+            )
+        }
     }
 
     @Test
@@ -194,4 +228,13 @@ class RouteContractsTest {
             provenance = RouteProvenance(providerId),
         )
     }
+
+    private fun reidentified(route: RoutePlan, id: String): RoutePlan = RoutePlan(
+        id = RouteId(id),
+        geometry = route.geometry,
+        legs = route.legs,
+        distanceMeters = route.distanceMeters,
+        durationSeconds = route.durationSeconds,
+        provenance = route.provenance,
+    )
 }

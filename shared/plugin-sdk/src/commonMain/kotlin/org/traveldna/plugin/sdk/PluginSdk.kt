@@ -7,7 +7,7 @@ private val NAMESPACED_ID = Regex("[a-z][a-z0-9]*(?:\\.[a-z][a-z0-9]*(?:-[a-z0-9
 private fun requireNamespacedId(value: String, field: String) {
     require(value.length in 3..128) { "$field length must be within [3, 128]" }
     require(NAMESPACED_ID.matches(value)) {
-        "$field must be a lowercase dot-separated identifier"
+        "$field must use lowercase dot-separated segments and internal hyphens only"
     }
 }
 
@@ -23,6 +23,7 @@ value class CapabilityId(val value: String) {
     override fun toString(): String = value
 }
 
+/** Identifies a runtime environment, not a Kotlin source set. */
 @JvmInline
 value class PlatformId(val value: String) {
     init { requireNamespacedId(value, "platform id") }
@@ -35,8 +36,15 @@ data class LicenseNotice(
     val notice: String? = null,
 ) {
     init {
-        require(component.isNotBlank()) { "license component must not be blank" }
-        require(spdxExpression.isNotBlank()) { "SPDX expression must not be blank" }
+        require(component.isNotBlank() && component.length <= 128) {
+            "license component must be non-blank and at most 128 characters"
+        }
+        require(spdxExpression.isNotBlank() && spdxExpression.length <= 128) {
+            "SPDX expression must be non-blank and at most 128 characters"
+        }
+        require(notice == null || (notice.isNotBlank() && notice.length <= 2_048)) {
+            "license notice must be null or non-blank and at most 2048 characters"
+        }
     }
 }
 
@@ -58,7 +66,16 @@ class PluginDescriptor(
         require(implementationVersion.length <= 64) { "implementation version is too long" }
         require(contractVersion > 0) { "contract version must be positive" }
         require(this.capabilities.isNotEmpty()) { "a plugin must declare at least one capability" }
+        require(this.capabilities.size <= MaxCapabilities) {
+            "a plugin may declare at most $MaxCapabilities capabilities"
+        }
         require(this.supportedPlatforms.isNotEmpty()) { "a plugin must declare at least one platform" }
+        require(this.supportedPlatforms.size <= MaxPlatforms) {
+            "a plugin may declare at most $MaxPlatforms runtime platforms"
+        }
+        require(this.licenseNotices.size <= MaxLicenseNotices) {
+            "a plugin may declare at most $MaxLicenseNotices license notices"
+        }
     }
 
     override fun equals(other: Any?): Boolean =
@@ -84,6 +101,12 @@ class PluginDescriptor(
         "PluginDescriptor(id=$id, implementationVersion=$implementationVersion, " +
             "contractVersion=$contractVersion, capabilities=$capabilities, " +
             "supportedPlatforms=$supportedPlatforms, licenseNotices=$licenseNotices)"
+
+    companion object {
+        const val MaxCapabilities: Int = 64
+        const val MaxPlatforms: Int = 16
+        const val MaxLicenseNotices: Int = 64
+    }
 }
 
 interface TravelDnaPlugin {
@@ -91,8 +114,7 @@ interface TravelDnaPlugin {
 }
 
 object KnownPlatforms {
-    val KotlinCommon = PlatformId("kotlin.common")
-    val Jvm = PlatformId("kotlin.jvm")
+    val Jvm = PlatformId("runtime.jvm")
     val Android = PlatformId("mobile.android")
     val Ios = PlatformId("mobile.ios")
     val LinuxX64 = PlatformId("native.linux-x64")

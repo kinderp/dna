@@ -96,10 +96,18 @@ class RouteProvenance(
     val dataSources: Set<String> = dataSources.toSet()
 
     init {
-        require(providerRouteId == null || providerRouteId.isNotBlank()) {
-            "provider route id must be null or non-blank"
+        require(
+            providerRouteId == null ||
+                (providerRouteId.isNotBlank() && providerRouteId.length <= MaxProviderRouteIdLength),
+        ) {
+            "provider route id must be null or non-blank and at most $MaxProviderRouteIdLength characters"
         }
-        require(this.dataSources.none { it.isBlank() }) { "data sources must not contain blanks" }
+        require(this.dataSources.size <= MaxDataSources) {
+            "route provenance may contain at most $MaxDataSources data sources"
+        }
+        require(this.dataSources.all { it.isNotBlank() && it.length <= MaxDataSourceLength }) {
+            "data sources must be non-blank and at most $MaxDataSourceLength characters"
+        }
     }
 
     override fun equals(other: Any?): Boolean =
@@ -118,6 +126,12 @@ class RouteProvenance(
     override fun toString(): String =
         "RouteProvenance(providerId=$providerId, providerRouteId=$providerRouteId, " +
             "dataSources=$dataSources)"
+
+    companion object {
+        const val MaxProviderRouteIdLength: Int = 256
+        const val MaxDataSources: Int = 32
+        const val MaxDataSourceLength: Int = 128
+    }
 }
 
 /** Immutable provider-neutral route snapshot consumed by application code. */
@@ -215,7 +229,7 @@ fun RoutePlan.requireMatches(request: RouteRequest): RoutePlan {
     }
     legs.forEachIndexed { index, leg ->
         require(leg.origin == stops[index]) {
-            "route leg $index origin differs from requested stop ${index}"
+            "route leg $index origin differs from requested stop $index"
         }
         require(leg.destination == stops[index + 1]) {
             "route leg $index destination differs from requested stop ${index + 1}"

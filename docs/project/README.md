@@ -7,7 +7,8 @@ and from historical foundation records.
 
 - [`development-status.md`](development-status.md): current milestone, active
   vertical slice, verified capabilities, gaps and next executable step.
-- [`daily/`](daily/): one report for each autonomous development session.
+- [`daily/README.md`](daily/README.md): indexed Markdown reports for autonomous
+  development days and sessions.
 
 ## Foundation records
 

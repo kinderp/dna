@@ -14,7 +14,7 @@ class PluginSdkTest {
     }
 
     @Test
-    fun descriptorRequiresCapabilitiesAndPlatforms() {
+    fun descriptorRequiresCapabilitiesAndRuntimePlatforms() {
         assertFailsWith<IllegalArgumentException> {
             PluginDescriptor(
                 id = PluginId("org.traveldna.empty"),
@@ -22,6 +22,15 @@ class PluginSdkTest {
                 contractVersion = 1,
                 capabilities = emptySet(),
                 supportedPlatforms = setOf(KnownPlatforms.Jvm),
+            )
+        }
+        assertFailsWith<IllegalArgumentException> {
+            PluginDescriptor(
+                id = PluginId("org.traveldna.empty-platform"),
+                implementationVersion = "0.1.0",
+                contractVersion = 1,
+                capabilities = setOf(CapabilityId("routing.plan")),
+                supportedPlatforms = emptySet(),
             )
         }
     }
@@ -47,5 +56,24 @@ class PluginSdkTest {
         assertEquals(setOf(CapabilityId("routing.plan")), descriptor.capabilities)
         assertEquals(setOf(KnownPlatforms.Jvm), descriptor.supportedPlatforms)
         assertEquals(listOf(LicenseNotice("fixture", "MIT")), descriptor.licenseNotices)
+    }
+
+    @Test
+    fun descriptorMetadataIsBounded() {
+        val capabilities = (0..PluginDescriptor.MaxCapabilities).map { index ->
+            CapabilityId("routing.capability-$index")
+        }.toSet()
+        assertFailsWith<IllegalArgumentException> {
+            PluginDescriptor(
+                id = PluginId("org.traveldna.too-many-capabilities"),
+                implementationVersion = "0.1.0",
+                contractVersion = 1,
+                capabilities = capabilities,
+                supportedPlatforms = setOf(KnownPlatforms.Jvm),
+            )
+        }
+        assertFailsWith<IllegalArgumentException> {
+            LicenseNotice("fixture", "MIT", " ")
+        }
     }
 }
