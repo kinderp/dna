@@ -55,9 +55,13 @@ class FakeMapMatcher(
         val routes = linkedMapOf<RouteId, RoutePlan>()
         val outcomes = linkedMapOf<Key, MapMatchResult>()
         entries.forEach { entry ->
-            val existingRoute = routes.putIfAbsent(entry.route.id, entry.route)
-            require(existingRoute == null || existingRoute == entry.route) {
-                "fake catalog reuses a route id for a different canonical route"
+            val existingRoute = routes[entry.route.id]
+            if (existingRoute == null) {
+                routes[entry.route.id] = entry.route
+            } else {
+                require(existingRoute == entry.route) {
+                    "fake catalog reuses a route id for a different canonical route"
+                }
             }
             if (entry.result is MapMatchResult.Matched) {
                 entry.result.requireMatches(entry.route, entry.sample, descriptor.id)

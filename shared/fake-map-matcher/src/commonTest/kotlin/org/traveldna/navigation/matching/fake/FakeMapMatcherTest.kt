@@ -7,6 +7,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
+import org.traveldna.geo.contracts.GeoPoint
 import org.traveldna.location.contracts.LocationSequence
 import org.traveldna.navigation.contracts.MatchConfidence
 import org.traveldna.navigation.contracts.MatchedRoutePosition
@@ -14,6 +15,9 @@ import org.traveldna.navigation.contracts.RouteCoordinate
 import org.traveldna.navigation.matching.contracts.MapMatchProvenance
 import org.traveldna.navigation.matching.contracts.MapMatchResult
 import org.traveldna.navigation.matching.testkit.MapMatcherContractProbe
+import org.traveldna.routing.contracts.RouteLeg
+import org.traveldna.routing.contracts.RouteManeuver
+import org.traveldna.routing.contracts.RoutePlan
 
 class FakeMapMatcherTest {
     @Test
@@ -72,15 +76,36 @@ class FakeMapMatcherTest {
     }
 
     @Test
-    fun bindRejectsAReusedRouteIdWithDifferentGeometry() {
+    fun bindRejectsAReusedRouteIdWithDifferentCanonicalGeometry() {
         val matcher = FakeMapMatchFixtures.matcher()
         val original = FakeMapMatchFixtures.Route
-        val altered = org.traveldna.routing.contracts.RoutePlan(
+        val alteredGeometry = original.geometry.mapIndexed { index, point ->
+            if (index == 1) GeoPoint(point.latitude + 0.001, point.longitude) else point
+        }
+        val alteredLegs = original.legs.map { leg ->
+            RouteLeg(
+                geometryStartIndex = leg.geometryStartIndex,
+                geometryEndIndex = leg.geometryEndIndex,
+                origin = alteredGeometry[leg.geometryStartIndex],
+                destination = alteredGeometry[leg.geometryEndIndex],
+                distanceMeters = leg.distanceMeters,
+                durationSeconds = leg.durationSeconds,
+                maneuvers = leg.maneuvers.map { maneuver ->
+                    RouteManeuver(
+                        geometryIndex = maneuver.geometryIndex,
+                        type = maneuver.type,
+                        location = alteredGeometry[maneuver.geometryIndex],
+                        instruction = maneuver.instruction,
+                        roadName = maneuver.roadName,
+                        exitNumber = maneuver.exitNumber,
+                    )
+                },
+            )
+        }
+        val altered = RoutePlan(
             id = original.id,
-            geometry = original.geometry.mapIndexed { index, point ->
-                if (index == 1) org.traveldna.geo.contracts.GeoPoint(point.latitude + 0.001, point.longitude) else point
-            },
-            legs = original.legs,
+            geometry = alteredGeometry,
+            legs = alteredLegs,
             distanceMeters = original.distanceMeters,
             durationSeconds = original.durationSeconds,
             provenance = original.provenance,
