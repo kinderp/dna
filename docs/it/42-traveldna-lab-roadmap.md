@@ -19,163 +19,137 @@ fixture e modificare un componente senza conoscere tutto il sistema.
 
 | Stato | Significato |
 | --- | --- |
-| `draft` | Struttura o semantica ancora incompleta. |
-| `stable-doc` | Percorso didattico consolidato, codice non necessariamente presente. |
-| `executable` | Comando, fixture e test esistono nel repository. |
-| `public-output` | Eventuale formato macchina versionato; non ancora usato. |
-| `deprecated` | Scenario sostituito, con indicazione del successore. |
-
-La promozione `stable-doc -> executable` richiede che il documento venga
-riallineato ai nomi reali di moduli, funzioni, test e artifact.
+| `draft` | Struttura o semantica incompleta. |
+| `stable-doc` | Percorso consolidato, codice non necessariamente presente. |
+| `executable` | Comando, fixture/fake e test esistono. |
+| `public-output` | Formato macchina versionato; non ancora usato. |
+| `deprecated` | Scenario sostituito con successore indicato. |
 
 ## Formato scenario
 
-Ogni Markdown contiene:
+Ogni scenario documenta almeno:
 
 ```text
-id
-title
-status
-learning goal
-prerequisites
-user story
-platforms
-scenario kind
-fixture
-trigger
-expected evidence
-expected domain events
-logical tracepoints
-function/module path
-state changes
-expected UI/output
-performance properties
-privacy/safety properties
-existing tests
-missing tests
-future tests
-common failures
-non-goals
-related docs
+id, status, learning goal, prerequisites, user story, platforms
+fixture/fake, trigger, expected evidence, tracepoints
+module/function path, state changes, output
+performance, privacy/safety, existing/missing/future tests
+common failures, non-goals, related docs
 ```
 
-## Primo scenario eseguibile
+## Scenari eseguibili
 
-| Scenario | Stato | Cosa insegna | Comando |
+| Scenario | Cosa insegna | Comando | Capitolo |
 | --- | --- | --- | --- |
-| [Reference routing Java/Rust](lab/scenarios/reference-routing-java-rust.md) | executable | Grafo, parser, Dijkstra, A*, euristica, determinismo e contract test cross-language. | `sh tools/tdna lab reference-routing astar` |
+| [Reference routing Java/Rust](lab/scenarios/reference-routing-java-rust.md) | Grafo, parser, Dijkstra, A*, euristica, determinismo e contract diff. | `sh tools/tdna lab reference-routing astar` | [43](43-reference-routing-java-rust.md) |
+| [Routing contracts e fake provider](lab/scenarios/routing-contracts-fake-provider.md) | KMP, porta, capability, invarianti, provenance, fake e conformance probe. | `sh tools/tdna lab routing-contracts` | [44](44-contratti-routing-e-fake-provider.md) |
 
-Il capitolo di accompagnamento è
-[Primo laboratorio eseguibile: routing di riferimento](43-reference-routing-java-rust.md).
+I due scenari mostrano livelli diversi:
 
-Il primo scenario non usa Android, iOS, OpenStreetMap o provider. Questa scelta
-riduce il numero di variabili e rende osservabile l'algoritmo.
+```text
+capitolo 43: come viene calcolato un percorso
+capitolo 44: come l'app chiede un percorso senza dipendere dal calcolatore
+```
 
 ## Scenari `stable-doc` successivi
 
 | Scenario | Cosa insegna | Dipendenza per diventare eseguibile |
 | --- | --- | --- |
-| [Missed exit and reroute](lab/scenarios/navigation-missed-exit-reroute.md) | GPS, map matching, state machine e route replacement. | Replay clock, fake guidance e route model. |
-| [Chat with external navigation](lab/scenarios/chat-with-external-navigation.md) | Navigatore foreground, push, local store, driving policy e voice reply. | Conversation core e platform fake. |
-| [Daily page photos and thoughts](lab/scenarios/daily-page-photos-thoughts.md) | Eventi, proiezione, media e controllo utente. | Journey event store e media fake. |
-| [DNA exchange privacy](lab/scenarios/dna-exchange-privacy.md) | Approssimazione, consenso, Cartolina e revoca. | Privacy filter e presence fake. |
-| [Render canonical route](lab/scenarios/render-canonical-route.md) | Contratto map scene e adapter MapLibre. | Canonical route/map contracts e fake renderer. |
+| [Render canonical route](lab/scenarios/render-canonical-route.md) | MapScene, delta e renderer provider-neutral. | Map contracts e fake renderer. |
+| [Missed exit and reroute](lab/scenarios/navigation-missed-exit-reroute.md) | GPS, map matching, state machine e route replacement. | Clock, LocationSample e fake guidance. |
+| [Chat with external navigation](lab/scenarios/chat-with-external-navigation.md) | Foreground navigator, push, local store e voice reply. | Conversation core e platform fake. |
+| [Daily page](lab/scenarios/daily-page-photos-thoughts.md) | Eventi, proiezione, media e controllo utente. | Journey store e media fake. |
+| [DNA exchange](lab/scenarios/dna-exchange-privacy.md) | Approssimazione, consenso, Cartolina e revoca. | Privacy filter e presence fake. |
 
 ## Livelli didattici
 
-### Livello A: leggere
+### A — leggere
 
-- diagramma;
-- glossario;
-- output atteso;
-- non-obiettivi.
+Diagramma, glossario, output e non-obiettivi.
 
-### Livello B: eseguire
+### B — eseguire
 
-- fixture;
-- test;
-- report;
-- replay o CLI.
+Fixture/fake, test, report e CLI.
 
-### Livello C: modificare
+### C — modificare
 
-- cambiare una strada sintetica;
-- aggiungere un caso limite;
-- implementare un fake;
-- confrontare output.
+Cambiare scenario, aggiungere caso limite, provider fake o test.
 
-### Livello D: misurare
+### D — misurare
 
-- benchmark;
-- memoria;
-- frame;
-- batteria;
-- FFI.
+Benchmark, memoria, frame, batteria e FFI.
 
-### Livello E: progettare
+### E — progettare
 
-- riaprire un ADR;
-- definire un nuovo contratto;
-- threat model;
-- provider replacement.
+ADR, nuovo contratto, threat model o sostituzione provider.
 
 ## Tracciabilità
 
-Ogni scenario deve collegare:
+Ogni scenario collega:
 
 ```text
 use case
 -> bounded context
--> tracepoint
+-> contratto/tracepoint
 -> modulo/funzione
--> state/data
+-> stato/dato
 -> test
 -> benchmark
 -> issue/PR
 ```
 
-Per il reference routing:
+### Reference routing
 
 ```text
-issue #3
--> fixture reference-network-v0
--> Java/Rust parser
+issue #3 -> PR #4
+-> fixture
+-> Java/Rust
 -> Dijkstra/A*
--> report
--> contract diff
+-> report diff
 -> capitolo 43
--> scenario executable
+```
+
+### Routing contracts
+
+```text
+issue #5 -> PR #6
+-> plugin-sdk
+-> routing-contracts
+-> fake planner
+-> conformance probe
+-> CLI
+-> capitolo 44
 ```
 
 ## Evoluzione strumenti
 
 ### Fase 1 — corrente
 
-- Markdown;
-- Mermaid;
-- fixture;
-- CLI;
+- Markdown e Mermaid;
+- fixture e fake;
+- Java, Rust e Kotlin CLI;
 - report JSON ristretto;
-- test e CI.
+- test common/JVM/Linux;
+- CI e architecture checks.
 
 ### Fase 2
 
+- MapScene inspector;
 - GPS replay con clock virtuale;
 - timeline degli stati;
-- visualizzazione raw vs matched;
-- state inspector.
+- raw vs matched position.
 
 ### Fase 3
 
 - link generati al codice;
 - call graph mirati;
 - benchmark comparison;
-- preview nelle pull request.
+- preview PR.
 
 ### Fase 4
 
 - esercizi autovalutativi;
-- notebook didattici;
+- notebook;
 - dataset challenge;
 - plugin starter kit.
 

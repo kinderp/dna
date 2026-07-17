@@ -1,97 +1,89 @@
 # Travel DNA development status
 
-Last updated: 2026-07-16
+Last updated: 2026-07-17
 
 ## Current milestone
 
 **Foundations and Travel DNA Lab v0 — in progress**
 
-The milestone is building executable contracts and teaching paths before mobile
-SDK integration.
+The milestone builds executable contracts, fakes, replay foundations and
+teaching paths before mobile SDK integration.
+
+## Completed slice
+
+**Java/Rust reference-routing Lab — merged**
+
+- issue: [#3](https://github.com/kinderp/tdna/issues/3);
+- PR: [#4](https://github.com/kinderp/tdna/pull/4);
+- merge commit: `d122f1b4871719087e79a50b185ab302d810cb20`;
+- documentation: `docs/it/43-reference-routing-java-rust.md`.
 
 ## Active vertical slice
 
-**Executable Java/Rust reference-routing Lab — implementation and autonomous review complete**
+**Provider-neutral routing contracts and deterministic fake planner — in review**
 
-Tracking:
+- issue: [#5](https://github.com/kinderp/tdna/issues/5);
+- draft PR: [#6](https://github.com/kinderp/tdna/pull/6);
+- branch: `agent/provider-neutral-routing-contracts`;
+- chapter: `docs/it/44-contratti-routing-e-fake-provider.md`;
+- Lab: `docs/it/lab/scenarios/routing-contracts-fake-provider.md`.
 
-- GitHub issue: `#3`;
-- draft pull request: `#4`;
-- branch: `agent/foundation-reference-routing`;
-- primary teaching chapter: `docs/it/43-reference-routing-java-rust.md`;
-- executable scenario: `docs/it/lab/scenarios/reference-routing-java-rust.md`.
+## Implemented in the active slice
 
-## Completed in the slice
+- Gradle/Kotlin Multiplatform root build;
+- JVM and Linux x64 targets;
+- generic plugin SDK;
+- bounded plugin descriptors and runtime platform IDs;
+- canonical geo and routing models;
+- route request/result invariants;
+- defensive collection snapshots;
+- request-to-route waypoint postconditions;
+- provider-neutral `RoutePlannerPort`;
+- canonical success and error model;
+- deterministic `FakeRoutePlanner`;
+- call recording and catalog miss behavior;
+- reusable `RoutePlannerContractProbe`;
+- executable JVM Lab CLI;
+- source-level architecture checker;
+- extended project tooling and CI;
+- second implementation-backed teaching chapter;
+- permanent daily-report index.
 
-- synthetic versioned road-graph fixture;
-- strict fixture parsers in Java and Rust;
-- Dijkstra implementations;
-- A* implementations with admissible WGS84 heuristic;
-- numerically bounded Haversine computation for extreme valid coordinates;
-- expected-path adjacency and checked-cost validation;
-- deterministic route reconstruction;
-- byte-comparable Lab report;
-- six Java reference scenarios;
-- six Rust unit scenarios;
-- cross-language contract script;
-- project command `tools/tdna`;
-- documentation link/fence checker;
-- GitHub Actions foundation workflow;
-- teaching chapter and executable Lab scenario.
+## Verification observed
 
-## Verification
+- Foundation CI run `#16`: initial KMP slice green;
+- Foundation CI run `#17`: immutability and waypoint fixes green;
+- Foundation CI run `#18`: failed only because the report index linked to the
+  not-yet-committed `2026-07-17.md`; the current commit supplies that report.
 
-Passed locally in the available Java/Python environment:
+A final green run is required before the slice review closes.
 
-```text
-sh tools/tdna check-docs
-sh tools/tdna check-java
-sh tools/tdna lab reference-routing astar
-```
+## Review findings resolved
 
-GitHub Actions run `#13` passed on Ubuntu 24.04 with Java 21 and stable Rust:
+1. mutable caller/provider collections could invalidate canonical values;
+2. route validation could ignore requested waypoints;
+3. a Kotlin common source set was incorrectly modelled as a runtime platform;
+4. provider control metadata was not explicitly bounded.
 
-```text
-Check documentation             success
-Check Java reference routing    success
-Check Rust reference routing    success
-Check Java and Rust contract    success
-```
-
-The CI result proves that `rustfmt`, Rust unit tests, the Java regression suite
-and byte-identical Java/Rust reports pass on commit
-`3d19262e3a4f48bbc6eacad408be2c2e6665b3c9`.
-
-## Review status
-
-Autonomous review round 1 found and fixed two issues:
-
-1. clamp the Haversine intermediate value to prevent floating-point drift from
-   producing an invalid square root for extreme valid coordinates;
-2. validate that every consecutive edge in fixture ground truth exists and that
-   its checked total equals the declared expected cost.
-
-Review rounds 2 and 3 found no new correctness, architecture, documentation,
-privacy or scope issues. The pull request remains draft because merge is a
-maintainer decision under the repository rules.
+Each finding has code and regression-test coverage.
 
 ## Milestone still missing
 
-- production-oriented canonical KMP geo/routing contracts;
-- plugin descriptor and capability model;
-- fake route planner and fake map renderer against those contracts;
-- deterministic GPS replay clock;
+- `LocationSample` and deterministic clock;
+- GPS replay runner;
+- `MapScene` and fake map renderer;
 - missed-exit guidance state machine;
-- benchmark report;
-- reproducible Gradle/KMP bootstrap.
+- first benchmark report;
+- committed Gradle Wrapper;
+- Android and iOS targets;
+- real provider adapter.
 
 ## Next executable step
 
-Introduce the provider-neutral Kotlin/JVM contract seed and a fake route planner,
-then map the reference-routing result into that contract without allowing the
-Lab fixture model to become the mobile API accidentally.
+Create provider-neutral map-scene contracts and `FakeMapRenderer`, then render a
+canonical `RoutePlan` through deltas without importing MapLibre.
 
 ## Decisions currently required from the maintainer
 
-None for continued development. Merge of pull request `#4` remains intentionally
-separate from implementation work.
+None for continued development. PR #6 merge remains a maintainer action after
+CI and autonomous review close.
