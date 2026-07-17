@@ -42,7 +42,7 @@ class FakeMapSnapshot(
  * Single-threaded, deterministic renderer fake.
  *
  * It stores semantic map state but never draws pixels. Tests can therefore
- * verify scene/delta contracts without MapLibre, Android or iOS.
+ * verify scene/delta contracts without a renderer SDK, Android or iOS.
  */
 class FakeMapRenderer(
     override val descriptor: PluginDescriptor = defaultDescriptor,
@@ -86,6 +86,12 @@ class FakeMapRenderer(
 
     override suspend fun install(scene: MapScene): MapRenderResult {
         calls += FakeMapCall.Install(scene.id)
+        if (scene.markers.isNotEmpty() && MapRendererCapabilities.Markers !in descriptor.capabilities) {
+            return failure(MapRenderErrorCode.UnsupportedOperation, "Static markers are not supported")
+        }
+        if (scene.selectedItemId != null && MapRendererCapabilities.Selection !in descriptor.capabilities) {
+            return failure(MapRenderErrorCode.UnsupportedOperation, "Static selection is not supported")
+        }
         state = State(
             sceneId = scene.id,
             camera = scene.camera,
