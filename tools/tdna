@@ -107,13 +107,15 @@ check_architecture() {
 }
 
 check_kotlin() {
-    say "== Kotlin Multiplatform contracts and fake provider =="
+    say "== Kotlin Multiplatform contracts and fake providers =="
     need gradle
     gradle --no-daemon --stacktrace check
     mkdir -p "$BUILD_DIR/kotlin"
     gradle --no-daemon --quiet :labs:routing-contracts-cli:run \
         > "$BUILD_DIR/kotlin/routing-contracts-lab.json"
-    say "PASS Kotlin report written under build/kotlin"
+    gradle --no-daemon --quiet :labs:map-scene-cli:run \
+        > "$BUILD_DIR/kotlin/map-scene-lab.json"
+    say "PASS Kotlin reports written under build/kotlin"
 }
 
 run_lab() {
@@ -139,8 +141,12 @@ run_lab() {
             need gradle
             gradle --no-daemon --quiet :labs:routing-contracts-cli:run
             ;;
+        map-scene)
+            need gradle
+            gradle --no-daemon --quiet :labs:map-scene-cli:run
+            ;;
         *)
-            say "usage: sh tools/tdna lab {reference-routing [dijkstra|astar]|routing-contracts}"
+            say "usage: sh tools/tdna lab {reference-routing [dijkstra|astar]|routing-contracts|map-scene}"
             exit 2
             ;;
     esac
@@ -203,10 +209,11 @@ Commands:
   check-java                          compile and test Java reference routing
   check-rust                          format and test Rust reference routing
   check-contract                      compare Java/Rust reports byte-for-byte
-  check-kotlin                        test KMP contracts and fake route planner
+  check-kotlin                        test KMP contracts and fake providers
   check                               run the complete foundation verification
   lab reference-routing [algorithm]   run the Java/Rust routing Lab
-  lab routing-contracts               run the KMP fake-provider Lab
+  lab routing-contracts               run the KMP routing-provider Lab
+  lab map-scene                       run the KMP map-scene Lab
   clean                               remove generated build output
 HELP
         ;;

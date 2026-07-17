@@ -37,57 +37,49 @@ Avvio: **2026-07-16**
 - stato **merged**;
 - merge commit `d122f1b4871719087e79a50b185ab302d810cb20`.
 
-Completati:
-
-- [x] fixture sintetica;
-- [x] Java/Rust parser;
-- [x] Dijkstra e A*;
-- [x] report deterministico;
-- [x] contract diff;
-- [x] test, CI, capitolo 43 e Lab.
-
 ### Slice B — provider-neutral routing contracts
 
 - issue [#5](https://github.com/kinderp/tdna/issues/5);
 - PR [#6](https://github.com/kinderp/tdna/pull/6);
-- stato **merged** il 17 luglio 2026;
+- stato **merged**;
 - merge commit `2a28d1654988cef4188986342f76fd7d19be358f`.
-
-Completati:
-
-- [x] Gradle/KMP bootstrap;
-- [x] JVM e Linux x64;
-- [x] plugin SDK e runtime platform semantics;
-- [x] canonical routing models;
-- [x] immutable snapshots e bounded metadata;
-- [x] request/waypoint postconditions;
-- [x] `RoutePlannerPort`;
-- [x] fake planner e call recording;
-- [x] reusable conformance probe;
-- [x] architecture checker;
-- [x] CLI Lab;
-- [x] capitolo 44 e scenario;
-- [x] indice report giornalieri;
-- [x] CI completa verde;
-- [x] merge.
 
 ### Slice C — review governance e contract hardening
 
 - issue [#8](https://github.com/kinderp/tdna/issues/8);
-- PR draft [#9](https://github.com/kinderp/tdna/pull/9);
-- branch `agent/two-clean-review-policy`;
-- stato **final CI and clean reviews pending**.
+- PR [#9](https://github.com/kinderp/tdna/pull/9);
+- stato **merged**;
+- merge commit `044e0773dd9afb1530db35688a00c56bfbd5eace`.
+
+Completati:
+
+- [x] due round consecutivi obbligatori;
+- [x] substantive head, finding e reset;
+- [x] capitolo `06-review-e-merge.md`;
+- [x] contributor guide, agent rules e PR template;
+- [x] `roadName` ed `exitNumber` bounded;
+- [x] CI verde e due round puliti;
+- [x] merge.
+
+### Slice D — provider-neutral MapScene e fake renderer
+
+- issue [#7](https://github.com/kinderp/tdna/issues/7);
+- draft PR [#10](https://github.com/kinderp/tdna/pull/10);
+- branch `agent/provider-neutral-map-scene`;
+- stato **realigned; final CI and two new reviews pending**.
 
 Deliverable:
 
-- [x] due round consecutivi obbligatori nelle regole operative;
-- [x] definizione di substantive head, finding e reset;
-- [x] capitolo `06-review-e-merge.md`;
-- [x] contributor guide, agent rules e PR template allineati;
-- [x] `roadName` ed `exitNumber` bounded;
-- [x] regression test Kotlin;
-- [x] report e indici aggiornati;
-- [ ] CI verde sul substantive head finale;
+- [x] `MapScene`, camera, route e marker semantici;
+- [x] delta bounded separati dalla scena statica;
+- [x] `MapRendererPort` e capability;
+- [x] `FakeMapRenderer` e snapshot;
+- [x] renderer contract probe;
+- [x] route projector;
+- [x] CLI Lab, capitolo 45 e scenario;
+- [x] rimozione dei contratti MapScene duplicati;
+- [x] riallineamento ai file di governance e routing di `main`;
+- [ ] CI verde sul nuovo substantive head;
 - [ ] clean review round 1;
 - [ ] clean review round 2;
 - [ ] merge.
@@ -99,9 +91,9 @@ Deliverable:
 - [x] canonical routing contract seed;
 - [x] plugin descriptor e capability;
 - [x] fake route planner;
+- [ ] `MapScene` e fake renderer su `main`;
 - [ ] `LocationSample` e clock;
 - [ ] GPS replay;
-- [ ] MapScene e fake renderer;
 - [ ] missed-exit scenario;
 - [ ] benchmark report;
 - [ ] Gradle Wrapper;
@@ -113,6 +105,8 @@ Deliverable:
 - ogni PR richiede CI verde e due review round consecutivi senza finding sullo
   stesso substantive head;
 - finding o commit sostanziali resettano il clean-review counter;
+- una sola PR può essere aperta alla volta salvo eccezione esplicita del maintainer;
+- dopo ogni merge il lavoro successivo parte dal nuovo `main` riallineato;
 - la chiusura registra prove e lavoro rimandato;
 - l'issue si chiude con il merge, non con la sola prontezza tecnica;
 - milestone future non autorizzano codice anticipato;
