@@ -60,7 +60,8 @@ Ogni capitolo dovrebbe contenere, quando utile:
 
 ## Stato
 
-Vedere [documentation-status.md](documentation-status.md). `main` contiene tre
-Lab eseguibili; la slice corrente aggiunge il quarto Lab su `LocationSample`,
-tempo monotono e replay deterministico e resta in draft fino a CI finale e due
-review pulite sullo stesso SHA.
+Il percorso implementation-backed comprende quattro Lab, dai capitoli 43 a 46.
+Per lo stato vivo di implementazione, review e milestone consultare
+[documentation-status.md](documentation-status.md),
+[development-status.md](../project/development-status.md) e l'indice dei
+[report giornalieri](../project/daily/README.md).
