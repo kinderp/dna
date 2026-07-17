@@ -10,12 +10,12 @@ codebase. I commenti nel codice restano in inglese e più sintetici.
 | [00 - Regole operative](00-regole-operative.md) | Metodo, scope, hot path, flusso PR seriale, test e gate di review. | Tutti i contributori. | Prima di lavorare. |
 | [01 - Visione del prodotto](01-visione-prodotto.md) | Problema, atmosfera, valore autonomo, diario, guida e socialità. | Tutti. | Per capire perché esiste Travel DNA. |
 | [02 - Glossario](02-glossario.md) | Termini di prodotto, dominio, mappe e navigazione. | Tutti. | Quando un termine non è chiaro. |
-| [03 - Guida alla lettura](03-guida-lettura-documentazione.md) | Percorsi per studente, Android, iOS, Java, Rust, navigazione e contributi. | Tutti. | Quando non sai cosa leggere. |
+| [03 - Guida alla lettura](03-guida-lettura-documentazione.md) | Percorsi per studente, mobile, Java, Rust, Kotlin e navigazione. | Tutti. | Quando non sai cosa leggere. |
 | [04 - Come contribuire](04-come-contribuire.md) | Branch da `main`, una PR, test, review e merge. | Nuovi contributori. | Prima della prima PR. |
 | [05 - Tracciabilità](05-tracciabilita-conversazione.md) | Origine delle decisioni iniziali. | Maintainer e studenti. | Per ricostruire il ragionamento. |
 | [06 - Review e merge](06-review-e-merge.md) | Flusso seriale, due round puliti, reset, autorità e riallineamento. | Reviewer, maintainer e agenti. | Prima di chiudere o mergiare una PR. |
 | [10 - DDD e bounded context](10-ddd-bounded-context.md) | Domini, confini e linguaggio condiviso. | Architettura e dominio. | Prima di introdurre moduli. |
-| [11 - Use case](11-use-case-principali.md) | Flussi utente completi e criteri di valore. | Prodotto, design, test. | Prima di una vertical slice. |
+| [11 - Use case](11-use-case-principali.md) | Flussi utente completi e criteri di valore. | Prodotto, design e test. | Prima di una vertical slice. |
 | [12 - Stato funzionalità](12-stato-funzionalita.md) | Implementato, pianificato, futuro e non-obiettivo. | Tutti. | Prima di promettere una feature. |
 | [20 - Architettura generale](20-architettura-generale.md) | Contesto, componenti, runtime e deployment. | Tecnici. | Prima di leggere o scrivere codice. |
 | [21 - Struttura repository](21-struttura-repository.md) | Monorepo, moduli e responsabilità. | Contributori. | Prima di creare file o moduli. |
@@ -40,6 +40,7 @@ codebase. I commenti nel codice restano in inglese e più sintetici.
 | [43 - Routing Java/Rust](43-reference-routing-java-rust.md) | Grafo, Dijkstra, A*, fixture e confronto. | Studenti Java/Rust. | Primo Lab algoritmico. |
 | [44 - Contratti routing e fake provider](44-contratti-routing-e-fake-provider.md) | KMP, porte, modelli canonici, capability, invarianti e testkit. | Studenti Kotlin e architettura. | Dopo il capitolo 43. |
 | [45 - MapScene e fake renderer](45-map-scene-e-fake-renderer.md) | Scena dichiarativa, delta, renderer port, projector, fake e hot path. | Studenti Kotlin, mappe e architettura. | Dopo il capitolo 44. |
+| [46 - LocationSample e replay](46-location-sample-e-replay-deterministico.md) | Tempo monotono, ordering gate, clock virtuale, fixture, replay e benchmark. | Studenti Kotlin e navigation runtime. | Dopo MapScene, prima di map matching. |
 | [50 - Registro milestone](50-registro-milestone.md) | Evoluzione e dipendenze. | Maintainer. | Durante la pianificazione. |
 | [51 - Roadmap librerie](51-roadmap-librerie-open-source.md) | Possesso, sostituzione e upstream. | Architettura. | Prima di riscrivere. |
 | [52 - Matrice tecnologie](52-matrice-tecnologie-decisioni.md) | Alternative, pro, contro e stato. | Tutti. | Prima di riaprire una scelta. |
@@ -60,6 +61,6 @@ Ogni capitolo dovrebbe contenere, quando utile:
 ## Stato
 
 Vedere [documentation-status.md](documentation-status.md). `main` contiene tre
-Lab eseguibili: routing Java/Rust, contratti routing KMP e MapScene. La PR di
-governance corrente non aggiunge un Lab: rende ripetibile e studiabile il flusso
-dalla issue al merge.
+Lab eseguibili; la slice corrente aggiunge il quarto Lab su `LocationSample`,
+tempo monotono e replay deterministico e resta in draft fino a CI finale e due
+review pulite sullo stesso SHA.
