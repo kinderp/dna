@@ -1,138 +1,132 @@
-# Review, due round puliti e merge
+# Review, due round puliti e flusso di merge seriale
 
 ## Scopo
 
-Questo capitolo rende eseguibile la regola introdotta nelle
-[regole operative](00-regole-operative.md): nessuna pull request di Travel DNA
-può essere chiusa o mergiata senza **due review round consecutivi senza nuovi
-finding** sullo stesso substantive head.
+Nessuna pull request di Travel DNA può distribuire una modifica senza:
 
-La regola serve a evitare un errore comune:
+- CI richiesta verde;
+- due review round consecutivi senza nuovi finding;
+- stesso substantive head SHA;
+- autorità di merge esplicita;
+- rispetto della regola con al massimo una PR aperta.
+
+La regola evita due errori:
 
 ```text
 review trova un problema
--> il problema viene corretto
--> la PR viene mergiata subito
+-> fix
+-> merge immediato senza riesaminare il fix
 ```
 
-Il fix può introdurre un nuovo difetto, rendere obsoleta una spiegazione o
-spostare il rischio in un altro modulo. Per questo la sequenza corretta è:
-
 ```text
-review con finding
--> fix
--> test
--> CI
--> review pulita 1
--> review pulita 2
--> ready/merge
+PR A ancora aperta
+-> PR B costruita sopra A
+-> A cambia o viene mergiata diversamente
+-> B contiene diff, storia e review ambigui
 ```
 
 ## Vocabolario
 
 ### Substantive head
 
-È il commit più recente che modifica il contenuto tecnico o documentale della
-slice:
-
-- codice;
-- test;
-- contratti;
-- fixture;
-- workflow;
-- documentazione stabile;
-- report tecnico della giornata.
-
-I due round puliti devono riferirsi allo stesso SHA.
+È il commit più recente che modifica codice, test, contratti, fixture, workflow,
+documentazione stabile o report tecnico della slice. I due round puliti devono
+riferirsi allo stesso SHA.
 
 ### Review round
 
-È una lettura distinta della PR corrente con un focus dichiarato. Non è:
-
-- un semplice rerun della CI;
-- una rilettura superficiale del solo ultimo file;
-- la ripetizione testuale del round precedente;
-- l'assenza di commenti per distrazione.
+È una lettura distinta della PR corrente con un focus dichiarato. Non è un rerun
+della CI, una lettura superficiale del solo ultimo file o la ripetizione testuale
+del round precedente.
 
 ### Finding
 
-È un problema che richiede una modifica sostanziale o una decisione esplicita.
-Esempi:
+È un problema che richiede una modifica sostanziale o una decisione esplicita,
+per esempio un'invariante mancante, un provider che esce dall'adapter, input non
+bounded, documento errato, rischio privacy o workflow incompleto.
 
-- invariante mancante;
-- provider type che esce dall'adapter;
-- test che non protegge il comportamento promesso;
-- input esterno non bounded;
-- documento che dichiara una capacità inesistente;
-- errore di privacy;
-- hot path reso più costoso senza prova;
-- workflow che non verifica il nuovo modulo;
-- scope non autorizzato dalla milestone.
+### PR attiva
 
-Un'osservazione puramente editoriale che non richiede modifica può essere
-registrata come nota e non resetta automaticamente il contatore. Se il testo
-viene però modificato nella PR, il commit è sostanziale e la sequenza riparte.
+È l'unica PR aperta nel repository. Non può esistere una seconda PR finché la
+prima non è stata mergiata o chiusa senza merge.
 
-## Fonti di evidenza della review
+### Chiusura amministrativa
 
-Per evitare un ciclo impossibile fra report e review, Travel DNA separa due
-fonti con ruoli diversi.
+È la chiusura senza merge di una PR accidentale, duplicata, stacked o abbandonata.
+Non equivale al completamento della slice e non autorizza applicazione diretta a
+`main`.
+
+## Perché al massimo una PR aperta
+
+Il flusso seriale rende verificabili base, diff, CI, finding, ordine delle
+dipendenze, report e responsabilità del merge.
+
+```text
+nessuna PR aperta
+-> branch dal main corrente
+-> una draft PR
+-> review/fix/CI
+-> due round puliti
+-> merge o chiusura senza merge
+-> verifica nuovo main
+-> branch successivo
+```
+
+Preparare issue future è consentito. Aprire PR stacked o placeholder non lo è.
+Le regole correnti non prevedono eccezioni per PR parallele.
+
+## Fonti di evidenza
 
 ### Ledger autorevole della PR
 
-La timeline delle review GitHub e la descrizione della PR conservano l'evidenza
-sullo stesso head senza creare un nuovo commit:
+Timeline delle review e descrizione PR conservano:
 
 ```text
 head SHA
+risk level
 focus
-file/contratti controllati
+file e contratti controllati
 CI e test osservati
 finding oppure no new findings
 clean-round count
 ```
 
-Questo è il ledger autorevole per decidere ready e merge.
-
 ### Report storico nel repository
 
-Il report Markdown committato prima dei round finali contiene:
+Il report Markdown committato prima dei round finali contiene contesto, issue,
+PR, finding e fix già avvenuti, substantive head previsto, focus dei round e link
+al ledger.
 
-- contesto della giornata;
-- issue e PR;
-- substantive head previsto;
-- finding e fix già avvenuti;
-- piano e focus dei round finali;
-- link stabile al ledger della PR.
-
-Non deve essere modificato dopo i round soltanto per copiare gli esiti: quel
-commit cambierebbe lo SHA e invaliderebbe i round. Dopo il merge, una successiva
-PR documentale può riconciliare il report storico con risultato finale, merge
-commit e review ledger. Anche tale PR segue la stessa policy.
+Non viene modificato dopo i round soltanto per copiarne gli esiti. Una successiva
+PR documentale può riconciliare report, CI finale e merge commit.
 
 ## Sequenza normativa
 
-### 1. PR draft
+### 1. Inventario e base
 
-La PR nasce draft e contiene:
+Prima del branch:
 
-- use case;
-- scope e non-obiettivi;
-- rischio;
-- contratti;
-- verifiche;
-- documentazione;
-- reviewer focus.
+1. verificare che non esistano PR aperte;
+2. chiudere o risolvere eventuali PR accidentali o stacked;
+3. leggere il nuovo SHA di `main`;
+4. verificare dipendenze della issue;
+5. creare il branch da quel `main`.
 
-### 2. Baseline verde
+### 2. PR draft
 
-Prima della review finale devono essere verdi i controlli applicabili sul head
-corrente. Una review può iniziare con CI in corso, ma non può essere dichiarata
-pulita finché la verifica richiesta non è conclusa.
+La PR nasce draft e contiene use case, scope, non-obiettivi, rischio, base `main`,
+conferma di essere l'unica PR, contratti, verifiche, documentazione e reviewer
+focus.
 
-### 3. Review round
+### 3. Baseline verde
 
-Ogni round viene registrato nel ledger della PR:
+Prima di dichiarare pulito un round devono essere verdi i controlli applicabili
+sul head corrente. La review può iniziare con CI in corso, ma l'esito resta
+pendente finché la CI non termina.
+
+### 4. Review round
+
+Ogni round viene registrato:
 
 ```text
 Review round N
@@ -146,19 +140,12 @@ Outcome:
 Consecutive clean rounds:
 ```
 
-### 4. Se esiste un finding
+### 5. Se esiste un finding
 
-Il finding deve essere:
+Il finding viene descritto, corretto, protetto da prova quando applicabile e
+verificato dalla CI sul nuovo head. Il conteggio torna a zero.
 
-1. descritto con effetto osservabile;
-2. corretto nel repository;
-3. protetto da test o altra evidenza quando applicabile;
-4. collegato nel report o nel ledger della PR;
-5. verificato dalla CI sul nuovo head.
-
-Il conteggio torna a zero.
-
-### 5. Due round consecutivi puliti
+### 6. Due round consecutivi puliti
 
 Dopo l'ultimo commit sostanziale:
 
@@ -167,24 +154,24 @@ Round A -> no new findings -> clean count 1
 Round B -> no new findings -> clean count 2
 ```
 
-I round devono avere focus complementari. Un esempio per una PR `R2`:
+Focus consigliato `R2`:
 
 ```text
 Round A:
-correttezza, invarianti, ownership, error model, test
+contratti, correttezza, invarianti, ownership, error model e test
 
 Round B:
-architettura, concorrenza, performance, documentazione, scope e CI
+architettura, concorrenza, performance, privacy, documentazione, scope e CI
 ```
 
-Per una PR `R3` aggiungere sempre privacy, abuso, sicurezza durante la guida e
+Per `R3` aggiungere threat model, abuso, sicurezza durante la guida e
 failure/degraded mode.
 
 ## Profondità per rischio
 
 | Rischio | Round 1 | Round 2 |
 | --- | --- | --- |
-| `R0` | correttezza editoriale, link, scope | rilettura indipendente e CI docs |
+| `R0` | accuratezza, link, scope | rilettura indipendente e CI docs |
 | `R1` | comportamento e test locali | architettura, documentazione e regressioni |
 | `R2` | contratti, ownership, cancellazione, provider | performance, failure mode, CI e didattica |
 | `R3` | sicurezza, privacy, abuso, threat model | review trasversale completa e prove dedicate |
@@ -199,134 +186,122 @@ Reset obbligatorio:
 source code
 unit/contract/replay tests
 fixture
-build or workflow
-stable documentation
+build o workflow
+documentazione stabile
 architecture map
-technical daily report
+report tecnico giornaliero
 ```
 
 Non reset automatico:
 
 ```text
-PR description only
-review submission or comment only
-labels/milestone
-CI rerun on the same SHA
+PR description
+review submission o commento
+label o milestone
+CI rerun sullo stesso SHA
 ```
 
-Un commit chiamato `docs:` non è automaticamente non sostanziale: se modifica la
-spiegazione consolidata o il report tecnico, deve essere nuovamente revisionato.
-
-## Gate prima del merge
-
-Checklist minima:
+## Gate prima del ready e merge
 
 - [ ] substantive head SHA registrato;
+- [ ] branch basato o riallineato al `main` corrente;
+- [ ] questa è l'unica PR aperta;
 - [ ] CI richiesta verde su quello SHA;
-- [ ] nessun finding aperto;
-- [ ] round pulito 1 registrato nel ledger della PR;
-- [ ] round pulito 2 registrato nel ledger della PR;
-- [ ] nessun commit sostanziale fra i due round e il merge;
+- [ ] nessun finding o thread aperto;
+- [ ] round pulito 1 registrato;
+- [ ] round pulito 2 registrato sullo stesso SHA;
+- [ ] nessun commit sostanziale dopo i round;
 - [ ] PR body aggiornato senza cambiare il head;
-- [ ] report giornaliero presente con link al ledger, finding history e review plan;
-- [ ] documentazione e stato milestone coerenti con lo stato pre-merge;
-- [ ] issue collegata pronta a chiudersi con il merge.
+- [ ] report giornaliero presente e indicizzato;
+- [ ] documentazione, issue e milestone coerenti;
+- [ ] autorità di merge registrata;
+- [ ] expected-head guard pronto.
 
-Solo dopo questi gate la PR può passare da draft a ready e può essere mergiata.
-Il risultato definitivo viene riconciliato nei report storici dopo il merge,
-tramite una successiva modifica documentale soggetta a review.
+Solo dopo questi gate la PR passa da draft a ready.
+
+## Autorità e merge autonomo
+
+Il maintainer può concedere autorizzazione singola, autorizzazione permanente o
+riservare il merge a sé.
+
+Con autorizzazione permanente un agente può mergiare solo dopo aver verificato
+ogni gate e usando l'expected head SHA revisionato. Non può saltare una review,
+mergiare CI rossa o obsoleta, ignorare una seconda PR, riutilizzare round di uno
+SHA precedente o aprire la PR successiva prima della verifica del merge.
+
+Se lo SHA si muove fra gate e merge, l'operazione deve fallire e la review deve
+essere rivalutata.
+
+## Dopo il merge
+
+Prima della PR successiva:
+
+1. verificare `merged=true`;
+2. registrare il merge commit;
+3. verificare l'issue collegata;
+4. leggere il nuovo `main`;
+5. verificare che non esistano PR aperte;
+6. creare o riallineare il branch successivo da quel `main`;
+7. aggiornare report e milestone nel punto previsto.
+
+## Chiusura amministrativa
+
+Una PR che non verrà mergiata può essere chiusa senza i due round puliti quando è
+accidentale, duplicata, vuota, placeholder, stacked o abbandonata esplicitamente.
+
+La chiusura deve spiegare perché non distribuisce modifiche. Il contenuto non può
+essere applicato direttamente a `main` e la PR non può essere registrata come
+slice completata.
 
 ## Esempio con finding
 
 ```text
 Head A
-Round 1: trova lista mutabile trattenuta dal contratto
+Round 1: trova lista mutabile trattenuta
 Clean count: 0
 
 Head B
-Fix: snapshot difensiva + regression test
-CI: green
-
+Fix + regression test + CI green
 Round 2: no finding
 Clean count: 1
-
-Round 3: trova metadata provider non bounded
+Round 3: trova metadata non bounded
 Clean count: 0
 
 Head C
-Fix: limiti + rejection tests
-CI: green
-
+Fix + CI green
 Round 4: no finding
 Clean count: 1
 Round 5: no finding
 Clean count: 2
 
 PR body aggiornato sullo stesso Head C
-PR ready e merge consentito
-
-Dopo il merge:
-PR documentale separata aggiorna il report storico con merge commit ed esito
+ready
+merge con expected Head C
+verifica nuovo main
+solo ora branch successivo
 ```
-
-## Esempio documentale `R0`
-
-Anche una PR di sola documentazione richiede due passaggi:
-
-```text
-Round 1:
-accuratezza, link, terminologia e scope
-
-Round 2:
-rilettura dal percorso dello studente, coerenza con stato e indice
-```
-
-I passaggi possono essere brevi, ma devono essere reali e registrati.
 
 ## Rapporto con la CI
 
-La CI non sostituisce la review:
-
 ```text
 CI -> dimostra proprietà automatizzate
-review -> valuta significato, confini, omissioni e rischi
+review -> valuta significato, omissioni, confini e rischi
 ```
 
-Allo stesso modo, due review pulite non sostituiscono una CI rossa o mancante.
-Servono entrambe.
-
-## Rapporto con i report giornalieri
-
-Prima dei round finali il report della sessione contiene:
-
-- substantive head o branch finale previsto;
-- finding e fix;
-- link alla PR;
-- focus dei round da svolgere;
-- decisioni ancora richieste.
-
-Dopo i round, gli esiti esatti vengono aggiunti alla descrizione o alle review
-della PR, che non modificano lo SHA. Dopo il merge, una successiva modifica
-storicizza nel report:
-
-- CI finale;
-- due round puliti;
-- merge commit;
-- stato issue;
-- lavoro rimandato.
-
-L'indice permanente vive in
-[`docs/project/daily/README.md`](../project/daily/README.md).
+La CI non sostituisce la review e due review non sostituiscono la CI.
 
 ## Regola per agenti autonomi
 
-Un agente può implementare, correggere e svolgere entrambi i round, ma deve:
+Un agente può implementare, correggere, svolgere entrambi i round e mergiare se
+autorizzato, ma deve:
 
-- separarli esplicitamente;
+- separare esplicitamente i round;
 - usare focus diversi;
-- non dichiarare pulito un round senza aver riesaminato il substantive head;
-- resettare il conteggio dopo ogni finding o commit sostanziale;
-- registrare gli esiti finali nel ledger PR, non con un commit auto-invalidante;
-- non mergiare autonomamente se il repository riserva il merge al maintainer.
+- non dichiarare pulito un round senza riesaminare il substantive head;
+- resettare il conteggio dopo finding o commit sostanziali;
+- registrare gli esiti nel ledger PR, non con un commit auto-invalidante;
+- usare expected-head guard;
+- mantenere al massimo una PR aperta;
+- verificare il nuovo `main` prima della PR successiva.
 
 La velocità non modifica il gate di qualità.

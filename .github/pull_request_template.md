@@ -13,6 +13,15 @@ Which user behavior or teaching scenario changes?
 - Risk level: R0 / R1 / R2 / R3
 - Current milestone issue:
 
+## Serial PR and base alignment
+
+- Base `main` SHA used to create or realign this branch:
+- Open-PR inventory checked at PR creation:
+- [ ] This is the only open PR
+- [ ] No unmerged dependency is hidden in another branch
+- [ ] This is not a placeholder, empty or `noop` PR
+- [ ] No next implementation PR will be opened before this PR is merged or closed
+
 ## Contracts and architecture
 
 - Canonical contracts changed:
@@ -54,12 +63,13 @@ Which user behavior or teaching scenario changes?
 - [ ] Code/state map updated
 - [ ] Lab scenario updated or added
 - [ ] ADR updated or added
-- [ ] Daily report and index contain context, finding history, review plan and this PR link
+- [ ] Daily report and permanent index contain context, finding history, review plan and this PR link
 - [ ] No documentation change required, with reason below
 
 ## Non-goals and follow-up
 
-State explicitly what this PR does not implement.
+State explicitly what this PR does not implement. Future implementation PRs must
+not be opened while this PR is active.
 
 ## Reviewer focus
 
@@ -102,9 +112,21 @@ change.
 - [ ] Two consecutive review rounds have no new findings
 - [ ] Both clean rounds reference the same substantive head SHA
 - [ ] No substantive commit was added after the clean rounds
+- [ ] No unresolved review thread remains
 - [ ] PR ledger contains exact outcomes; report links the PR and records pre-review context
 - [ ] Issue and milestone agree with the pre-merge state
-- [ ] Maintainer has authorized ready/merge
+- [ ] This remains the only open PR
+- [ ] Merge authorization: maintainer action / explicit agent authorization / standing agent authorization
+- [ ] Merge will use the reviewed expected head SHA
 
 A PR must remain draft and must not be merged until every applicable gate above
 is satisfied. See `docs/it/06-review-e-merge.md`.
+
+## Post-merge verification
+
+Performed after merge, before another PR is opened:
+
+- [ ] GitHub reports the PR as merged
+- [ ] linked issue state is correct
+- [ ] new `main` SHA is recorded
+- [ ] next branch, if any, starts from that new `main`
