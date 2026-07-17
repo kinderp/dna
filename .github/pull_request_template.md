@@ -54,7 +54,7 @@ Which user behavior or teaching scenario changes?
 - [ ] Code/state map updated
 - [ ] Lab scenario updated or added
 - [ ] ADR updated or added
-- [ ] Daily report and index updated
+- [ ] Daily report and index contain context, finding history, review plan and this PR link
 - [ ] No documentation change required, with reason below
 
 ## Non-goals and follow-up
@@ -90,6 +90,11 @@ Point reviewers to the most important risks or decisions.
 Add a new section whenever a finding or substantive commit resets the sequence.
 Do not overwrite historical rounds.
 
+The PR review timeline/body is the authoritative same-head review ledger. Do not
+create a new commit merely to copy clean-round outcomes into the daily report;
+reconcile final review and merge status through a later reviewed documentation
+change.
+
 ## Ready and merge gate
 
 - [ ] All findings are resolved or explicitly approved as non-goals
@@ -97,7 +102,8 @@ Do not overwrite historical rounds.
 - [ ] Two consecutive review rounds have no new findings
 - [ ] Both clean rounds reference the same substantive head SHA
 - [ ] No substantive commit was added after the clean rounds
-- [ ] PR body, daily report, issue and milestone agree on status
+- [ ] PR ledger contains exact outcomes; report links the PR and records pre-review context
+- [ ] Issue and milestone agree with the pre-merge state
 - [ ] Maintainer has authorized ready/merge
 
 A PR must remain draft and must not be merged until every applicable gate above
