@@ -7,12 +7,13 @@ codebase. I commenti nel codice restano in inglese e più sintetici.
 
 | Capitolo | Cosa spiega | Chi lo legge | Quando |
 | --- | --- | --- | --- |
-| [00 - Regole operative](00-regole-operative.md) | Metodo, scope, hot path, test, documentazione e review. | Tutti i contributori. | Prima di lavorare. |
+| [00 - Regole operative](00-regole-operative.md) | Metodo, scope, hot path, test, documentazione e gate di review. | Tutti i contributori. | Prima di lavorare. |
 | [01 - Visione del prodotto](01-visione-prodotto.md) | Problema, atmosfera, valore autonomo, diario, guida e socialità. | Tutti. | Per capire perché esiste Travel DNA. |
 | [02 - Glossario](02-glossario.md) | Termini di prodotto, dominio, mappe e navigazione. | Tutti. | Quando un termine non è chiaro. |
 | [03 - Guida alla lettura](03-guida-lettura-documentazione.md) | Percorsi per studente, Android, iOS, Java, Rust, navigazione e contributi. | Tutti. | Quando non sai cosa leggere. |
 | [04 - Come contribuire](04-come-contribuire.md) | Fork, branch, issue, PR, test e review. | Nuovi contributori. | Prima della prima PR. |
 | [05 - Tracciabilità](05-tracciabilita-conversazione.md) | Origine delle decisioni iniziali. | Maintainer e studenti. | Per ricostruire il ragionamento. |
+| [06 - Review e merge](06-review-e-merge.md) | Due round puliti, reset, substantive head e gate di merge. | Reviewer, maintainer e agenti. | Prima di chiudere o mergiare una PR. |
 | [10 - DDD e bounded context](10-ddd-bounded-context.md) | Domini, confini e linguaggio condiviso. | Architettura e dominio. | Prima di introdurre moduli. |
 | [11 - Use case](11-use-case-principali.md) | Flussi utente completi e criteri di valore. | Prodotto, design, test. | Prima di una vertical slice. |
 | [12 - Stato funzionalità](12-stato-funzionalita.md) | Implementato, pianificato, futuro e non-obiettivo. | Tutti. | Prima di promettere una feature. |
