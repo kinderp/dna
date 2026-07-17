@@ -10,6 +10,7 @@ import org.traveldna.routing.contracts.RoutePlanningErrorCode
 import org.traveldna.routing.contracts.RoutePlanningResult
 import org.traveldna.routing.contracts.RouteRequest
 import org.traveldna.routing.contracts.RoutingCapabilities
+import org.traveldna.routing.contracts.requireMatches
 
 /**
  * Deterministic, in-memory route planner for contract and application tests.
@@ -22,7 +23,9 @@ class FakeRoutePlanner(
     catalog: Map<RouteRequest, List<RoutePlan>>,
     override val descriptor: PluginDescriptor = defaultDescriptor,
 ) : RoutePlannerPort {
-    private val routesByRequest = catalog.mapValues { (_, routes) -> routes.toList() }
+    private val routesByRequest = catalog.entries.associate { (request, routes) ->
+        request to routes.toList()
+    }
     private val calls = mutableListOf<RouteRequest>()
 
     val recordedRequests: List<RouteRequest> get() = calls.toList()
@@ -34,9 +37,7 @@ class FakeRoutePlanner(
         routesByRequest.forEach { (request, routes) ->
             require(routes.isNotEmpty()) { "fake catalog entry must contain at least one route" }
             routes.forEach { route ->
-                require(route.origin == request.origin && route.destination == request.destination) {
-                    "fake catalog route endpoints must match its request"
-                }
+                route.requireMatches(request)
                 require(route.provenance.providerId == descriptor.id) {
                     "fake catalog route provenance must match the fake descriptor"
                 }

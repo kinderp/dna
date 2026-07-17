@@ -40,13 +40,25 @@ data class RoutePlanningError(
 }
 
 sealed interface RoutePlanningResult {
-    data class Success(val routes: List<RoutePlan>) : RoutePlanningResult {
+    /** Immutable successful response containing one or more unique alternatives. */
+    class Success(routes: List<RoutePlan>) : RoutePlanningResult {
+        val routes: List<RoutePlan> = routes.toList()
+
         init {
-            require(routes.isNotEmpty()) { "successful route planning needs at least one route" }
-            require(routes.map(RoutePlan::id).toSet().size == routes.size) {
+            require(this.routes.isNotEmpty()) {
+                "successful route planning needs at least one route"
+            }
+            require(this.routes.map(RoutePlan::id).toSet().size == this.routes.size) {
                 "successful route planning must not contain duplicate route ids"
             }
         }
+
+        override fun equals(other: Any?): Boolean =
+            other is Success && routes == other.routes
+
+        override fun hashCode(): Int = routes.hashCode()
+
+        override fun toString(): String = "Success(routes=$routes)"
     }
 
     data class Failure(val error: RoutePlanningError) : RoutePlanningResult

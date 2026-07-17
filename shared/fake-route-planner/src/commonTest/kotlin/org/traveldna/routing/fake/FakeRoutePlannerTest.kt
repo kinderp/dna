@@ -5,9 +5,11 @@ import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.coroutines.startCoroutine
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import org.traveldna.routing.contracts.RoutePlanningErrorCode
 import org.traveldna.routing.contracts.RoutePlanningResult
+import org.traveldna.routing.contracts.RouteRequest
 import org.traveldna.routing.testkit.RoutePlannerContractProbe
 
 class FakeRoutePlannerTest {
@@ -38,9 +40,27 @@ class FakeRoutePlannerTest {
         )
         assertEquals(FakeRoutePlanner.Id.value, report.providerId)
         assertEquals(
-            listOf("declares-routing-plan", "returns-canonical-routes", "deterministic-repeat", "canonical-no-route"),
+            listOf(
+                "declares-routing-plan",
+                "returns-canonical-routes",
+                "returns-declared-maneuvers",
+                "deterministic-repeat",
+                "canonical-no-route",
+            ),
             report.checks,
         )
+    }
+
+    @Test
+    fun rejectsCatalogRouteThatIgnoresRequestedWaypoint() {
+        val request = RouteRequest(
+            origin = FakeRouteFixtures.A,
+            destination = FakeRouteFixtures.E,
+            waypoints = listOf(FakeRouteFixtures.D),
+        )
+        assertFailsWith<IllegalArgumentException> {
+            FakeRoutePlanner(mapOf(request to listOf(FakeRouteFixtures.ReferenceRoute)))
+        }
     }
 }
 

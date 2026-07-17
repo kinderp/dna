@@ -6,6 +6,7 @@ import org.traveldna.routing.contracts.RoutePlanningErrorCode
 import org.traveldna.routing.contracts.RoutePlanningResult
 import org.traveldna.routing.contracts.RouteRequest
 import org.traveldna.routing.contracts.RoutingCapabilities
+import org.traveldna.routing.contracts.requireMatches
 
 data class RoutePlannerContractReport(
     val providerId: String,
@@ -30,17 +31,19 @@ object RoutePlannerContractProbe {
             "provider returned more alternatives than requested"
         }
         first.routes.forEach { route ->
+            route.requireMatches(routableRequest)
             require(route.provenance.providerId == planner.descriptor.id) {
                 "route provenance provider differs from plugin descriptor"
             }
-            require(route.origin == routableRequest.origin) {
-                "route origin differs from request"
-            }
-            require(route.destination == routableRequest.destination) {
-                "route destination differs from request"
-            }
         }
         checks += "returns-canonical-routes"
+
+        if (RoutingCapabilities.Maneuvers in planner.descriptor.capabilities) {
+            require(first.routes.all { route -> route.legs.all { it.maneuvers.isNotEmpty() } }) {
+                "provider declares routing.maneuvers but returned an empty maneuver list"
+            }
+            checks += "returns-declared-maneuvers"
+        }
 
         if (RoutingCapabilities.Deterministic in planner.descriptor.capabilities) {
             val second = planner.plan(routableRequest).requireSuccess()
