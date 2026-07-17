@@ -49,9 +49,9 @@ Completati:
 ### Slice B — provider-neutral routing contracts
 
 - issue [#5](https://github.com/kinderp/tdna/issues/5);
-- PR draft [#6](https://github.com/kinderp/tdna/pull/6);
-- branch `agent/provider-neutral-routing-contracts`;
-- stato **review complete — merge pending**.
+- PR [#6](https://github.com/kinderp/tdna/pull/6);
+- stato **merged** il 17 luglio 2026;
+- merge commit `2a28d1654988cef4188986342f76fd7d19be358f`.
 
 Completati:
 
@@ -68,8 +68,28 @@ Completati:
 - [x] CLI Lab;
 - [x] capitolo 44 e scenario;
 - [x] indice report giornalieri;
-- [x] CI completa verde, run `#19`;
-- [x] tre review round, ultimi senza finding bloccanti;
+- [x] CI completa verde;
+- [x] merge.
+
+### Slice C — review governance e contract hardening
+
+- issue [#8](https://github.com/kinderp/tdna/issues/8);
+- PR draft [#9](https://github.com/kinderp/tdna/pull/9);
+- branch `agent/two-clean-review-policy`;
+- stato **final CI and clean reviews pending**.
+
+Deliverable:
+
+- [x] due round consecutivi obbligatori nelle regole operative;
+- [x] definizione di substantive head, finding e reset;
+- [x] capitolo `06-review-e-merge.md`;
+- [x] contributor guide, agent rules e PR template allineati;
+- [x] `roadName` ed `exitNumber` bounded;
+- [x] regression test Kotlin;
+- [x] report e indici aggiornati;
+- [ ] CI verde sul substantive head finale;
+- [ ] clean review round 1;
+- [ ] clean review round 2;
 - [ ] merge.
 
 ### Criteri di chiusura milestone
@@ -90,6 +110,10 @@ Completati:
 ## Regole
 
 - ogni slice non banale ha issue e PR;
+- ogni PR richiede CI verde e due review round consecutivi senza finding sullo
+  stesso substantive head;
+- finding o commit sostanziali resettano il clean-review counter;
 - la chiusura registra prove e lavoro rimandato;
+- l'issue si chiude con il merge, non con la sola prontezza tecnica;
 - milestone future non autorizzano codice anticipato;
 - deliverable significa evidenza, non percentuale vaga.
