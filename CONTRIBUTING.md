@@ -31,5 +31,11 @@ upstream repository
 
 Every pull request requires two consecutive review rounds with no new findings
 before it can be marked ready or merged. Any substantive commit after a clean
-round resets the count. The pull request body must record the reviewed head SHA,
-review focus, findings, CI evidence and current clean-round count.
+round resets the count.
+
+The pull request review timeline/body is the authoritative same-head ledger. It
+records the reviewed SHA, focus, findings, CI evidence and clean-round count.
+The committed daily report contains context, finding history, review plan and a
+link to that ledger. Do not create a new commit merely to copy final review
+outcomes into the report; reconcile final review and merge status later through
+a separately reviewed documentation change.
