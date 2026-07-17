@@ -26,7 +26,7 @@ GitHub Discussion  -> ragionamento ancora aperto
 ADR                -> decisione architetturale specifica
 Documentazione     -> spiegazione consolidata corrente
 Issue              -> lavoro da svolgere
-Pull request       -> una modifica concreta e verificabile
+Pull request       -> l'unica modifica concreta attiva
 PR review ledger   -> evidenza dei round sullo stesso head
 Test               -> evidenza eseguibile del comportamento
 Benchmark          -> evidenza misurata del costo
@@ -100,17 +100,17 @@ PR 1 data class vuota; PR 2 metodo vuoto; PR 3 import; PR 4 primo uso.
 Ogni slice deve produrre una prova osservabile: test, replay, screenshot di test,
 benchmark, contratto o scenario Lab.
 
-### 5.1 Una sola PR aperta
+### 5.1 Al massimo una PR aperta
 
-Durante lo sviluppo ordinario autonomo può essere aperta **una sola pull request
-alla volta**.
+Nel repository può essere aperta **al massimo una pull request**.
 
 ```text
-main verificato
+nessuna PR aperta
+-> main verificato
 -> branch della slice
 -> una draft PR
 -> CI, finding, fix e review
--> merge o abbandono esplicito
+-> merge o chiusura senza merge
 -> verifica del nuovo main
 -> soltanto allora branch e PR successivi
 ```
@@ -125,8 +125,9 @@ Non creare:
 - PR chiamate `noop` usate come segnaposto;
 - una nuova PR da un branch che dipende da modifiche non ancora mergiate.
 
-Un'eccezione per PR parallele richiede una decisione esplicita del maintainer,
-registrata nelle issue e nelle PR coinvolte.
+Le regole correnti non prevedono eccezioni per PR parallele. Una futura modifica
+a questa regola deve passare attraverso una nuova PR di governance, aperta quando
+non esiste un'altra PR.
 
 ### 5.2 Chiusura amministrativa
 
@@ -135,9 +136,13 @@ due round puliti perché non distribuisce alcuna modifica. La chiusura deve:
 
 - dichiarare il motivo;
 - non mergiare il contenuto;
+- non applicare il contenuto direttamente a `main`;
 - non essere registrata come lavoro completato;
 - indicare se il branch viene conservato;
 - richiedere riallineamento al futuro `main` prima di un eventuale nuovo uso.
+
+Se compare accidentalmente una seconda PR, lo sviluppo ordinario si ferma finché
+l'inventario non torna a zero o una PR.
 
 ## 6. Regole architetturali
 
@@ -265,10 +270,10 @@ Ogni sessione significativa produce o aggiorna un report Markdown indicizzato.
 
 ## 11. GitHub, review e merge
 
-La sequenza normativa ordinaria è:
+La sequenza normativa è:
 
 ```text
-verifica main e PR aperte
+verifica che nessuna PR sia aperta
 -> issue della slice
 -> branch dal main corrente
 -> una draft PR
@@ -367,7 +372,7 @@ riconciliare il report con CI finale, round puliti e merge commit.
 Un agente può marcare ready e mergiare soltanto quando:
 
 1. il maintainer ha concesso autorizzazione esplicita o permanente;
-2. esiste una sola PR ordinaria aperta;
+2. questa è l'unica PR aperta;
 3. la CI richiesta è verde sul substantive head corrente;
 4. non esistono finding o thread aperti;
 5. due round consecutivi puliti riferiscono lo stesso SHA;
@@ -376,7 +381,7 @@ Un agente può marcare ready e mergiare soltanto quando:
 8. il merge usa l'expected head SHA revisionato.
 
 Senza autorizzazione, l'agente lascia la PR ready al maintainer. Se lo SHA cambia,
-compare una nuova PR, la CI diventa obsoleta o un gate è ambiguo, il merge si
+compare una seconda PR, la CI diventa obsoleta o un gate è ambiguo, il merge si
 ferma.
 
 ### 11.6 Verifica e riallineamento dopo il merge
@@ -389,7 +394,7 @@ Dopo il merge e prima di aprire la PR successiva:
 4. registrare merge e lavoro rimandato nel luogo previsto;
 5. creare il branch successivo da quel nuovo `main`;
 6. riallineare o ricreare eventuali branch conservati;
-7. verificare nuovamente che non esistano altre PR aperte.
+7. verificare nuovamente che non esistano PR aperte.
 
 ### 11.7 Gate di ready, merge e chiusura
 
@@ -402,7 +407,7 @@ Una PR non può essere marcata ready o mergiata finché:
 - il ledger PR contiene evidenza dei round;
 - il report contiene link, finding history e review plan;
 - documentazione, issue e milestone sono coerenti con lo stato pre-merge;
-- rimane l'unica PR ordinaria aperta;
+- rimane l'unica PR aperta;
 - l'autorità di merge è chiara.
 
 L'issue collegata viene chiusa dal merge o subito dopo, non soltanto perché

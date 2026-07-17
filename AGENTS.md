@@ -79,14 +79,14 @@ last merged slice
 
 ## Serial pull-request workflow
 
-Normal autonomous development uses **one open pull request at a time**.
+The repository may contain **at most one open pull request**.
 
 The normative sequence is:
 
 ```text
-verify no ordinary PR is open
--> update local/remote view of main
--> create branch from the current main SHA
+verify no PR is open
+-> update the view of main
+-> create a branch from the current main SHA
 -> implement one coherent issue slice
 -> open one draft PR
 -> findings, fixes and CI
@@ -103,14 +103,16 @@ Rules:
 - do not open the next PR while the current PR is open;
 - after every merge, the next branch starts from the newly verified `main`;
 - an issue may be prepared while a PR is open, but its implementation PR waits;
-- an exception for parallel PRs requires an explicit maintainer decision recorded
-  in the affected issues and PRs;
+- parallel PRs are not permitted by the current project rules;
+- changing the one-PR rule requires a future reviewed governance change after
+  the current PR has been merged or closed;
 - accidental, duplicate, stacked or abandoned PRs may be closed administratively
   without two clean rounds because they ship no change, but the reason must be
   explicit and they must not be recorded as completed or merged work.
 
-A branch may be preserved after administrative closure, but it must be rebased,
-recreated or otherwise realigned from the future `main` before a new PR is opened.
+If an accidental second PR appears, stop ordinary development and close or
+resolve it before continuing. A preserved branch must be rebased, recreated or
+otherwise realigned from the future `main` before a new PR is opened.
 
 ## Pull request review gate
 
@@ -155,7 +157,7 @@ reviews are necessary but do not replace CI.
 An agent may mark ready and merge only when all of these are true:
 
 - the maintainer has granted explicit or standing merge authorization;
-- exactly one ordinary PR is open;
+- this is the only open PR;
 - the PR head still equals the reviewed substantive SHA;
 - required CI is green on that SHA;
 - no finding or unresolved review thread remains;
@@ -177,7 +179,7 @@ Discussion       = open reasoning and alternatives
 ADR              = a specific architectural decision
 Docs             = consolidated explanation and teaching material
 Issue            = work to perform
-Pull request     = one concrete reviewable change
+Pull request     = the single concrete reviewable change currently active
 PR review ledger = same-head evidence for ready and merge
 Tests            = executable evidence
 Benchmarks       = measured cost under a declared scenario

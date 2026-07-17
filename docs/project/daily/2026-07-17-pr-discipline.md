@@ -5,7 +5,7 @@
 Ripristinare un flusso GitHub comprensibile e renderlo normativo:
 
 ```text
-una sola PR aperta
+al massimo una PR aperta
 -> CI verde
 -> due review pulite sullo stesso SHA
 -> merge autorizzato
@@ -38,16 +38,9 @@ La PR `#13` non era però una vera PR vuota: era stata creata accidentalmente
 durante tentativi di verificare lo stato dei branch e conteneva duplicati della
 PR `#9` più note temporanee `REVIEW-GATE-NOTE-*`.
 
-Non possedeva:
-
-- una user story;
-- una issue-slice legittima;
-- scope autonomo;
-- una review unit valida;
-- un risultato da distribuire.
-
-È stata quindi chiusa amministrativamente senza merge. Il nome `noop` non verrà
-usato come tecnica di gestione del flusso.
+Non possedeva user story, issue-slice legittima, scope autonomo, review unit valida
+o risultato da distribuire. È stata chiusa amministrativamente senza merge e il
+nome `noop` non verrà usato come tecnica di gestione del flusso.
 
 ## Pulizia delle PR
 
@@ -77,13 +70,8 @@ Mergiata su `main`:
 ### PR #10
 
 La PR MapScene è stata ricostruita direttamente sul nuovo `main`. Durante il
-riallineamento sono stati corretti:
-
-- due generazioni duplicate dei contratti MapScene;
-- merge tree che avrebbe reintrodotto vecchia governance;
-- fixture fake rimasta sui tipi obsoleti;
-- capability statiche non applicate durante `install`;
-- test di atomicità mancante per installazioni rifiutate.
+riallineamento sono stati corretti contratti duplicati, merge tree regressivo,
+fixture obsolete, capability statiche e atomicità delle installazioni fallite.
 
 Head finale:
 
@@ -131,46 +119,53 @@ docs/it/06-review-e-merge.md
 
 Le regole centrali sono:
 
-1. una sola PR ordinaria aperta;
+1. al massimo una PR aperta nel repository;
 2. branch creato dal `main` corrente;
 3. niente PR stacked, placeholder o `noop`;
 4. issue future consentite, PR future no;
-5. due round puliti sullo stesso substantive head;
-6. finding o commit sostanziale azzera il contatore;
-7. merge autonomo soltanto con autorizzazione e tutti i gate;
-8. expected-head guard obbligatorio per il merge automatico;
-9. verifica di PR, issue e nuovo `main` dopo il merge;
-10. soltanto dopo si crea il branch successivo;
-11. chiusura amministrativa consentita solo per PR che non distribuiscono nulla.
+5. nessuna eccezione parallela prevista dalle regole correnti;
+6. due round puliti sullo stesso substantive head;
+7. finding o commit sostanziale azzera il contatore;
+8. merge autonomo soltanto con autorizzazione e tutti i gate;
+9. expected-head guard obbligatorio;
+10. verifica di PR, issue e nuovo `main` dopo il merge;
+11. soltanto dopo si crea il branch successivo;
+12. chiusura amministrativa solo per PR che non distribuiscono nulla.
 
 ## Perché non inserire queste regole nella PR MapScene
 
 Governance e MapScene sono due review unit differenti. Inserire le nuove regole
-nella PR `#10` avrebbe:
-
-- ampliato lo scope;
-- confuso review tecnica e processo;
-- aggiunto commit sostanziali dopo i round;
-- invalidato nuovamente il gate.
-
-Per questo la governance parte dal merge commit MapScene e usa una sola PR
-separata.
+nella PR `#10` avrebbe ampliato lo scope e invalidato nuovamente il gate. La
+governance parte quindi dal merge commit MapScene e usa una sola PR separata.
 
 ## Finding pre-review
 
-Il primo passaggio di coerenza ha trovato che:
+### Finding 1 — indici documentali sullo stato precedente
 
-- `docs/it/README.md` descriveva ancora MapScene come PR draft invece che slice
-  già mergiata;
-- `documentation-status.md` non citava il nuovo report né il flusso seriale nelle
-  note dei capitoli operativi.
+Il primo passaggio ha trovato che:
+
+- `docs/it/README.md` descriveva ancora MapScene come PR draft;
+- `documentation-status.md` non citava il nuovo report né il flusso seriale.
+
+Correzione: indice principale e stato documentale allineati ai tre Lab presenti
+in `main` e al nuovo report.
+
+### Finding 2 — deroga implicita alla regola dell'unica PR
+
+La prima versione della governance usava l'espressione “PR ordinaria” e lasciava
+una possibile eccezione esplicita per PR parallele. Questo indeboliva la decisione
+del maintainer.
 
 Correzione:
 
-- indice principale aggiornato ai tre Lab presenti in `main`;
-- capitoli `00`, `04` e `06` descritti esplicitamente come governance seriale;
-- nuovo report aggiunto allo stato documentale;
-- la CI sul primo SHA della PR è storica e il clean-review counter resta zero.
+- sostituito ovunque con “al massimo una PR aperta”;
+- rimossa la deroga parallela da regole, agent guide, contributor guide e template;
+- un eventuale cambio futuro richiederà una nuova PR di governance quando non
+  esiste un'altra PR;
+- la chiusura amministrativa resta consentita solo perché non distribuisce nulla.
+
+Entrambi i finding hanno azzerato il clean-review counter. La CI e i due round
+finali devono riferirsi al nuovo substantive head.
 
 ## Verifica prevista
 
@@ -187,7 +182,7 @@ Round 1:
 Round 2:
 
 - percorso reale di uno studente/contributore;
-- una sola PR aperta;
+- unica PR aperta;
 - riallineamento post-merge;
 - report e milestone;
 - link e CI.
@@ -205,12 +200,9 @@ Qualunque finding o commit sostanziale azzera il contatore.
 
 ## Decisioni richieste
 
-Nessuna. Il maintainer ha già stabilito:
-
-- due round consecutivi obbligatori;
-- autorizzazione al merge autonomo dopo i gate;
-- una sola PR aperta;
-- riallineamento di `main` prima della PR successiva.
+Nessuna. Il maintainer ha già stabilito due round consecutivi, autorizzazione al
+merge autonomo dopo i gate, al massimo una PR aperta e riallineamento di `main`
+prima della PR successiva.
 
 ## Debito e prossimo passo
 

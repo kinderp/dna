@@ -4,7 +4,7 @@
 
 ```text
 repository upstream
--> verifica main e PR aperte
+-> verifica main e assenza di PR aperte
 -> fork personale o branch autorizzato
 -> branch di lavoro dal main corrente
 -> issue o sub-issue
@@ -33,7 +33,7 @@ La procedura normativa di review e merge è descritta in
 4. leggere il documento del componente;
 5. identificare test e scenari Lab;
 6. eseguire la baseline disponibile;
-7. controllare la lista delle PR aperte;
+7. verificare che non esistano PR aperte;
 8. leggere lo SHA corrente di `main`;
 9. creare un branch descrittivo da quel `main`.
 
@@ -47,9 +47,9 @@ perf-measure-navigation-snapshot
 fix-presence-expiry
 ```
 
-## Una sola PR alla volta
+## Al massimo una PR aperta
 
-Nel flusso ordinario del progetto esiste una sola PR aperta.
+Nel repository può esserci al massimo una PR aperta.
 
 Mentre una PR è attiva si possono:
 
@@ -66,8 +66,9 @@ Non si possono aprire:
 - PR `noop` usate come segnaposto;
 - PR basate su una versione di `main` precedente all'ultimo merge.
 
-Un'eccezione richiede autorizzazione esplicita del maintainer e tracciabilità in
-ogni PR coinvolta.
+Le regole correnti non prevedono PR parallele. Una futura modifica deve essere
+approvata tramite una PR di governance quando il repository non ha altre PR
+aperte.
 
 ### Chiusura senza merge
 
@@ -77,6 +78,7 @@ commento di chiusura deve spiegare:
 
 - perché non è una review unit valida;
 - che non è stata mergiata;
+- che il contenuto non verrà applicato direttamente a `main`;
 - se il branch viene conservato;
 - che prima di un nuovo uso dovrà essere riallineato al `main` futuro.
 
@@ -102,17 +104,8 @@ Esempi:
 
 ## Issue madre e micro-step
 
-Una milestone usa una issue madre con:
-
-- goal;
-- roadmap primaria;
-- non-obiettivi;
-- dipendenze;
-- rischi;
-- checklist;
-- tracciabilità;
-- issue figlie;
-- PR collegate.
+Una milestone usa una issue madre con goal, roadmap, non-obiettivi, dipendenze,
+rischi, checklist, tracciabilità, issue figlie e PR collegate.
 
 Le issue figlie rappresentano vertical slice o prove specifiche. Creare una issue
 non equivale ad aprire la sua PR.
@@ -152,8 +145,7 @@ sh tools/tdna check-kotlin
 sh tools/tdna check
 ```
 
-La CI deve usare gli stessi comandi o task sottostanti. Non deve esistere una
-procedura segreta disponibile soltanto al server.
+La CI deve usare gli stessi comandi o task sottostanti.
 
 ## Scegliere il test
 
@@ -181,7 +173,7 @@ La PR spiega:
 - bounded context e piattaforme;
 - livello di rischio;
 - base `main` usata;
-- inventario delle PR aperte;
+- conferma che è l'unica PR aperta;
 - contratti modificati;
 - provider coinvolti;
 - impatto su prestazioni e batteria;
@@ -246,22 +238,11 @@ Dopo il fix servono due nuovi round puliti. I round precedenti non contano.
 
 ### Commit che invalidano la review
 
-Invalidano i round puliti modifiche a:
+Invalidano i round puliti modifiche a codice, test, fixture, contratti, build,
+workflow, documentazione stabile e report tecnico della slice.
 
-- codice;
-- test;
-- fixture;
-- contratti;
-- build e workflow;
-- documentazione stabile;
-- report tecnico della slice.
-
-Non li invalidano da soli:
-
-- aggiornamento della descrizione PR;
-- review submission o commento;
-- label o milestone;
-- rerun CI sullo stesso SHA.
+Non li invalidano da soli descrizione PR, review submission, commento, label,
+milestone o rerun CI sullo stesso SHA.
 
 ### Focus consigliati
 
@@ -281,23 +262,17 @@ durante la guida.
 Il ledger autorevole per il merge è la timeline delle review e la descrizione PR.
 Può essere aggiornato dopo i round senza cambiare il commit revisionato.
 
-Il report Markdown committato prima dei round finali contiene:
-
-- contesto;
-- finding e fix;
-- substantive head previsto;
-- review plan;
-- link alla PR.
+Il report Markdown committato prima dei round finali contiene contesto, finding,
+fix, substantive head previsto, review plan e link alla PR.
 
 Non viene modificato dopo i round soltanto per duplicarne l'esito. Dopo il merge,
-una successiva PR documentale può riconciliare il report storico con CI finale,
-due round puliti e merge commit.
+una successiva PR documentale può riconciliare il report storico.
 
 ## Gate di merge
 
 Prima del merge verificare:
 
-- [ ] questa è l'unica PR ordinaria aperta;
+- [ ] questa è l'unica PR aperta;
 - [ ] CI verde sul substantive head corrente;
 - [ ] nessun finding o thread aperto;
 - [ ] review round pulito 1 registrato;
@@ -323,7 +298,7 @@ Prima di aprire la PR successiva:
 4. aggiornare o pianificare la riconciliazione storica;
 5. creare il branch successivo dal nuovo `main`;
 6. riallineare eventuali branch conservati;
-7. verificare che non esistano altre PR aperte.
+7. verificare che non esistano PR aperte.
 
 ## Commit
 
@@ -334,10 +309,6 @@ Formato consigliato:
 
 Explain what changed and why.
 Explain contract, hot-path or ownership effects when relevant.
-
-Modified files:
-- path/one
-- path/two
 ```
 
 Tipi indicativi:
@@ -348,15 +319,7 @@ feat fix docs test refactor perf build chore style
 
 ## Dati e fixture
 
-Non committare:
-
-- tracce GPS personali;
-- coordinate domestiche;
-- foto private;
-- conversazioni reali;
-- token o chiavi API;
-- dump di database;
-- log con identificativi.
-
+Non committare tracce GPS personali, coordinate domestiche, foto private,
+conversazioni reali, token, chiavi API, dump di database o log con identificativi.
 Una fixture pubblica deve essere sintetica o anonimizzata e documentare la
 provenienza.

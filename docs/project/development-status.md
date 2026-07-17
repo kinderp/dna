@@ -51,10 +51,11 @@ Last updated: 2026-07-17
 
 ## Active deliverables
 
-- one ordinary open PR at a time;
+- at most one open PR in the repository;
 - no stacked, placeholder or `noop` PRs;
+- no parallel-PR exception in the current rules;
 - next branch from the verified post-merge `main`;
-- explicit administrative-closure exception for non-shipping PRs;
+- explicit administrative closure for non-shipping PRs;
 - standing autonomous merge authority constrained by every gate;
 - expected-head merge guard;
 - post-merge verification before the next PR;
@@ -66,8 +67,17 @@ At PR creation:
 
 - PR #10 was merged;
 - PR #12 and #13 were closed without merge;
-- no ordinary PR remained open;
-- PR #15 becomes the single active PR.
+- no PR remained open;
+- PR #15 became the single active PR.
+
+## Findings in the active slice
+
+1. documentation index/status still described MapScene as an unmerged draft;
+2. the first governance draft left an explicit parallel-PR exception and the
+   ambiguous phrase “ordinary PR”, which weakened the maintainer's strict rule.
+
+Both findings are corrected on the current substantive head. The review counter
+remains zero until CI and two new clean rounds complete.
 
 ## Milestone still missing
 

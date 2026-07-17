@@ -17,10 +17,10 @@ Which user behavior or teaching scenario changes?
 
 - Base `main` SHA used to create or realign this branch:
 - Open-PR inventory checked at PR creation:
-- [ ] This is the only ordinary open PR
+- [ ] This is the only open PR
 - [ ] No unmerged dependency is hidden in another branch
 - [ ] This is not a placeholder, empty or `noop` PR
-- [ ] Any exception to serial PR execution is explicitly authorized and linked
+- [ ] No next implementation PR will be opened before this PR is merged or closed
 
 ## Contracts and architecture
 
@@ -69,7 +69,7 @@ Which user behavior or teaching scenario changes?
 ## Non-goals and follow-up
 
 State explicitly what this PR does not implement. Future implementation PRs must
-not be opened while this PR is active unless the maintainer records an exception.
+not be opened while this PR is active.
 
 ## Reviewer focus
 
@@ -115,7 +115,7 @@ change.
 - [ ] No unresolved review thread remains
 - [ ] PR ledger contains exact outcomes; report links the PR and records pre-review context
 - [ ] Issue and milestone agree with the pre-merge state
-- [ ] This remains the only ordinary open PR
+- [ ] This remains the only open PR
 - [ ] Merge authorization: maintainer action / explicit agent authorization / standing agent authorization
 - [ ] Merge will use the reviewed expected head SHA
 

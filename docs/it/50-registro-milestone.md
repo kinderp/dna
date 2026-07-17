@@ -80,11 +80,12 @@ Deliverable:
 - issue [#14](https://github.com/kinderp/tdna/issues/14);
 - PR [#15](https://github.com/kinderp/tdna/pull/15);
 - branch `agent/serial-pr-governance`;
-- stato **in review**.
+- stato **finding corretti; CI e review finali pendenti**.
 
 Deliverable:
 
-- [x] una sola PR ordinaria aperta;
+- [x] al massimo una PR aperta;
+- [x] nessuna eccezione parallela nelle regole correnti;
 - [x] niente stacked, placeholder o `noop`;
 - [x] branch successivo dal nuovo `main`;
 - [x] chiusura amministrativa esplicita per PR non distribuite;
@@ -92,6 +93,7 @@ Deliverable:
 - [x] expected-head guard;
 - [x] verifica post-merge prima della PR successiva;
 - [x] regole, agent guide, contributor guide e template allineati;
+- [x] report e indici documentali allineati;
 - [ ] CI verde sul substantive head finale;
 - [ ] clean review round 1;
 - [ ] clean review round 2;
@@ -115,7 +117,7 @@ Deliverable:
 ## Regole
 
 - ogni slice non banale ha issue e PR;
-- una sola PR ordinaria può essere aperta alla volta salvo eccezione esplicita;
+- nel repository può essere aperta al massimo una PR;
 - ogni branch parte dal `main` verificato dopo l'ultimo merge;
 - niente PR stacked, placeholder o `noop`;
 - ogni PR richiede CI verde e due review round consecutivi senza finding sullo

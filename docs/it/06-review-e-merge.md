@@ -8,7 +8,7 @@ Nessuna pull request di Travel DNA può distribuire una modifica senza:
 - due review round consecutivi senza nuovi finding;
 - stesso substantive head SHA;
 - autorità di merge esplicita;
-- rispetto del flusso con una sola PR aperta.
+- rispetto della regola con al massimo una PR aperta.
 
 La regola evita due errori:
 
@@ -29,86 +29,57 @@ PR A ancora aperta
 
 ### Substantive head
 
-È il commit più recente che modifica il contenuto tecnico o documentale della
-slice:
-
-- codice;
-- test;
-- contratti;
-- fixture;
-- workflow;
-- documentazione stabile;
-- report tecnico della giornata.
-
-I due round puliti devono riferirsi allo stesso SHA.
+È il commit più recente che modifica codice, test, contratti, fixture, workflow,
+documentazione stabile o report tecnico della slice. I due round puliti devono
+riferirsi allo stesso SHA.
 
 ### Review round
 
-È una lettura distinta della PR corrente con un focus dichiarato. Non è:
-
-- un rerun della CI;
-- una rilettura superficiale del solo ultimo file;
-- la ripetizione testuale del round precedente;
-- l'assenza di commenti per distrazione.
+È una lettura distinta della PR corrente con un focus dichiarato. Non è un rerun
+della CI, una lettura superficiale del solo ultimo file o la ripetizione testuale
+del round precedente.
 
 ### Finding
 
-È un problema che richiede una modifica sostanziale o una decisione esplicita.
-Esempi:
+È un problema che richiede una modifica sostanziale o una decisione esplicita,
+per esempio un'invariante mancante, un provider che esce dall'adapter, input non
+bounded, documento errato, rischio privacy o workflow incompleto.
 
-- invariante mancante;
-- tipo provider che esce dall'adapter;
-- test che non protegge il comportamento promesso;
-- input esterno non bounded;
-- documento che dichiara una capacità inesistente;
-- errore di privacy;
-- hot path reso più costoso senza prova;
-- workflow che non verifica il nuovo modulo;
-- scope non autorizzato dalla milestone.
+### PR attiva
 
-### PR ordinaria
-
-È una PR destinata al merge. Nel flusso autonomo ordinario ne esiste una sola
-aperta.
+È l'unica PR aperta nel repository. Non può esistere una seconda PR finché la
+prima non è stata mergiata o chiusa senza merge.
 
 ### Chiusura amministrativa
 
 È la chiusura senza merge di una PR accidentale, duplicata, stacked o abbandonata.
-Non equivale al completamento della slice.
+Non equivale al completamento della slice e non autorizza applicazione diretta a
+`main`.
 
-## Perché una sola PR aperta
+## Perché al massimo una PR aperta
 
-Il flusso seriale rende verificabili:
-
-- base reale del branch;
-- diff della review unit;
-- CI associata allo SHA;
-- finding e reset;
-- ordine delle dipendenze;
-- report e milestone;
-- responsabilità del merge.
-
-La sequenza è:
+Il flusso seriale rende verificabili base, diff, CI, finding, ordine delle
+dipendenze, report e responsabilità del merge.
 
 ```text
-nessuna PR ordinaria aperta
+nessuna PR aperta
 -> branch dal main corrente
 -> una draft PR
 -> review/fix/CI
 -> due round puliti
--> merge o abbandono
+-> merge o chiusura senza merge
 -> verifica nuovo main
 -> branch successivo
 ```
 
-Preparare issue future è consentito. Aprire PR stacked o placeholder non lo è,
-salvo eccezione esplicita del maintainer.
+Preparare issue future è consentito. Aprire PR stacked o placeholder non lo è.
+Le regole correnti non prevedono eccezioni per PR parallele.
 
 ## Fonti di evidenza
 
 ### Ledger autorevole della PR
 
-Timeline delle review e descrizione PR conservano sullo stesso head:
+Timeline delle review e descrizione PR conservano:
 
 ```text
 head SHA
@@ -120,22 +91,14 @@ finding oppure no new findings
 clean-round count
 ```
 
-Questo è il ledger autorevole per ready e merge.
-
 ### Report storico nel repository
 
-Il report Markdown committato prima dei round finali contiene:
+Il report Markdown committato prima dei round finali contiene contesto, issue,
+PR, finding e fix già avvenuti, substantive head previsto, focus dei round e link
+al ledger.
 
-- contesto della giornata;
-- issue e PR;
-- finding e fix già avvenuti;
-- substantive head previsto;
-- piano e focus dei round;
-- link al ledger della PR.
-
-Non viene modificato dopo i round soltanto per copiarne gli esiti: quel commit
-cambierebbe lo SHA e invaliderebbe i round. Una successiva PR documentale può
-riconciliare report, CI finale e merge commit.
+Non viene modificato dopo i round soltanto per copiarne gli esiti. Una successiva
+PR documentale può riconciliare report, CI finale e merge commit.
 
 ## Sequenza normativa
 
@@ -143,25 +106,17 @@ riconciliare report, CI finale e merge commit.
 
 Prima del branch:
 
-1. verificare quante PR sono aperte;
-2. chiudere o risolvere eventuali PR accidentali/stacked;
+1. verificare che non esistano PR aperte;
+2. chiudere o risolvere eventuali PR accidentali o stacked;
 3. leggere il nuovo SHA di `main`;
 4. verificare dipendenze della issue;
 5. creare il branch da quel `main`.
 
 ### 2. PR draft
 
-La PR nasce draft e contiene:
-
-- use case;
-- scope e non-obiettivi;
-- rischio;
-- base `main` SHA;
-- conferma che è l'unica PR ordinaria;
-- contratti;
-- verifiche;
-- documentazione;
-- reviewer focus.
+La PR nasce draft e contiene use case, scope, non-obiettivi, rischio, base `main`,
+conferma di essere l'unica PR, contratti, verifiche, documentazione e reviewer
+focus.
 
 ### 3. Baseline verde
 
@@ -187,15 +142,8 @@ Consecutive clean rounds:
 
 ### 5. Se esiste un finding
 
-Il finding deve essere:
-
-1. descritto con effetto osservabile;
-2. corretto nel repository;
-3. protetto da test o altra evidenza quando applicabile;
-4. collegato nel report o nel ledger;
-5. verificato dalla CI sul nuovo head.
-
-Il conteggio torna a zero.
+Il finding viene descritto, corretto, protetto da prova quando applicabile e
+verificato dalla CI sul nuovo head. Il conteggio torna a zero.
 
 ### 6. Due round consecutivi puliti
 
@@ -206,7 +154,7 @@ Round A -> no new findings -> clean count 1
 Round B -> no new findings -> clean count 2
 ```
 
-I round devono avere focus complementari. Esempio `R2`:
+Focus consigliato `R2`:
 
 ```text
 Round A:
@@ -253,16 +201,11 @@ label o milestone
 CI rerun sullo stesso SHA
 ```
 
-Un commit `docs:` è sostanziale quando modifica la spiegazione consolidata o il
-report tecnico.
-
 ## Gate prima del ready e merge
-
-Checklist minima:
 
 - [ ] substantive head SHA registrato;
 - [ ] branch basato o riallineato al `main` corrente;
-- [ ] questa è l'unica PR ordinaria aperta;
+- [ ] questa è l'unica PR aperta;
 - [ ] CI richiesta verde su quello SHA;
 - [ ] nessun finding o thread aperto;
 - [ ] round pulito 1 registrato;
@@ -278,21 +221,13 @@ Solo dopo questi gate la PR passa da draft a ready.
 
 ## Autorità e merge autonomo
 
-Il maintainer può concedere:
-
-- autorizzazione singola per una PR;
-- autorizzazione permanente per il flusso autonomo;
-- nessuna autorizzazione, riservando il merge a sé.
+Il maintainer può concedere autorizzazione singola, autorizzazione permanente o
+riservare il merge a sé.
 
 Con autorizzazione permanente un agente può mergiare solo dopo aver verificato
-ogni gate e usando l'expected head SHA revisionato. Non può interpretare
-l'autorizzazione come permesso di:
-
-- saltare una review;
-- mergiare CI rossa o obsoleta;
-- ignorare una nuova PR aperta;
-- riutilizzare round di uno SHA precedente;
-- aprire la PR successiva prima della verifica del merge.
+ogni gate e usando l'expected head SHA revisionato. Non può saltare una review,
+mergiare CI rossa o obsoleta, ignorare una seconda PR, riutilizzare round di uno
+SHA precedente o aprire la PR successiva prima della verifica del merge.
 
 Se lo SHA si muove fra gate e merge, l'operazione deve fallire e la review deve
 essere rivalutata.
@@ -305,25 +240,18 @@ Prima della PR successiva:
 2. registrare il merge commit;
 3. verificare l'issue collegata;
 4. leggere il nuovo `main`;
-5. verificare che non esistano altre PR aperte;
+5. verificare che non esistano PR aperte;
 6. creare o riallineare il branch successivo da quel `main`;
-7. aggiornare report/milestone nel punto previsto.
-
-Questa fase non è una formalità: impedisce che la slice successiva parta da una
-storia diversa da quella realmente distribuita.
+7. aggiornare report e milestone nel punto previsto.
 
 ## Chiusura amministrativa
 
-Una PR che non verrà mergiata può essere chiusa senza i due round puliti quando è:
+Una PR che non verrà mergiata può essere chiusa senza i due round puliti quando è
+accidentale, duplicata, vuota, placeholder, stacked o abbandonata esplicitamente.
 
-- accidentale;
-- duplicata;
-- vuota o placeholder;
-- stacked e aperta prima della dipendenza;
-- abbandonata esplicitamente.
-
-La chiusura deve spiegare perché non distribuisce modifiche. Non può essere usata
-per aggirare il gate e poi applicare il contenuto direttamente a `main`.
+La chiusura deve spiegare perché non distribuisce modifiche. Il contenuto non può
+essere applicato direttamente a `main` e la PR non può essere registrata come
+slice completata.
 
 ## Esempio con finding
 
@@ -333,8 +261,7 @@ Round 1: trova lista mutabile trattenuta
 Clean count: 0
 
 Head B
-Fix + regression test
-CI green
+Fix + regression test + CI green
 Round 2: no finding
 Clean count: 1
 Round 3: trova metadata non bounded
@@ -374,7 +301,7 @@ autorizzato, ma deve:
 - resettare il conteggio dopo finding o commit sostanziali;
 - registrare gli esiti nel ledger PR, non con un commit auto-invalidante;
 - usare expected-head guard;
-- mantenere una sola PR aperta;
+- mantenere al massimo una PR aperta;
 - verificare il nuovo `main` prima della PR successiva.
 
 La velocità non modifica il gate di qualità.

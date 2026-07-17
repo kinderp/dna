@@ -15,7 +15,7 @@ teaching documentation in `docs/it` is written in Italian.
 ## Serial contribution flow
 
 ```text
-verify current main and open-PR inventory
+verify current main and confirm no PR is open
 -> personal fork or authorized repository branch
 -> small topic branch from current main
 -> focused issue
@@ -31,14 +31,17 @@ verify current main and open-PR inventory
 -> only then start the next branch and PR
 ```
 
-During normal project development exactly one pull request is open at a time.
-Do not create stacked, placeholder or `noop` pull requests. Preparing future
-issues and design notes is allowed; opening their PR waits for the active PR to
-merge or be explicitly abandoned.
+The repository may contain at most one open pull request. Do not create stacked,
+placeholder or `noop` pull requests. Preparing future issues and design notes is
+allowed; opening their PR waits for the active PR to merge or be explicitly
+closed without merge.
 
-Parallel PRs require an explicit maintainer exception. Accidental, duplicate,
-stacked or abandoned PRs may be closed administratively without the two-review
-gate because they ship no change; their closure reason must be explicit.
+The current rules provide no parallel-PR exception. A future change to this rule
+must itself pass through the serial governance workflow.
+
+Accidental, duplicate, stacked or abandoned PRs may be closed administratively
+without the two-review gate because they ship no change; their closure reason
+must be explicit and their content must not be applied directly to `main`.
 
 ## Review and merge
 
