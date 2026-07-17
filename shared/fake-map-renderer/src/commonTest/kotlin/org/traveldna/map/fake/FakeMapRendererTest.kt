@@ -22,8 +22,12 @@ import org.traveldna.map.contracts.RouteOverlay
 import org.traveldna.map.contracts.RouteOverlayProgress
 import org.traveldna.map.contracts.RouteOverlayRole
 import org.traveldna.map.testkit.MapRendererContractProbe
+import org.traveldna.plugin.sdk.PluginId
 import org.traveldna.routing.contracts.GeoPoint
 import org.traveldna.routing.contracts.RouteId
+import org.traveldna.routing.contracts.RouteLeg
+import org.traveldna.routing.contracts.RoutePlan
+import org.traveldna.routing.contracts.RouteProvenance
 
 class FakeMapRendererTest {
     private val a = GeoPoint(0.0, 0.0)
@@ -130,6 +134,15 @@ class FakeMapRendererTest {
         )
     }
 
+    @Test
+    fun canonicalFixtureUsesTheCurrentMapContractGeneration() {
+        val scene = FakeMapFixtures.scene(canonicalRoute())
+        assertEquals(1, scene.routeOverlays.size)
+        assertEquals(1, scene.markers.size)
+        assertEquals(MapMarkerKind.Place, scene.markers.single().kind)
+        assertEquals(MapLocationSemantics.PublicPlace, scene.markers.single().locationSemantics)
+    }
+
     private fun scene(markers: List<MapMarker> = emptyList()): MapScene = MapScene(
         id = MapSceneId("scene.reference"),
         camera = MapCamera(a, zoom = 12.0),
@@ -142,6 +155,25 @@ class FakeMapRendererTest {
             ),
         ),
         markers = markers,
+    )
+
+    private fun canonicalRoute(): RoutePlan = RoutePlan(
+        id = RouteId("route-fixture-v0"),
+        geometry = listOf(a, b, c),
+        legs = listOf(
+            RouteLeg(
+                geometryStartIndex = 0,
+                geometryEndIndex = 2,
+                origin = a,
+                destination = c,
+                distanceMeters = 2_400L,
+                durationSeconds = 160L,
+                maneuvers = emptyList(),
+            ),
+        ),
+        distanceMeters = 2_400L,
+        durationSeconds = 160L,
+        provenance = RouteProvenance(PluginId("org.traveldna.fake-map-test")),
     )
 
     private fun dnaMarker(id: String): MapMarker = MapMarker(
