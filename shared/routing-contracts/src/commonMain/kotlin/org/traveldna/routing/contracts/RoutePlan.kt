@@ -25,11 +25,27 @@ data class RouteManeuver(
     init {
         require(geometryIndex >= 0) { "maneuver geometry index must be non-negative" }
         require(instruction.isNotBlank()) { "maneuver instruction must not be blank" }
-        require(instruction.length <= 512) { "maneuver instruction is too long" }
-        require(roadName == null || roadName.isNotBlank()) { "road name must be null or non-blank" }
-        require(exitNumber == null || exitNumber.isNotBlank()) {
-            "exit number must be null or non-blank"
+        require(instruction.length <= MaxInstructionLength) {
+            "maneuver instruction is too long"
         }
+        require(
+            roadName == null ||
+                (roadName.isNotBlank() && roadName.length <= MaxRoadNameLength),
+        ) {
+            "road name must be null or non-blank and at most $MaxRoadNameLength characters"
+        }
+        require(
+            exitNumber == null ||
+                (exitNumber.isNotBlank() && exitNumber.length <= MaxExitNumberLength),
+        ) {
+            "exit number must be null or non-blank and at most $MaxExitNumberLength characters"
+        }
+    }
+
+    companion object {
+        const val MaxInstructionLength: Int = 512
+        const val MaxRoadNameLength: Int = 256
+        const val MaxExitNumberLength: Int = 64
     }
 }
 

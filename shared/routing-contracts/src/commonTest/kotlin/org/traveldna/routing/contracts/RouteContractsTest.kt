@@ -139,6 +139,24 @@ class RouteContractsTest {
                 providerDiagnosticCode = "x".repeat(129),
             )
         }
+        assertFailsWith<IllegalArgumentException> {
+            RouteManeuver(
+                geometryIndex = 0,
+                type = ManeuverType.Continue,
+                location = a,
+                instruction = "Continue",
+                roadName = "r".repeat(RouteManeuver.MaxRoadNameLength + 1),
+            )
+        }
+        assertFailsWith<IllegalArgumentException> {
+            RouteManeuver(
+                geometryIndex = 0,
+                type = ManeuverType.ExitRight,
+                location = a,
+                instruction = "Take the exit",
+                exitNumber = "e".repeat(RouteManeuver.MaxExitNumberLength + 1),
+            )
+        }
     }
 
     @Test

@@ -6,27 +6,36 @@ Last updated: 2026-07-17
 
 **Foundations and Travel DNA Lab v0 — in progress**
 
-## Completed slice
+## Completed slices
 
-**Java/Rust reference-routing Lab — merged**
+### Java/Rust reference-routing Lab
 
 - issue [#3](https://github.com/kinderp/tdna/issues/3);
 - PR [#4](https://github.com/kinderp/tdna/pull/4);
 - merge commit `d122f1b4871719087e79a50b185ab302d810cb20`;
 - chapter `docs/it/43-reference-routing-java-rust.md`.
 
-## Active slice
-
-**Provider-neutral routing contracts and deterministic fake planner — review complete, merge pending**
+### Provider-neutral routing contracts and deterministic fake planner
 
 - issue [#5](https://github.com/kinderp/tdna/issues/5);
-- draft PR [#6](https://github.com/kinderp/tdna/pull/6);
-- branch `agent/provider-neutral-routing-contracts`;
-- implementation/documentation commit `ece0c6e26773b0b409f18e723b7e6249a3c3ee9a`;
+- PR [#6](https://github.com/kinderp/tdna/pull/6);
+- merge commit `2a28d1654988cef4188986342f76fd7d19be358f`;
 - chapter `docs/it/44-contratti-routing-e-fake-provider.md`;
 - scenario `docs/it/lab/scenarios/routing-contracts-fake-provider.md`.
 
-## Implemented
+## Active slice
+
+**Governance: two consecutive clean review rounds — implementation complete,
+final CI and clean reviews pending**
+
+- issue [#8](https://github.com/kinderp/tdna/issues/8);
+- draft PR [#9](https://github.com/kinderp/tdna/pull/9);
+- branch `agent/two-clean-review-policy`;
+- operational rule `docs/it/00-regole-operative.md`;
+- detailed chapter `docs/it/06-review-e-merge.md`;
+- report `docs/project/daily/2026-07-17-review-policy.md`.
+
+## Implemented foundation capabilities
 
 - Gradle/Kotlin Multiplatform bootstrap;
 - JVM and Linux x64 targets;
@@ -39,32 +48,24 @@ Last updated: 2026-07-17
 - provider-neutral `RoutePlannerPort`;
 - deterministic fake planner and call recording;
 - reusable conformance probe;
-- executable JVM Lab;
+- executable Java/Rust and Kotlin Labs;
 - architecture checker;
 - extended Foundation CI;
-- chapter 44 and second executable Lab;
-- indexed daily reports.
+- indexed daily reports;
+- mandatory two-clean-review policy on the PR #9 branch.
 
-## Verification
+## Review-policy hardening
 
-Foundation CI run `#19` passed all steps on commit
-`ece0c6e26773b0b409f18e723b7e6249a3c3ee9a`:
+The first audit of the new policy found that provider-controlled maneuver
+`roadName` and `exitNumber` values were non-blank but unbounded. PR #9 adds:
 
 ```text
-documentation             success
-architecture boundaries   success
-Java                       success
-Rust                       success
-Java/Rust contract         success
-Kotlin Multiplatform       success
+MaxRoadNameLength = 256
+MaxExitNumberLength = 64
 ```
 
-## Review
-
-- round 1: fixed mutable collection ownership and ignored waypoint risks;
-- round 2: fixed runtime-platform semantics and bounded metadata;
-- round 3: no new blocking findings;
-- privacy/safety: synthetic data only, no network or user information.
+with common Kotlin regression tests. Because a finding required a substantive
+change, the clean-review counter was reset to zero as the new policy requires.
 
 ## Milestone still missing
 
@@ -79,10 +80,12 @@ Kotlin Multiplatform       success
 
 ## Next executable step
 
-Create provider-neutral map-scene contracts and `FakeMapRenderer`, then project a
-canonical `RoutePlan` through scene deltas without MapLibre imports.
+After PR #9 reaches two clean rounds and is merged, continue issue
+[#7](https://github.com/kinderp/tdna/issues/7): provider-neutral map-scene
+contracts, route overlay projection and `FakeMapRenderer`.
 
-## Maintainer decision
+## Maintainer decisions
 
-Only the merge of PR #6. No product or architectural decision blocks subsequent
-planning.
+No product or architectural decision is currently required. Merge authority
+remains with the maintainer after each PR satisfies CI and two consecutive clean
+review rounds.
