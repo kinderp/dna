@@ -8,18 +8,19 @@ tracepoint logici, test, prestazioni e proprietà di sicurezza.
 1. leggere [Tracepoint Model v0](../41-tracepoint-model-v0.md);
 2. aprire lo scenario;
 3. eseguire o ispezionare la fixture indicata;
-4. seguire il percorso logico e, quando esiste, quello delle funzioni reali;
+4. seguire il percorso logico e quello delle funzioni reali;
 5. confrontare output e test;
 6. rispondere alle domande di ripasso;
-7. provare una variante senza modificare il contratto stabile.
+7. provare una variante senza rompere il contratto.
 
 ## Scenari eseguibili
 
 | Scenario | Stato | Cosa insegna |
 | --- | --- | --- |
 | [Reference routing Java/Rust](scenarios/reference-routing-java-rust.md) | executable | Grafo, Dijkstra, A*, fixture, determinismo e contract test cross-language. |
-| [Routing contracts e fake provider](scenarios/routing-contracts-fake-provider.md) | executable | Porte, modelli canonici, capability, provenance, invarianti e provider conformance. |
-| [MapScene e fake renderer](scenarios/map-scene-fake-renderer.md) | executable | Scena statica, delta, route progress, marker semantici, privacy e renderer conformance. |
+| [Routing contracts e fake provider](scenarios/routing-contracts-fake-provider.md) | executable | Porte, modelli canonici, capability, provenance e provider conformance. |
+| [MapScene e fake renderer](scenarios/map-scene-fake-renderer.md) | executable | Scena statica, delta, route progress, marker semantici e renderer conformance. |
+| [LocationSample e replay](scenarios/location-replay-deterministico.md) | executable | Tempo monotono, stream ordering, clock virtuale, rate razionale e fixture ground truth. |
 
 Comandi minimi:
 
@@ -27,6 +28,13 @@ Comandi minimi:
 sh tools/tdna lab reference-routing astar
 sh tools/tdna lab routing-contracts
 sh tools/tdna lab map-scene
+sh tools/tdna lab location-replay
+```
+
+Benchmark diagnostico della quarta slice:
+
+```bash
+sh tools/tdna bench location-replay 10000 7
 ```
 
 ## Scenari documentali pianificati
@@ -41,10 +49,9 @@ sh tools/tdna lab map-scene
 
 ## Regola sugli stati
 
-- `stable-doc`: il percorso didattico è abbastanza chiaro da guidare una futura
-  implementazione, ma il codice può non esistere;
-- `executable`: fixture, comando e test esistono nel repository;
+- `stable-doc`: percorso consolidato, codice non necessariamente presente;
+- `executable`: fixture/fake, comando e test esistono nel repository;
 - `public-output`: eventuale contratto macchina versionato, non ancora presente.
 
-Ogni scenario deve dichiarare test `existing`, `missing` e `future` senza
-fingere copertura.
+Ogni scenario dichiara test `existing`, `missing` e `future` senza fingere
+copertura.

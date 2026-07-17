@@ -10,9 +10,9 @@ dipendenze, risultati e lavoro rimandato.
 | Ordine | Milestone | Stato | Perché ora | Deliverable principali | Non-obiettivi |
 | --- | --- | --- | --- | --- | --- |
 | 0 | Documentation Foundation v0 | done | Fonte stabile prima del codice. | Regole, architettura, ADR, Lab e roadmap. | Codice mobile/backend. |
-| 1 | Foundations and Travel DNA Lab v0 | in-progress | Contratti e scenari prima degli SDK reali. | Multi-language build, canonical models, fakes, replay seed e CI. | GPS reale, MapLibre, Valhalla, chat. |
-| 2 | Canonical Route and Map Slice | planned | Verificare rendering e isolamento provider. | MapScene, fake renderer e adapter seed. | Turn-by-turn completo. |
-| 3 | Navigation Runtime Replay v0 | planned | Ridurre il rischio guidance. | Clock, replay, off-route e reroute. | Traffico live. |
+| 1 | Foundations and Travel DNA Lab v0 | in-progress | Contratti e scenari prima degli SDK reali. | Build multi-language, canonical models, fakes, replay e CI. | GPS reale, provider reali, chat. |
+| 2 | Canonical Route and Map Slice | planned | Verificare rendering e isolamento provider. | Adapter MapLibre seed e benchmark dispositivo. | Turn-by-turn completo. |
+| 3 | Navigation Runtime Replay v0 | planned | Ridurre il rischio guidance. | Matched position, progress, off-route e reroute. | Traffico live. |
 | 4 | External Navigation Companion v0 | planned | Valore con navigatori maturi. | Handoff, shadow route e recorder. | Automotive completo. |
 | 5 | Journey Journal v0 | planned | Valore autonomo e dati per DNA. | Event store, soste, media fake e DailyPage. | Cloud media pubblico. |
 | 6 | Conversation Core v0 | planned | Messaggistica durable e driver policy. | Outbox, fake server e voice surface. | Discovery live. |
@@ -30,87 +30,54 @@ dipendenze, risultati e lavoro rimandato.
 
 Avvio: **2026-07-16**
 
-### Slice A — reference routing
+### Slice completate
 
-- issue [#3](https://github.com/kinderp/tdna/issues/3);
-- PR [#4](https://github.com/kinderp/tdna/pull/4);
-- stato **merged**;
-- merge `d122f1b4871719087e79a50b185ab302d810cb20`.
+| Slice | Issue / PR | Stato | Merge |
+| --- | --- | --- | --- |
+| Reference routing | #3 / #4 | merged | `d122f1b4871719087e79a50b185ab302d810cb20` |
+| Routing contracts | #5 / #6 | merged | `2a28d1654988cef4188986342f76fd7d19be358f` |
+| Review governance | #8 / #9 | merged | `044e0773dd9afb1530db35688a00c56bfbd5eace` |
+| MapScene/fake renderer | #7 / #10 | merged | `2128f24b4a6ab00aeb437ed48a0af2910f33e9ec` |
+| Serial PR governance | #14 / #15 | merged | `76680433089842db5805d28eb50416a23c7d0a88` |
 
-### Slice B — provider-neutral routing contracts
+### Slice F — LocationSample e replay deterministico
 
-- issue [#5](https://github.com/kinderp/tdna/issues/5);
-- PR [#6](https://github.com/kinderp/tdna/pull/6);
-- stato **merged**;
-- merge `2a28d1654988cef4188986342f76fd7d19be358f`.
-
-### Slice C — two-clean-review governance e contract hardening
-
-- issue [#8](https://github.com/kinderp/tdna/issues/8);
-- PR [#9](https://github.com/kinderp/tdna/pull/9);
-- stato **merged**;
-- merge `044e0773dd9afb1530db35688a00c56bfbd5eace`.
-
-### Slice D — provider-neutral MapScene e fake renderer
-
-- issue [#7](https://github.com/kinderp/tdna/issues/7);
-- PR [#10](https://github.com/kinderp/tdna/pull/10);
-- stato **merged**;
-- final head `a18e73ad015951545c808d489ee66c57c5d1c80d`;
-- CI #80 verde;
-- review finali `4719736270` e `4719739041`;
-- merge `2128f24b4a6ab00aeb437ed48a0af2910f33e9ec`.
+- issue [#11](https://github.com/kinderp/tdna/issues/11);
+- PR [#16](https://github.com/kinderp/tdna/pull/16);
+- branch `agent/location-sample-replay`;
+- stato **pre-review complete; final CI and two clean rounds pending**.
 
 Deliverable:
 
-- [x] `MapScene`, camera, route e marker semantici;
-- [x] delta bounded separati dalla scena statica;
-- [x] `MapRendererPort` e capability;
-- [x] `FakeMapRenderer` e snapshot;
-- [x] renderer contract probe;
-- [x] route projector;
-- [x] CLI Lab, capitolo 45 e scenario;
-- [x] rimozione dei contratti duplicati;
-- [x] capability statiche e dinamiche coerenti;
-- [x] CI e due round puliti;
-- [x] merge.
-
-### Slice E — flusso PR seriale e merge autonomo gated
-
-- issue [#14](https://github.com/kinderp/tdna/issues/14);
-- PR [#15](https://github.com/kinderp/tdna/pull/15);
-- branch `agent/serial-pr-governance`;
-- stato **finding corretti; CI e review finali pendenti**.
-
-Deliverable:
-
-- [x] al massimo una PR aperta;
-- [x] nessuna eccezione parallela nelle regole correnti;
-- [x] niente stacked, placeholder o `noop`;
-- [x] branch successivo dal nuovo `main`;
-- [x] chiusura amministrativa esplicita per PR non distribuite;
-- [x] autorità di merge autonomo vincolata ai gate;
-- [x] expected-head guard;
-- [x] verifica post-merge prima della PR successiva;
-- [x] regole, agent guide, contributor guide e template allineati;
-- [x] report e indici documentali allineati;
-- [ ] CI verde sul substantive head finale;
+- [x] `GeoPoint` cross-domain e zero firmato canonico;
+- [x] `LocationSample`, sequence, monotonic time e origin;
+- [x] ordering gate con inspect/commit;
+- [x] rate razionale e resto;
+- [x] clock virtuale;
+- [x] transizione accepted atomica;
+- [x] state machine e summary bounded;
+- [x] fixture sintetica e parser JVM;
+- [x] Lab/report deterministico;
+- [x] benchmark diagnostico e artifact CI;
+- [x] chapter 46 e scenario Lab;
+- [x] reading paths, tracepoint, tooling e indici;
+- [x] report pre-review con finding history e benchmark;
+- [ ] Foundation CI sul substantive head finale;
 - [ ] clean review round 1;
 - [ ] clean review round 2;
-- [ ] merge.
+- [ ] merge e verifica `main`.
 
-### Criteri di chiusura milestone
+## Criteri di chiusura milestone
 
 - [x] repository e CI multi-language;
 - [x] Java/Rust reference routing;
 - [x] canonical routing contract seed;
 - [x] plugin descriptor e capability;
 - [x] fake route planner;
-- [x] `MapScene` e fake renderer su `main`;
-- [ ] `LocationSample` e clock;
-- [ ] GPS replay;
+- [x] `MapScene` e fake renderer;
+- [ ] `LocationSample`, clock e replay su `main`;
 - [ ] missed-exit scenario;
-- [ ] benchmark report;
+- [x] benchmark seed diagnostico;
 - [ ] Gradle Wrapper;
 - [ ] documentazione finale milestone.
 
@@ -120,13 +87,9 @@ Deliverable:
 - nel repository può essere aperta al massimo una PR;
 - ogni branch parte dal `main` verificato dopo l'ultimo merge;
 - niente PR stacked, placeholder o `noop`;
-- ogni PR richiede CI verde e due review round consecutivi senza finding sullo
-  stesso substantive head;
-- finding o commit sostanziali resettano il clean-review counter;
-- con autorizzazione permanente l'agente può mergiare soltanto dopo tutti i gate
-  e usando expected-head guard;
-- dopo il merge si verificano PR, issue e nuovo `main` prima della slice successiva;
+- CI verde e due round puliti sullo stesso SHA sono obbligatori;
+- finding o commit sostanziali azzerano il contatore;
+- il merge autonomo usa expected-head guard;
+- dopo il merge si verificano PR, issue e nuovo `main`;
 - una chiusura amministrativa non equivale a una slice completata;
-- l'issue si chiude con il merge, non con la sola prontezza tecnica;
-- milestone future non autorizzano codice anticipato;
 - deliverable significa evidenza, non percentuale vaga.

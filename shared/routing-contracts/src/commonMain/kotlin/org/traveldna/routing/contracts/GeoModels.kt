@@ -14,13 +14,11 @@ value class RouteId(val value: String) {
     override fun toString(): String = value
 }
 
-data class GeoPoint(val latitude: Double, val longitude: Double) {
-    init {
-        require(latitude.isFinite() && latitude in -90.0..90.0) {
-            "latitude must be finite and within [-90, 90]"
-        }
-        require(longitude.isFinite() && longitude in -180.0..180.0) {
-            "longitude must be finite and within [-180, 180]"
-        }
-    }
-}
+/**
+ * Source-compatible routing name for the cross-domain geo contract.
+ *
+ * New cross-domain code should import `org.traveldna.geo.contracts.GeoPoint`
+ * directly. The alias prevents the extraction from forcing unrelated callers
+ * to change in the same slice.
+ */
+typealias GeoPoint = org.traveldna.geo.contracts.GeoPoint

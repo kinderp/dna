@@ -1,0 +1,17 @@
+# Synthetic location stream with two deliberate ordering violations.
+TDNA_LOCATION_REPLAY_V0
+scenario reference-location-replay-v0
+rate 2 1
+sample 0 0 37.500000 15.100000 5.0 20.0 90.0 replay
+sample 1 1000 37.501000 15.100000 5.0 20.0 90.0 replay
+sample 1 1500 37.501500 15.100000 5.0 20.0 90.0 replay
+sample 2 2000 37.502000 15.100000 5.0 20.0 90.0 replay
+sample 3 1500 37.502500 15.100000 5.0 20.0 90.0 replay
+sample 4 3000 37.503000 15.100000 5.0 20.0 90.0 replay
+expect accepted 4
+expect rejected 2
+expect final_time_ms 3000
+expect playback_delay_ms 1500
+expect last_sequence 4
+expect reason non_increasing_sequence 1
+expect reason non_increasing_monotonic_time 1
