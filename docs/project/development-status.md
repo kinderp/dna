@@ -8,94 +8,74 @@ Last updated: 2026-07-17
 
 ## Completed slices
 
-### Java/Rust reference-routing Lab
-
-- issue [#3](https://github.com/kinderp/tdna/issues/3);
-- PR [#4](https://github.com/kinderp/tdna/pull/4);
-- merge `d122f1b4871719087e79a50b185ab302d810cb20`;
-- chapter `docs/it/43-reference-routing-java-rust.md`.
-
-### Provider-neutral routing contracts and fake planner
-
-- issue [#5](https://github.com/kinderp/tdna/issues/5);
-- PR [#6](https://github.com/kinderp/tdna/pull/6);
-- merge `2a28d1654988cef4188986342f76fd7d19be358f`;
-- chapter `docs/it/44-contratti-routing-e-fake-provider.md`.
-
-### Two-clean-review governance and routing hardening
-
-- issue [#8](https://github.com/kinderp/tdna/issues/8);
-- PR [#9](https://github.com/kinderp/tdna/pull/9);
-- merge `044e0773dd9afb1530db35688a00c56bfbd5eace`;
-- two clean rounds required on every shipping PR.
-
-### Provider-neutral MapScene and fake renderer
-
-- issue [#7](https://github.com/kinderp/tdna/issues/7);
-- PR [#10](https://github.com/kinderp/tdna/pull/10);
-- final head `a18e73ad015951545c808d489ee66c57c5d1c80d`;
-- Foundation CI #80 green;
-- reviews `4719736270` and `4719739041` clean;
-- merge `2128f24b4a6ab00aeb437ed48a0af2910f33e9ec`;
-- chapter `docs/it/45-map-scene-e-fake-renderer.md`.
+- Java/Rust reference routing — issue #3, PR #4;
+- provider-neutral routing contracts — issue #5, PR #6;
+- two-clean-review governance — issue #8, PR #9;
+- provider-neutral MapScene — issue #7, PR #10;
+- serial PR governance — issue #14, PR #15, merge
+  `76680433089842db5805d28eb50416a23c7d0a88`.
 
 ## Active slice
 
-**Serial PR governance and autonomous gated merge**
+**Canonical LocationSample and deterministic replay**
 
-- issue [#14](https://github.com/kinderp/tdna/issues/14);
-- PR [#15](https://github.com/kinderp/tdna/pull/15);
-- branch `agent/serial-pr-governance`;
-- report `docs/project/daily/2026-07-17-pr-discipline.md`;
-- risk `R1`, documentation and workflow governance.
+- issue [#11](https://github.com/kinderp/tdna/issues/11);
+- PR [#16](https://github.com/kinderp/tdna/pull/16);
+- branch `agent/location-sample-replay`;
+- risk `R2`;
+- chapter `docs/it/46-location-sample-e-replay-deterministico.md`;
+- scenario `docs/it/lab/scenarios/location-replay-deterministico.md`;
+- report `docs/project/daily/2026-07-17-location-replay.md`.
 
-## Active deliverables
+## Implemented
 
-- at most one open PR in the repository;
-- no stacked, placeholder or `noop` PRs;
-- no parallel-PR exception in the current rules;
-- next branch from the verified post-merge `main`;
-- explicit administrative closure for non-shipping PRs;
-- standing autonomous merge authority constrained by every gate;
-- expected-head merge guard;
-- post-merge verification before the next PR;
-- aligned AGENTS, contributor guide, operational rules and PR template.
+- cross-domain `GeoPoint` with signed-zero normalization;
+- bounded `LocationSample` with monotonic time and sequence;
+- explicit accepted/rejected ordering gate;
+- rational playback rate with remainder preservation;
+- virtual clock with first-sample baseline;
+- deterministic replay state machine;
+- bounded summary without event-history retention;
+- strict versioned synthetic fixture parser;
+- exact Lab report;
+- diagnostic benchmark and retained CI artifact;
+- common/JVM/Linux tests;
+- architecture boundaries;
+- implementation-backed chapter and scenario.
+
+## Findings resolved
+
+1. public replay summary counters were not bounded to scenario size;
+2. fixture expectation counts and sums could exceed the scenario contract;
+3. benchmark output was not retained as a CI observation.
+
+All were corrected with regression evidence. Final review count remains zero
+until the last substantive documentation commit and CI complete.
 
 ## Pull-request inventory
 
-At PR creation:
+- PR #16 is the only open PR;
+- old PR #12 remains closed and supplies no review evidence;
+- branch starts from verified post-governance `main`.
 
-- PR #10 was merged;
-- PR #12 and #13 were closed without merge;
-- no PR remained open;
-- PR #15 became the single active PR.
+## Remaining before merge
 
-## Findings in the active slice
+- acquire and record benchmark artifact result;
+- finish final report/index consistency;
+- Foundation CI green on final substantive head;
+- clean review round 1;
+- clean review round 2 on same SHA;
+- ready and expected-head merge;
+- verify issue closure and new `main`.
 
-1. documentation index/status still described MapScene as an unmerged draft;
-2. the first governance draft left an explicit parallel-PR exception and the
-   ambiguous phrase “ordinary PR”, which weakened the maintainer's strict rule.
+## Milestone still missing after this slice
 
-Both findings are corrected on the current substantive head. The review counter
-remains zero until CI and two new clean rounds complete.
-
-## Milestone still missing
-
-- `LocationSample` and deterministic clock;
-- GPS replay runner;
-- missed-exit guidance state machine;
-- first benchmark report;
-- committed Gradle Wrapper;
+- matched-position/map-matching seed;
+- missed-exit/off-route state machine;
+- Gradle Wrapper;
 - Android/iOS targets;
 - real MapLibre or routing provider adapter.
 
-## Next executable step
-
-Complete CI and two clean review rounds for PR #15, merge it with expected-head
-guard, verify the new `main`, then create a fresh LocationSample/replay branch
-from that exact commit.
-
 ## Maintainer decisions
 
-None. The maintainer has granted standing authorization for autonomous merge
-after every documented gate is met.
+None. Standing authorization permits autonomous merge only after all gates.
