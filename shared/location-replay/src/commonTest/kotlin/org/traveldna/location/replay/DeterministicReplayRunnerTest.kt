@@ -27,7 +27,6 @@ class DeterministicReplayRunnerTest {
     @Test
     fun replayReportsAcceptedAndRejectedSamplesWithoutSorting() {
         val summary = DeterministicReplayRunner(referenceScenario()).runToEnd()
-
         assertEquals(ReplayState.Completed, summary.state)
         assertEquals(6, summary.processedSamples)
         assertEquals(4, summary.acceptedSamples)
@@ -74,6 +73,35 @@ class DeterministicReplayRunnerTest {
         val duplicate = assertIs<ReplayEvent.Rejected>(runner.advance())
         assertEquals(MonotonicInstant(1_000L), duplicate.clock)
         assertEquals(500L, runner.summary().totalPlaybackDelayMilliseconds)
+    }
+
+    @Test
+    fun arithmeticFailureDoesNotPartiallyAdvanceRunnerState() {
+        val runner = DeterministicReplayRunner(
+            LocationReplayScenario(
+                id = "overflow-atomicity-v0",
+                playbackRate = PlaybackRate.of(1, PlaybackRate.MaxTerm),
+                samples = listOf(
+                    sample(0, 0),
+                    sample(1, Long.MAX_VALUE / 2),
+                ),
+            ),
+        )
+        runner.start()
+        assertIs<ReplayEvent.Accepted>(runner.advance())
+
+        assertFailsWith<IllegalArgumentException> { runner.advance() }
+        val summary = runner.summary()
+        assertEquals(ReplayState.Running, summary.state)
+        assertEquals(1, summary.processedSamples)
+        assertEquals(1, summary.acceptedSamples)
+        assertEquals(0, summary.rejectedSamples)
+        assertEquals(MonotonicInstant.Zero, summary.finalClock)
+        assertEquals(LocationSequence(0), summary.lastAcceptedSequence)
+        assertEquals(0L, summary.totalPlaybackDelayMilliseconds)
+
+        assertFailsWith<IllegalArgumentException> { runner.advance() }
+        assertEquals(1, runner.summary().processedSamples)
     }
 
     @Test

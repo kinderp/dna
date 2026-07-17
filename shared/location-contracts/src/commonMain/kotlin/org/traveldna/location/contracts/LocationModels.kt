@@ -112,14 +112,14 @@ sealed interface LocationSampleDecision {
  * Single-owner, bounded-state gate for a location stream.
  *
  * Sequence and monotonic time must both increase strictly. Input order is never
- * rewritten or silently sorted. Rejected samples do not alter the accepted
- * baseline.
+ * rewritten or silently sorted. `inspect` is non-mutating so a caller can prove
+ * all downstream work before committing the accepted baseline atomically.
  */
 class LocationSampleGate {
     var lastAccepted: LocationSample? = null
         private set
 
-    fun evaluate(sample: LocationSample): LocationSampleDecision {
+    fun inspect(sample: LocationSample): LocationSampleDecision {
         val previous = lastAccepted
         if (previous != null) {
             if (sample.sequence <= previous.sequence) {
@@ -129,8 +129,22 @@ class LocationSampleGate {
                 return rejected(sample, LocationSampleRejectionReason.NonIncreasingMonotonicTime, previous)
             }
         }
-        lastAccepted = sample
         return LocationSampleDecision.Accepted(sample)
+    }
+
+    fun commitAccepted(sample: LocationSample) {
+        require(inspect(sample) is LocationSampleDecision.Accepted) {
+            "only a currently acceptable location sample may become the baseline"
+        }
+        lastAccepted = sample
+    }
+
+    fun evaluate(sample: LocationSample): LocationSampleDecision {
+        val decision = inspect(sample)
+        if (decision is LocationSampleDecision.Accepted) {
+            commitAccepted(sample)
+        }
+        return decision
     }
 
     fun reset() {

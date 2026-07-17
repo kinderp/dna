@@ -1,5 +1,6 @@
 package org.traveldna.location.replay
 
+import org.traveldna.location.contracts.LocationSample
 import org.traveldna.location.contracts.LocationSampleDecision
 import org.traveldna.location.contracts.LocationSampleGate
 import org.traveldna.location.contracts.LocationSampleRejectionReason
@@ -7,9 +8,8 @@ import org.traveldna.location.contracts.LocationSampleRejectionReason
 /**
  * Single-threaded deterministic replay state machine.
  *
- * The runner never sleeps and never reads files. It computes the playback delay
- * a future scheduler would use. It retains only counters, the next index, gate
- * state and virtual clock; it does not accumulate an event history.
+ * The runner never sleeps and never reads files. Accepted transitions are
+ * prepared without mutation and committed only after all arithmetic checks pass.
  */
 class DeterministicReplayRunner(
     val scenario: LocationReplayScenario,
@@ -102,11 +102,11 @@ class DeterministicReplayRunner(
         }
 
         val sample = scenario.samples[nextIndex]
-        nextIndex += 1
-        val event = when (val decision = gate.evaluate(sample)) {
-            is LocationSampleDecision.Accepted -> acceptedEvent(decision)
-            is LocationSampleDecision.Rejected -> rejectedEvent(decision)
+        val event = when (val decision = gate.inspect(sample)) {
+            is LocationSampleDecision.Accepted -> prepareAndCommitAccepted(decision.sample)
+            is LocationSampleDecision.Rejected -> commitRejected(decision)
         }
+        nextIndex += 1
 
         if (nextIndex == scenario.samples.size) {
             state = ReplayState.Completed
@@ -114,24 +114,32 @@ class DeterministicReplayRunner(
         return event
     }
 
-    private fun acceptedEvent(decision: LocationSampleDecision.Accepted): ReplayEvent.Accepted {
-        val sample = decision.sample
-        val sourceDelta = clock.accept(sample.monotonicTime)
-        val playbackDelay = delayScaler.scale(sourceDelta)
-        require(totalPlaybackDelayMilliseconds <= Long.MAX_VALUE - playbackDelay) {
+    private fun prepareAndCommitAccepted(sample: LocationSample): ReplayEvent.Accepted {
+        val sourceDelta = clock.deltaTo(sample.monotonicTime)
+        val delayPreview = delayScaler.preview(sourceDelta)
+        require(
+            totalPlaybackDelayMilliseconds <=
+                Long.MAX_VALUE - delayPreview.delayMilliseconds,
+        ) {
             "total playback delay overflows Long"
         }
-        totalPlaybackDelayMilliseconds += playbackDelay
+
+        gate.commitAccepted(sample)
+        val committedDelta = clock.accept(sample.monotonicTime)
+        check(committedDelta == sourceDelta) { "virtual clock changed during accepted transition" }
+        delayScaler.commit(delayPreview)
+        totalPlaybackDelayMilliseconds += delayPreview.delayMilliseconds
         acceptedSamples += 1
+
         return ReplayEvent.Accepted(
             sample = sample,
             clock = checkNotNull(clock.now),
             sourceDeltaMilliseconds = sourceDelta,
-            playbackDelayMilliseconds = playbackDelay,
+            playbackDelayMilliseconds = delayPreview.delayMilliseconds,
         )
     }
 
-    private fun rejectedEvent(decision: LocationSampleDecision.Rejected): ReplayEvent.Rejected {
+    private fun commitRejected(decision: LocationSampleDecision.Rejected): ReplayEvent.Rejected {
         rejectedSamples += 1
         rejectionCounts[decision.reason] = rejectionCounts.getOrElse(decision.reason) { 0 } + 1
         return ReplayEvent.Rejected(
