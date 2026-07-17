@@ -13,11 +13,10 @@ una sola PR aperta
 -> soltanto allora PR successiva
 ```
 
-Issue di governance:
-[#14](https://github.com/kinderp/tdna/issues/14).
-
-PR prevista per questo report:
-[#15](https://github.com/kinderp/tdna/pull/15).
+- issue: [#14](https://github.com/kinderp/tdna/issues/14);
+- PR: [#15](https://github.com/kinderp/tdna/pull/15);
+- branch: `agent/serial-pr-governance`;
+- base `main`: `2128f24b4a6ab00aeb437ed48a0af2910f33e9ec`.
 
 ## Situazione iniziale
 
@@ -67,23 +66,18 @@ usato come tecnica di gestione del flusso.
 
 ### PR #9
 
-Verificati:
-
-- CI verde;
-- due round puliti sullo stesso SHA;
-- nessun thread aperto;
-- mergeability.
+Verificati CI, due round puliti sullo stesso SHA, thread e mergeability.
 
 Mergiata su `main`:
 
 ```text
-merge commit 044e0773dd9afb1530db35688a00c56bfbd5eace
+044e0773dd9afb1530db35688a00c56bfbd5eace
 ```
 
 ### PR #10
 
 La PR MapScene è stata ricostruita direttamente sul nuovo `main`. Durante il
-riallineamento sono stati trovati e corretti:
+riallineamento sono stati corretti:
 
 - due generazioni duplicate dei contratti MapScene;
 - merge tree che avrebbe reintrodotto vecchia governance;
@@ -97,7 +91,7 @@ Head finale:
 a18e73ad015951545c808d489ee66c57c5d1c80d
 ```
 
-Foundation CI run
+Foundation CI
 [#80](https://github.com/kinderp/tdna/actions/runs/29558725017):
 
 ```text
@@ -117,14 +111,14 @@ Review finali sullo stesso SHA:
 Mergiata con expected-head guard:
 
 ```text
-merge commit 2128f24b4a6ab00aeb437ed48a0af2910f33e9ec
+2128f24b4a6ab00aeb437ed48a0af2910f33e9ec
 ```
 
 L'issue `#7` è stata chiusa automaticamente dal merge.
 
 ## Regole rese normative
 
-La PR di governance aggiorna:
+La PR `#15` aggiorna:
 
 ```text
 AGENTS.md
@@ -161,6 +155,22 @@ nella PR `#10` avrebbe:
 
 Per questo la governance parte dal merge commit MapScene e usa una sola PR
 separata.
+
+## Finding pre-review
+
+Il primo passaggio di coerenza ha trovato che:
+
+- `docs/it/README.md` descriveva ancora MapScene come PR draft invece che slice
+  già mergiata;
+- `documentation-status.md` non citava il nuovo report né il flusso seriale nelle
+  note dei capitoli operativi.
+
+Correzione:
+
+- indice principale aggiornato ai tre Lab presenti in `main`;
+- capitoli `00`, `04` e `06` descritti esplicitamente come governance seriale;
+- nuovo report aggiunto allo stato documentale;
+- la CI sul primo SHA della PR è storica e il clean-review counter resta zero.
 
 ## Verifica prevista
 
@@ -207,7 +217,6 @@ Nessuna. Il maintainer ha già stabilito:
 Dopo il merge della governance:
 
 1. verificare il nuovo `main`;
-2. verificare che la PR governance sia l'unica chiusa/mergiata e non restino PR
-   aperte;
+2. verificare che non restino PR aperte;
 3. riprendere issue `#11` da un nuovo branch basato sul `main` aggiornato;
 4. aprire una sola PR per LocationSample, tempo monotono e replay deterministico.

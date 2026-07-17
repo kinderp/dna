@@ -3,7 +3,7 @@
 ## Stati
 
 - `Foundation complete`: base utilizzabile;
-- `Implementation-backed`: collegato a codice e test correnti;
+- `Implementation-backed`: collegato a codice, test o processo corrente;
 - `Partial`: utile ma ancora incompleto;
 - `Planned`: struttura prevista per una milestone futura.
 
@@ -11,13 +11,13 @@
 
 | Stato | Documento | Nota |
 | --- | --- | --- |
-| Implementation-backed | `00-regole-operative.md` | Costituzione operativa con gate dei due round puliti. |
+| Implementation-backed | `00-regole-operative.md` | Costituzione operativa con PR seriale e due round puliti. |
 | Foundation complete | `01-visione-prodotto.md` | Visione consolidata. |
 | Foundation complete | `02-glossario.md` | Glossario iniziale. |
-| Implementation-backed | `03-guida-lettura-documentazione.md` | Percorsi verso i Lab e la codebase. |
-| Implementation-backed | `04-come-contribuire.md` | Flusso contributivo e gate di review. |
+| Implementation-backed | `03-guida-lettura-documentazione.md` | Percorsi verso Lab, codebase e governance. |
+| Implementation-backed | `04-come-contribuire.md` | Branch da `main`, una PR, review e merge. |
 | Foundation complete | `05-tracciabilita-conversazione.md` | Origine dei temi iniziali. |
-| Implementation-backed | `06-review-e-merge.md` | Substantive head, reset e due review consecutive. |
+| Implementation-backed | `06-review-e-merge.md` | Flusso seriale, substantive head, reset, autorità e riallineamento. |
 | Foundation complete | `10-ddd-bounded-context.md` | Confini strategici v0. |
 | Foundation complete | `11-use-case-principali.md` | Use case prioritari. |
 | Implementation-backed | `12-stato-funzionalita.md` | Distingue Lab e prodotto. |
@@ -40,7 +40,7 @@
 | Foundation complete | `36-licenze-dati-supply-chain.md` | Policy iniziale. |
 | Implementation-backed | `40-mappa-codice-e-stati.md` | Percorsi reali più mappe target. |
 | Implementation-backed | `41-tracepoint-model-v0.md` | Tracepoint dei Lab. |
-| Implementation-backed | `42-traveldna-lab-roadmap.md` | Tre scenari eseguibili con la slice MapScene. |
+| Implementation-backed | `42-traveldna-lab-roadmap.md` | Tre scenari eseguibili. |
 | Implementation-backed | `43-reference-routing-java-rust.md` | Primo capitolo sostenuto da codice. |
 | Implementation-backed | `44-contratti-routing-e-fake-provider.md` | Contratti KMP, fake e testkit. |
 | Implementation-backed | `45-map-scene-e-fake-renderer.md` | Scena, delta, projector, fake e performance. |
@@ -58,11 +58,12 @@
 | Implementation-backed | `../project/daily/README.md` | Indice storico dei report. |
 | Implementation-backed | `../project/daily/2026-07-16.md` | Reference routing Java/Rust. |
 | Implementation-backed | `../project/daily/2026-07-17.md` | Contratti routing KMP e fake provider. |
-| Implementation-backed | `../project/daily/2026-07-17-review-policy.md` | Governance dei due round e hardening manovre. |
+| Implementation-backed | `../project/daily/2026-07-17-review-policy.md` | Due round e hardening manovre. |
 | Implementation-backed | `../project/daily/2026-07-17-map-scene.md` | MapScene, fake renderer e projector. |
+| Implementation-backed | `../project/daily/2026-07-17-pr-discipline.md` | Pulizia PR, `noop`, flusso seriale e merge autorizzato. |
 | Implementation-backed | `lab/scenarios/reference-routing-java-rust.md` | Primo scenario eseguibile. |
 | Implementation-backed | `lab/scenarios/routing-contracts-fake-provider.md` | Secondo scenario eseguibile. |
-| Implementation-backed | `lab/scenarios/map-scene-fake-renderer.md` | Terzo scenario eseguibile della PR MapScene. |
+| Implementation-backed | `lab/scenarios/map-scene-fake-renderer.md` | Terzo scenario eseguibile. |
 
 Aggiornare questa tabella quando un capitolo cambia stato o il codice rende
 obsolete parti della spiegazione.
