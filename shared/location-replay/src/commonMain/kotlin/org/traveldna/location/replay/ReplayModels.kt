@@ -132,6 +132,9 @@ class ReplaySummary(
         require(accountedSamples == processedSamples.toLong()) {
             "accepted and rejected counts must equal processed samples"
         }
+        require(processedSamples == 0 || acceptedSamples > 0) {
+            "processing a structurally valid replay stream must establish an accepted baseline"
+        }
         require(this.rejectionCounts.size <= LocationSampleRejectionReason.entries.size) {
             "rejection counts contain unsupported reasons"
         }

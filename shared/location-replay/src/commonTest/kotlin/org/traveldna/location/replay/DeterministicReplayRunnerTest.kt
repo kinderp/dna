@@ -180,6 +180,18 @@ class DeterministicReplayRunnerTest {
         assertFailsWith<IllegalArgumentException> {
             ReplaySummary(
                 state = ReplayState.Running,
+                processedSamples = 1,
+                acceptedSamples = 0,
+                rejectedSamples = 1,
+                rejectionCounts = mapOf(LocationSampleRejectionReason.NonIncreasingSequence to 1),
+                finalClock = null,
+                totalPlaybackDelayMilliseconds = 0L,
+                lastAcceptedSequence = null,
+            )
+        }
+        assertFailsWith<IllegalArgumentException> {
+            ReplaySummary(
+                state = ReplayState.Running,
                 processedSamples = Int.MAX_VALUE,
                 acceptedSamples = Int.MAX_VALUE,
                 rejectedSamples = 0,
