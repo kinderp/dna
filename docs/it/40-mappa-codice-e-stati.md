@@ -1,327 +1,287 @@
 # Mappa del codice e degli stati
 
-## Stato del documento
+## Scopo
 
-La mappa contiene ora due livelli distinti:
+Questa mappa mostra percorsi reali ed eseguibili separandoli dalle viste target.
+Ogni sezione dichiara ownership, stato mutato e confini.
 
-- un percorso reale ed eseguibile per il routing di riferimento Java/Rust;
-- le mappe target dei futuri runtime mobile, chat, diario e presenza.
-
-Le sezioni target non devono essere lette come codice già disponibile. Il
-[capitolo sullo stato delle funzionalità](12-stato-funzionalita.md) indica quali
-percorsi sono soltanto documentali.
-
-## Obiettivo
-
-Aiutare lo studente a vedere Travel DNA come:
-
-- dati che cambiano forma;
-- stati che evolvono;
-- responsabilità separate;
-- percorsi caldi e percorsi asincroni;
-- contratti protetti da test.
-
-## Percorso reale: routing di riferimento
-
-### Vista comune
-
-```mermaid
-flowchart LR
-    F[reference-network-v0.tdna] --> P1[Java fixture parser]
-    F --> P2[Rust fixture parser]
-    P1 --> G1[Java RoadGraph]
-    P2 --> G2[Rust RoadGraph]
-    G1 --> A1[Dijkstra / A*]
-    G2 --> A2[Dijkstra / A*]
-    A1 --> R1[Java canonical report]
-    A2 --> R2[Rust canonical report]
-    R1 --> D[diff -u]
-    R2 --> D
-```
-
-### Percorso Java
+## 1. Reference routing Java/Rust
 
 ```text
-ReferenceRoutingCli.main()
--> ReferenceFixtureParser.parse()
--> RoadGraph.addNode()/addBidirectionalRoad()
--> DijkstraRouter oppure AStarRouter
--> AbstractBestFirstRouter.route()
--> reconstructPath()
--> RouteReport.canonicalLine()
-```
-
-Responsabilità:
-
-| Componente | Responsabilità | Stato modificato |
-| --- | --- | --- |
-| `ReferenceFixtureParser` | Validare sintassi, versione, query e ground truth. | Costruisce scenario e grafo. |
-| `RoadGraph` | Possedere nodi e liste di adiacenza ordinate. | Mutabile solo durante il caricamento. |
-| `AbstractBestFirstRouter` | Eseguire best-first search deterministica. | `frontier`, `bestCost`, `previous`. |
-| `DijkstraRouter` | Fornire euristica zero. | Nessuno stato aggiuntivo. |
-| `AStarRouter` | Fornire distanza WGS84 floored. | Nessuno stato aggiuntivo. |
-| `RouteReport` | Produrre una riga JSON fixture-scoped. | Nessuno. |
-
-### Percorso Rust
-
-```text
-main()
--> parse_fixture()
--> RoadGraph::add_node()/add_bidirectional_road()
--> route()
--> heuristic_metres()
--> reconstruct_path()
--> canonical_report()
-```
-
-La crate usa:
-
-- `BTreeMap` per stato con ordine stabile;
-- `BinaryHeap` con ordinamento invertito per estrarre la priorità minima;
-- `checked_add` per intercettare overflow;
-- nessuna dipendenza esterna;
-- nessun blocco `unsafe`.
-
-### Percorso degli strumenti
-
-```text
-sh tools/tdna check
--> check_docs.py
--> javac + Java test suite
--> cargo fmt + cargo test
--> Java/Rust report
--> diff -u
-```
-
-### Stato dell'algoritmo
-
-```text
-fixture text
--> parsed graph
--> best_cost[origin] = 0
--> frontier seeded
--> node selected
--> outgoing edges relaxed
--> destination reached
--> predecessor chain reversed
+reference-network-v0.tdna
+-> parser Java / parser Rust
+-> RoadGraph
+-> Dijkstra o A*
+-> predecessor chain
 -> route result
--> deterministic report
+-> report byte-identico
 ```
 
-Questo percorso non contiene GPS, provider, rete, database o UI. È la prima
-mappa di codice verificabile del repository.
-
-## Vista: avvio viaggio
-
-```mermaid
-flowchart TD
-    A[User taps Start] --> B[StartTripSession use case]
-    B --> C[Validate consent and roles]
-    B --> D[Create local session]
-    D --> E[Start journey recorder]
-    D --> F[Start conversation delivery]
-    D --> G[Select navigation provider]
-    D --> H[Publish allowed road presence]
-    G --> I{External or embedded?}
-    I -->|External| J[Launch handoff]
-    I -->|Embedded| K[Plan route and start runtime]
-```
-
-Futuri punti di ingresso da documentare:
+Stato temporaneo:
 
 ```text
-StartTripSession.execute()
-ConsentPolicy.evaluate()
-TripSessionStore.create()
-NavigationModeSelector.select()
-ExternalNavigationProvider.launch()
-NavigationRuntime.start()
+frontier
+best cost
+previous
 ```
 
-## Vista: loop navigation
+Nessun GPS, provider, rete o UI entra nel Lab.
+
+## 2. Routing provider-neutral
+
+```text
+RouteRequest
+-> RoutePlannerPort
+-> FakeRoutePlanner
+-> RoutePlanningResult
+-> RoutePlan
+-> RoutePlannerContractProbe
+```
+
+Ownership:
+
+| Componente | Possiede |
+| --- | --- |
+| `RouteRequest` | origine, destinazione, tappe e profilo |
+| `RoutePlan` | geometria, leg, manovre e provenance |
+| provider | traduzione e comportamento concreto |
+| application layer | scelta del provider e fallback |
+
+Il dominio non importa modelli Valhalla, Google, Sygic o altri vendor.
+
+## 3. MapScene e renderer
+
+```text
+RoutePlan
+-> RouteMapProjector
+-> MapScene
+-> FakeMapRenderer.install
+-> MapSceneDelta
+-> FakeMapRenderer.apply
+-> snapshot semantico
+```
+
+```text
+MapScene installata raramente:
+  camera, route, marker, selezione
+
+MapSceneDelta frequente:
+  camera, progress, marker changes, selection
+```
+
+Il renderer possiede gli handle concreti; i contratti condivisi possiedono ID e
+modelli dichiarativi.
+
+## 4. LocationSample e replay
+
+```text
+TDNA_LOCATION_REPLAY_V0
+-> ReplayFixtureParser JVM
+-> LocationSample list
+-> DeterministicReplayRunner
+   -> LocationSampleGate.inspect
+   -> VirtualReplayClock.preview
+   -> ReplayDelayScaler.preview
+   -> commit atomico
+-> ReplaySummary
+-> report JSON
+```
+
+Stato del runner:
+
+```text
+next index
+accepted/rejected counters
+last accepted sample
+virtual clock
+rate remainder
+rejection counts
+replay state
+```
+
+Il runner non conserva la cronologia degli eventi e non legge il wall clock.
+
+## 5. Matched position e route progress
+
+### Percorso reale
 
 ```mermaid
 flowchart LR
-    GPS[LocationSource] --> VALIDATE[Sample validation]
-    VALIDATE --> MATCH[Map match]
-    MATCH --> PROGRESS[Route progress]
-    PROGRESS --> MANEUVER[Maneuver selection]
-    PROGRESS --> OFFROUTE[Off-route state]
-    MANEUVER --> SNAPSHOT[NavigationSnapshot]
-    OFFROUTE --> REROUTE[Rerouting coordinator]
-    SNAPSHOT --> HUD[HUD state]
-    SNAPSHOT --> MAP[Map delta]
-    SNAPSHOT --> VOICE[Voice prompt scheduler]
+    L[LocationSample futuro] --> F[Filter futuro]
+    F --> MM[Map matcher futuro]
+    MM --> MP[MatchedRoutePosition]
+    MP --> T[RouteProgressTracker.accept]
+    T --> S[RouteProgressSnapshot]
+    S --> P[RouteProgressMapProjector.project]
+    P --> D[MapSceneDelta.UpdateRouteProgress]
+    D --> R[Renderer]
 ```
 
-Stato posseduto dal navigation actor:
+La parte eseguibile corrente inizia da `MatchedRoutePosition`; filter e map
+matcher sono ancora target.
+
+### Function path del Lab
 
 ```text
-active route id
-route geometry/index
-last accepted sample
+Main.runLab
+-> referenceRoute
+-> MatchedRoutePosition candidates
+-> RouteProgressTracker.accept
+   -> rejection precedence
+   -> findActiveLegIndex (binary search)
+   -> findUpcomingManeuver (binary search)
+   -> RouteProgressSnapshot
+-> RouteProgressMapProjector.bind   // installazione
+-> RouteProgressMapProjector.project
+-> report JSON
+```
+
+### Ownership
+
+| Componente | Stato posseduto | Frequenza |
+| --- | --- | --- |
+| `RoutePlan` | geometria, leg e manovre immutabili | installazione |
+| `MatchedRoutePosition` | una ipotesi del matcher | campione |
+| `RouteProgressTracker` | cursori precomputati e ultimo snapshot | sessione |
+| `RouteProgressMapBinding` | scene/overlay/route ID e point count | installazione |
+| projector update | nessuno | accepted sample |
+| renderer | geometria installata e progresso | scena |
+
+### Transizioni
+
+```text
+nessun snapshot
+-> prima posizione valida accepted
+-> stationary accepted
+-> advance accepted
+-> leg boundary accepted
+-> regression rejected, stato invariato
+-> arrival accepted
+```
+
+### Rifiuti
+
+```text
+RouteMismatch
+GeometryIndexOutOfBounds
+FinalPointHasFraction
+NonIncreasingSequence
+NonIncreasingMonotonicTime
+RegressedAlongRoute
+```
+
+Un rifiuto non cambia `lastSnapshot`.
+
+### Binding mappa
+
+```text
+install route:
+  overlay.routeId == route.id
+  overlay.geometry == route.geometry
+  -> RouteProgressMapBinding
+
+hot update:
+  binding + snapshot
+  -> route ID / index / final fraction check
+  -> compact delta O(1)
+```
+
+La geometria non viene confrontata né copiata a ogni campione.
+
+## 6. Navigation runtime target
+
+```text
+LocationSource
+-> sample validation/filter
+-> map matcher
+-> route progress
+-> confidence/off-route policy
+-> maneuver and prompt state
+-> NavigationSnapshot
+-> HUD / map delta / voice
+```
+
+Stato futuro single-owner:
+
+```text
+active route
+last accepted LocationSample
 matched position
-progress
-current maneuver
-announced prompts
-off-route state
-reroute request id
+progress snapshot
+current/announced maneuver
+off-route evidence
+reroute request/version
 confidence
 ```
 
-## Vista: mappa
+## 7. Chat durante la guida target
 
 ```text
-MapScene installed once
-  base style
-  route geometry
-  static layers
-
-MapSceneDelta repeated
-  puck position
-  completed range
-  camera
-  presence add/update/remove
-  selected POI
+server message
+-> push/live signal
+-> local sync/store
+-> DriveInteractionPolicy
+-> voice/car notification oppure full passenger UI
+-> outbox
 ```
 
-Il renderer possiede handle e layer del provider; il core possiede solo ID e
-delta canonici.
+Server e local DB possiedono durata e ordine; la superficie possiede soltanto
+stato di presentazione.
 
-## Vista: chat
-
-```mermaid
-flowchart TD
-    SERVER[Durable server message] --> SIGNAL[Push or live signal]
-    SIGNAL --> SYNC[Fetch/sync]
-    SYNC --> STORE[Local conversation store]
-    STORE --> POLICY[DriveInteractionPolicy]
-    POLICY --> VOICE[Voice/car notification]
-    POLICY --> FULL[Passenger/full UI]
-    VOICE --> REPLY[Voice reply]
-    REPLY --> OUTBOX[Outgoing outbox]
-    OUTBOX --> SERVER
-```
-
-State ownership:
-
-- server: durable accepted order;
-- local DB: cached conversation/outbox;
-- surface: transient presentation;
-- policy: allowed capability;
-- navigator: unrelated, no dependency on message body.
-
-## Vista: diario
-
-```mermaid
-flowchart TD
-    EVENTS[Journey events] --> STORE[Journey event store]
-    STORE --> STOPS[Stop/visit projector]
-    MEDIA[Media observations] --> ASSOC[Media association]
-    STOPS --> TIMELINE[Timeline projector]
-    ASSOC --> TIMELINE
-    TIMELINE --> PAGE[DailyPage draft]
-    PAGE --> EDIT[User edits]
-    EDIT --> CONFIRM[Confirmed page]
-    CONFIRM --> DNA[Optional DnaCard projection]
-```
-
-## Vista: presenza
+## 8. Diario target
 
 ```text
-precise sample local
+JourneyEvent
+-> event store
+-> stop/visit projection
+-> media association
+-> DailyPage draft
+-> user edits
+-> optional DNA card sanitization
+```
+
+La condivisione deriva da una proiezione minimizzata, non dal diario privato
+completo.
+
+## 9. Presenza target
+
+```text
+exact local sample
 -> road context
 -> privacy approximation
--> ephemeral signal
--> backend TTL store
--> aggregation/matching
--> approximate companion projection
+-> ephemeral TTL signal
+-> aggregate companion projection
 ```
 
-La funzione di privacy precede la trasmissione.
+La minimizzazione precede la rete.
 
-## State machine principali
+## 10. Mappa dati
 
-### Trip session
-
-```text
-CREATED
--> STARTING
--> ACTIVE
--> PAUSED optional
--> ENDING
--> COMPLETED
--> FAILED_START
-```
-
-### Navigation
-
-```text
-IDLE
--> ROUTE_READY
--> NAVIGATING
--> SUSPECTED_OFF_ROUTE
--> CONFIRMED_OFF_ROUTE
--> REROUTING
--> NAVIGATING
--> ARRIVED
-```
-
-### Shadow route confidence
-
-```text
-UNKNOWN -> HIGH -> MEDIUM -> LOW -> UNKNOWN
-```
-
-Transizioni possono risalire quando una nuova route torna coerente.
-
-### Message
-
-```text
-DRAFT -> QUEUED -> SENDING -> ACCEPTED
-                         \-> FAILED_RETRYABLE
-                         \-> FAILED_PERMANENT
-```
-
-### Presence
-
-```text
-DISABLED -> STARTING -> ACTIVE -> EXPIRING -> EXPIRED
-                       \-> SUSPENDED
-```
-
-### Daily page
-
-```text
-NOT_CREATED -> AUTO_DRAFT -> USER_EDITED -> CONFIRMED -> ARCHIVED
-```
-
-## Mappa dati
-
-| Dato | Owner | Lettori | Persistenza |
-| --- | --- | --- | --- |
-| Exact LocationSample | Navigation/Journey local | nav, recorder | breve/local |
-| RoutePlan | Navigation | map, guide | cache/local/server optional |
-| NavigationSnapshot | Navigation runtime | UI/voice | transient/snapshot |
-| JourneyEvent | Journey | Journal projector | local durable |
-| DailyPage | Journal | UI/export | user durable |
-| PresenceSignal | Presence | backend matching | short TTL |
-| Message | Conversation | UI/car | server/local durable |
-| DnaCard | Travel DNA | recipients | revocable |
-| Place | Guide | map/journal | catalog/cache |
+| Dato | Owner | Persistenza |
+| --- | --- | --- |
+| `LocationSample` esatto | navigation/journey locale | breve/local |
+| `MatchedRoutePosition` | matcher/runtime | transiente |
+| `RouteProgressSnapshot` | progress tracker | ultimo snapshot |
+| `RoutePlan` | navigation | cache/sessione |
+| `MapScene` | presentation/renderer | scena |
+| `MapSceneDelta` | presentation | transiente |
+| `JourneyEvent` | journey | locale durable |
+| `DailyPage` | journal | user durable |
+| `PresenceSignal` | presence/backend | TTL breve |
+| `Message` | conversation | server/local durable |
 
 ## Regola di aggiornamento
 
-Per ogni nuova vertical slice aggiungere:
+Ogni vertical slice aggiunge:
 
 - package e file;
 - entry point;
-- helper principali;
-- struct/class mutate;
+- funzione path;
+- stato mutato e owner;
 - thread/dispatcher;
 - tracepoint;
 - test;
-- benchmark;
-- link commit.
+- benchmark e limiti;
+- issue, PR e report.
 
-Evitare call graph globali illeggibili. Generare viste mirate.
+Evitare call graph globali illeggibili: generare viste mirate al comportamento.

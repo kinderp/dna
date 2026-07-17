@@ -7,51 +7,38 @@ tracepoint logici, test, prestazioni e proprietà di sicurezza.
 
 1. leggere [Tracepoint Model v0](../41-tracepoint-model-v0.md);
 2. aprire lo scenario;
-3. eseguire o ispezionare la fixture indicata;
-4. seguire il percorso logico e quello delle funzioni reali;
+3. eseguire o ispezionare fixture/fake;
+4. seguire funzioni e ownership;
 5. confrontare output e test;
-6. rispondere alle domande di ripasso;
+6. rispondere alle domande;
 7. provare una variante senza rompere il contratto.
 
 ## Scenari eseguibili
 
-| Scenario | Stato | Cosa insegna |
+| Scenario | Cosa insegna | Comando |
 | --- | --- | --- |
-| [Reference routing Java/Rust](scenarios/reference-routing-java-rust.md) | executable | Grafo, Dijkstra, A*, fixture, determinismo e contract test cross-language. |
-| [Routing contracts e fake provider](scenarios/routing-contracts-fake-provider.md) | executable | Porte, modelli canonici, capability, provenance e provider conformance. |
-| [MapScene e fake renderer](scenarios/map-scene-fake-renderer.md) | executable | Scena statica, delta, route progress, marker semantici e renderer conformance. |
-| [LocationSample e replay](scenarios/location-replay-deterministico.md) | executable | Tempo monotono, stream ordering, clock virtuale, rate razionale e fixture ground truth. |
+| [Reference routing Java/Rust](scenarios/reference-routing-java-rust.md) | Grafo, Dijkstra, A* e contract diff. | `sh tools/tdna lab reference-routing astar` |
+| [Routing contracts](scenarios/routing-contracts-fake-provider.md) | Porte, capability, provenance e fake. | `sh tools/tdna lab routing-contracts` |
+| [MapScene](scenarios/map-scene-fake-renderer.md) | Scena, delta, marker e renderer conformance. | `sh tools/tdna lab map-scene` |
+| [Location replay](scenarios/location-replay-deterministico.md) | Tempo monotono, ordering gate, clock e rate. | `sh tools/tdna lab location-replay` |
+| [Route progress](scenarios/route-progress-tracker.md) | Matched position, leg, manovra, arrival e map binding. | `sh tools/tdna lab route-progress` |
 
-Comandi minimi:
-
-```bash
-sh tools/tdna lab reference-routing astar
-sh tools/tdna lab routing-contracts
-sh tools/tdna lab map-scene
-sh tools/tdna lab location-replay
-```
-
-Benchmark diagnostico della quarta slice:
+Benchmark diagnostici:
 
 ```bash
 sh tools/tdna bench location-replay 10000 7
+sh tools/tdna bench route-progress 10000 7
 ```
 
-## Scenari documentali pianificati
+## Scenari pianificati
 
 | Scenario | Stato | Cosa insegna |
 | --- | --- | --- |
-| [Route canonica](scenarios/render-canonical-route.md) | stable-doc | Futuro adapter grafico e verifica fake/reale. |
-| [Uscita mancata e ricalcolo](scenarios/navigation-missed-exit-reroute.md) | stable-doc | GPS, map matching, progress, off-route e reroute. |
+| [Route canonica](scenarios/render-canonical-route.md) | stable-doc | Adapter grafico reale e verifica fake/reale. |
+| [Uscita mancata](scenarios/navigation-missed-exit-reroute.md) | stable-doc | Off-route, reroute e route replacement. |
 | [Chat con navigatore esterno](scenarios/chat-with-external-navigation.md) | stable-doc | Background, push e superficie sicura. |
-| [Pagina del giorno](scenarios/daily-page-photos-thoughts.md) | stable-doc | Eventi viaggio, media, pensieri e privacy. |
-| [Scambio DNA](scenarios/dna-exchange-privacy.md) | stable-doc | Minimizzazione, consenso e proiezione condivisa. |
+| [Pagina del giorno](scenarios/daily-page-photos-thoughts.md) | stable-doc | Eventi, media, pensieri e privacy. |
+| [Scambio DNA](scenarios/dna-exchange-privacy.md) | stable-doc | Consenso, minimizzazione e revoca. |
 
-## Regola sugli stati
-
-- `stable-doc`: percorso consolidato, codice non necessariamente presente;
-- `executable`: fixture/fake, comando e test esistono nel repository;
-- `public-output`: eventuale contratto macchina versionato, non ancora presente.
-
-Ogni scenario dichiara test `existing`, `missing` e `future` senza fingere
-copertura.
+`executable` significa che comando, dati/fake e test esistono; non significa
+capacità di prodotto o affidabilità su strada.

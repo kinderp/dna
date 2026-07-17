@@ -1,12 +1,13 @@
 # Stato delle funzionalità
 
-Questo documento impedisce di confondere visione, decisione architetturale,
-laboratorio eseguibile e software di prodotto già funzionante.
+Questo documento distingue visione, contratto, laboratorio e capacità di
+prodotto. Lo stato vivo di CI e merge è in
+[development-status.md](../project/development-status.md).
 
 ## Legenda
 
 - `documented`: comportamento descritto, nessun codice;
-- `executable lab`: codice, fixture/test e comando eseguibili, ma non capacità di prodotto;
+- `executable lab`: codice, test/dati e comando eseguibili nel ramo che contiene il documento;
 - `prototype planned`: previsto nella milestone tecnica;
 - `future`: direzione approvata ma non pianificata ora;
 - `open`: richiede discussione o spike;
@@ -16,111 +17,47 @@ laboratorio eseguibile e software di prodotto già funzionante.
 
 | Funzionalità | Stato | Nota |
 | --- | --- | --- |
-| Visione Travel DNA | documented | Diario, guida, navigazione e socialità. |
-| Modello DDD | documented | Bounded context iniziali. |
-| Plugin SDK v0 | executable lab | ID, capability, runtime platform, descriptor e notice. |
-| Canonical geo/routing contracts v0 | executable lab | `GeoPoint`, request, plan, legs, maneuvers e provenance KMP. |
-| `RoutePlannerPort` e fake planner | executable lab | Porta provider-neutral, catalogo deterministico e conformance probe. |
-| Fixture route sintetica v0 | executable lab | Formato versionato, metadati e ground truth. |
-| Dijkstra/A* Java e Rust | executable lab | Due implementazioni indipendenti confrontate byte-per-byte. |
-| `MapScene` e `MapRendererPort` | executable lab | Scena statica, delta bounded, capability e error model. |
-| Fake map renderer | executable lab | Stato semantico, snapshot, call history e conformance probe. |
-| `LocationSample` e ordering gate | executable lab | Sequence e tempo monotono strettamente crescenti. |
-| Clock virtuale e replay deterministico | executable lab | Rate razionale, pause/step/resume/cancel e stato bounded. |
-| Fixture location replay v0 | executable lab | Sei campioni sintetici, due rifiuti e ground truth. |
-| Benchmark replay diagnostico | executable lab | JVM CI, nessuna soglia e nessuna pretesa mobile/stradale. |
-| Tooling foundation | executable lab | Documentazione, architettura, Java, Rust, KMP e Lab. |
+| Visione e DDD | documented | Diario, guida, navigazione, socialità e bounded context. |
+| Plugin SDK e routing contracts | executable lab | ID, capability, request, plan, legs, maneuvers e provenance. |
+| Fake route planner/testkit | executable lab | Catalogo deterministico e conformance probe. |
+| Dijkstra/A* Java e Rust | executable lab | Implementazioni indipendenti e report byte-identico. |
+| `MapScene` e fake renderer | executable lab | Scena statica, delta, snapshot e conformance. |
+| `LocationSample` e ordering gate | executable lab | Sequence e tempo monotono. |
+| Clock virtuale e replay | executable lab | Rate razionale, stato bounded e fixture ground truth. |
+| `MatchedRoutePosition` | executable lab | Output provider-neutral di un matcher futuro; non esegue matching. |
+| Route progress tracker | executable lab | Leg, manovra, arrival e rifiuti deterministici. |
+| Route-progress map binding | executable lab | Geometria verificata all'installazione e update `O(1)`. |
+| Benchmark replay/progress | executable lab | JVM CI diagnostica, nessuna soglia o pretesa mobile. |
+| Tooling foundation | executable lab | Documentazione, architettura, Java, Rust e KMP. |
 | Gradle/KMP bootstrap | executable lab | JVM/Linux CI; wrapper locale ancora mancante. |
-| MapLibre adapter | prototype planned | Dopo contratti/fake renderer e benchmark su dispositivo. |
-| Valhalla adapter | prototype planned | Dietro `RoutePlannerPort`/gateway. |
-| Ferrostar adapter | prototype planned | Dietro navigation runtime contracts. |
-| Map matching e route progress | prototype planned | Prossima fase dopo il sample replay. |
+| Map matching reale | prototype planned | Candidati, scoring, confidenza e isteresi separati. |
 | Off-route e rerouting | prototype planned | Scenario missed-exit deterministico. |
-| Navigatore esterno | prototype planned | Deep link e sessione Companion. |
-| Percorso ombra | prototype planned | Confidenza esplicita e degradazione. |
-| Diario automatico | prototype planned | Event store e stop detection dopo le fondazioni. |
-| Pagina del giorno | prototype planned | Foto e pensieri locali. |
-| Chat reale | future | Prima core e policy di guida. |
-| Android Auto messaging | future | Dopo chat mobile stabile. |
-| CarPlay messaging/widget | future | Richiede capability e review Apple. |
-| Road presence | future | Richiede backend e threat model. |
-| Cartolina DNA | future | Dopo diario e privacy model. |
-| Mappe/routing offline | future | Provider, licenza e distribuzione da progettare. |
-| Guidance core Rust proprio | future | Dopo replay e shadow comparison. |
-| Traffico crowdsourced | future | Richiede massa critica e dati. |
+| MapLibre adapter | prototype planned | Dopo contratti e benchmark dispositivo. |
+| Valhalla/Ferrostar adapter | prototype planned | Dietro porte Travel DNA. |
+| Navigatore esterno e percorso ombra | prototype planned | Handoff e confidence esplicita. |
+| Diario automatico e pagina del giorno | prototype planned | Event store, soste, foto e pensieri. |
+| Chat reale/automotive | future | Core, outbox e driver policy prima dell'auto. |
+| Road presence e Cartoline DNA | future | Backend, threat model, consenso e revoca. |
+| Mappe/routing offline | future | Provider, licenza e distribuzione. |
 | Contenuti Touring | open | Solo partnership/licenza. |
 | LoRa/LoRaWAN | open | Spike dedicato. |
-| Profili minori | non-goal | Fuori MVP. |
-| Verticali shopping/study | non-goal | Fuori Travel DNA iniziale. |
+| Profili minori e verticali shopping/study | non-goal | Fuori MVP Travel DNA. |
 
-## Cosa è dimostrato oggi
-
-### Algoritmo di routing
+## Cosa è dimostrato
 
 ```text
-fixture sintetica
--> Java/Rust parser
--> Dijkstra/A*
--> percorso
--> report identico
+grafo -> Dijkstra/A* -> report Java/Rust
+RouteRequest -> fake planner -> RoutePlan
+RoutePlan -> MapScene -> fake renderer
+Location fixture -> gate -> virtual clock -> replay summary
+MatchedRoutePosition -> progress snapshot -> map binding/delta
 ```
 
-### Contratti e provider
-
-```text
-RouteRequest
--> RoutePlannerPort
--> FakeRoutePlanner
--> RoutePlan
--> conformance probe
-```
-
-### Rendering semantico
-
-```text
-RoutePlan
--> RouteOverlay
--> MapScene
--> MapSceneDelta
--> FakeMapRenderer
--> snapshot
-```
-
-### Posizione e replay
-
-```text
-fixture sintetica
--> ReplayFixtureParser
--> LocationSample
--> ordering gate
--> virtual clock/rate scaler
--> ReplaySummary
--> report deterministico
-```
-
-Non è ancora dimostrato:
-
-- routing OpenStreetMap;
-- route reali utilizzabili da un veicolo;
-- adapter Android/iOS;
-- MapLibre reale;
-- GPS reale;
-- map matching, guidance o ricalcolo;
-- batteria e affidabilità su strada.
+Non sono dimostrati GPS o strade reali, map matching, distanza/ETA, off-route,
+rerouting, MapLibre, adapter mobile, batteria o affidabilità su strada.
 
 ## Regola di comunicazione
 
-Non dire “Travel DNA supporta” una capacità finché non esistono implementazione,
-test, documentazione corrente, degraded mode e review privacy/performance quando
-necessaria.
-
-Usare formulazioni precise:
-
-```text
-è documentato
-è un laboratorio eseguibile
-è pianificato
-è in prototipo
-è sperimentale
-è disponibile
-```
+Usare formulazioni precise: `documentato`, `Lab eseguibile`, `pianificato`,
+`prototipo`, `sperimentale`, `disponibile`. Non dire che il prodotto supporta una
+capacità soltanto perché esiste un Lab.

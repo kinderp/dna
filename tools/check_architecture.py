@@ -69,6 +69,22 @@ RULES = {
         "kotlin.",
         "org.traveldna.location.contracts.",
     ),
+    "shared/navigation-contracts": (
+        "kotlin.",
+        "org.traveldna.location.contracts.",
+        "org.traveldna.routing.contracts.",
+    ),
+    "shared/route-progress": (
+        "kotlin.",
+        "org.traveldna.navigation.contracts.",
+        "org.traveldna.routing.contracts.",
+    ),
+    "shared/route-progress-map-projector": (
+        "kotlin.",
+        "org.traveldna.navigation.contracts.",
+        "org.traveldna.map.contracts.",
+        "org.traveldna.routing.contracts.",
+    ),
 }
 FORBIDDEN_CODE_TOKENS = (
     "maplibre",

@@ -4,48 +4,49 @@
 
 - `Foundation complete`: base utilizzabile;
 - `Implementation-backed`: collegato a codice, test o processo corrente;
-- `Partial`: utile ma ancora incompleto;
-- `Planned`: struttura prevista per una milestone futura.
+- `Partial`: utile ma incompleto;
+- `Planned`: previsto per una milestone futura.
 
 ## Capitoli
 
 | Stato | Documento | Nota |
 | --- | --- | --- |
-| Implementation-backed | `00-regole-operative.md` | Costituzione operativa con PR seriale e due round puliti. |
+| Implementation-backed | `00-regole-operative.md` | PR seriale, due round e merge gated. |
 | Foundation complete | `01-visione-prodotto.md` | Visione consolidata. |
 | Foundation complete | `02-glossario.md` | Glossario iniziale. |
 | Implementation-backed | `03-guida-lettura-documentazione.md` | Percorsi verso Lab, codebase e governance. |
-| Implementation-backed | `04-come-contribuire.md` | Branch da `main`, una PR, review e merge. |
+| Implementation-backed | `04-come-contribuire.md` | Branch, PR, review e merge. |
 | Foundation complete | `05-tracciabilita-conversazione.md` | Origine dei temi iniziali. |
-| Implementation-backed | `06-review-e-merge.md` | Flusso seriale, substantive head, reset, autorità e riallineamento. |
+| Implementation-backed | `06-review-e-merge.md` | Substantive head, reset, autorità e riallineamento. |
 | Foundation complete | `10-ddd-bounded-context.md` | Confini strategici v0. |
 | Foundation complete | `11-use-case-principali.md` | Use case prioritari. |
 | Implementation-backed | `12-stato-funzionalita.md` | Distingue Lab e prodotto. |
 | Foundation complete | `20-architettura-generale.md` | Architettura target. |
 | Implementation-backed | `21-struttura-repository.md` | Moduli reali e albero target. |
-| Implementation-backed | `22-architettura-plugin-provider.md` | Plugin SDK, fake routing e fake renderer. |
+| Implementation-backed | `22-architettura-plugin-provider.md` | SDK, fake e adapter boundaries. |
 | Foundation complete | `23-openstreetmap-e-cartografia.md` | Uso corretto di OSM. |
 | Foundation complete | `24-routing-e-navigazione.md` | Fondamenti del navigatore. |
 | Foundation complete | `25-navigatori-esterni-e-automotive.md` | Companion e auto. |
 | Foundation complete | `26-diario-media-pagina-giorno.md` | Diario e condivisione. |
 | Foundation complete | `27-presenza-chat-dna.md` | Socialità e privacy. |
-| Implementation-backed | `28-stack-linguaggi-e-gui.md` | Java, Rust e bootstrap KMP. |
+| Implementation-backed | `28-stack-linguaggi-e-gui.md` | Java, Rust e KMP. |
 | Foundation complete | `29-backend-dati-sync.md` | Architettura dati v0. |
-| Implementation-backed | `30-strategia-test.md` | Contract probe routing, rendering e replay. |
-| Implementation-backed | `31-gps-replay-e-fixture.md` | Fixture replay v0 e separazione I/O/core. |
-| Implementation-backed | `32-performance-budget.md` | Scena/delta e benchmark replay diagnostico. |
+| Implementation-backed | `30-strategia-test.md` | Contract, rendering, replay e progress. |
+| Implementation-backed | `31-gps-replay-e-fixture.md` | Fixture replay e separazione I/O/core. |
+| Implementation-backed | `32-performance-budget.md` | Scene/delta e benchmark diagnostici. |
 | Foundation complete | `33-privacy-security-driving-safety.md` | Threat model iniziale. |
-| Implementation-backed | `34-debugging-e-strumenti.md` | Comandi reali Java/Rust/Kotlin/docs. |
-| Foundation complete | `35-qualita-prodotto-software.md` | Matrice qualità v0. |
+| Implementation-backed | `34-debugging-e-strumenti.md` | Comandi reali. |
+| Foundation complete | `35-qualita-prodotto-software.md` | Matrice qualità. |
 | Foundation complete | `36-licenze-dati-supply-chain.md` | Policy iniziale. |
-| Implementation-backed | `40-mappa-codice-e-stati.md` | Percorsi reali più mappe target. |
+| Implementation-backed | `40-mappa-codice-e-stati.md` | Percorsi reali e target. |
 | Implementation-backed | `41-tracepoint-model-v0.md` | Tracepoint dei Lab. |
-| Implementation-backed | `42-traveldna-lab-roadmap.md` | Quattro scenari eseguibili con la slice replay. |
-| Implementation-backed | `43-reference-routing-java-rust.md` | Primo capitolo sostenuto da codice. |
-| Implementation-backed | `44-contratti-routing-e-fake-provider.md` | Contratti KMP, fake e testkit. |
-| Implementation-backed | `45-map-scene-e-fake-renderer.md` | Scena, delta, projector, fake e performance. |
-| Implementation-backed | `46-location-sample-e-replay-deterministico.md` | Geo contract, sample, gate, clock, fixture, replay e benchmark. |
-| Implementation-backed | `50-registro-milestone.md` | Milestone 1 e slice tracciate. |
+| Implementation-backed | `42-traveldna-lab-roadmap.md` | Cinque scenari eseguibili con la slice progress. |
+| Implementation-backed | `43-reference-routing-java-rust.md` | Algoritmo Java/Rust. |
+| Implementation-backed | `44-contratti-routing-e-fake-provider.md` | Contratti KMP e fake planner. |
+| Implementation-backed | `45-map-scene-e-fake-renderer.md` | Scena, delta e fake renderer. |
+| Implementation-backed | `46-location-sample-e-replay-deterministico.md` | Sample, clock e replay. |
+| Implementation-backed | `47-posizione-matched-e-route-progress.md` | Matched position, tracker, binding e benchmark. |
+| Implementation-backed | `50-registro-milestone.md` | Milestone e slice tracciate. |
 | Foundation complete | `51-roadmap-librerie-open-source.md` | Sostituzione progressiva. |
 | Foundation complete | `52-matrice-tecnologie-decisioni.md` | Scelte e alternative. |
 | Foundation complete | `53-riferimenti-tecnici.md` | Fonti ufficiali. |
@@ -55,18 +56,15 @@
 
 | Stato | Documento | Nota |
 | --- | --- | --- |
-| Implementation-backed | `../project/development-status.md` | Milestone e prossimo passo. |
+| Implementation-backed | `../project/development-status.md` | Milestone e prossimi gate. |
 | Implementation-backed | `../project/daily/README.md` | Indice storico dei report. |
-| Implementation-backed | `../project/daily/2026-07-16.md` | Reference routing Java/Rust. |
-| Implementation-backed | `../project/daily/2026-07-17.md` | Contratti routing KMP e fake provider. |
-| Implementation-backed | `../project/daily/2026-07-17-review-policy.md` | Due round e hardening manovre. |
-| Implementation-backed | `../project/daily/2026-07-17-map-scene.md` | MapScene, fake renderer e projector. |
-| Implementation-backed | `../project/daily/2026-07-17-pr-discipline.md` | Pulizia PR, `noop`, flusso seriale e merge autorizzato. |
-| Implementation-backed | `../project/daily/2026-07-17-location-replay.md` | LocationSample, clock, replay, benchmark e review plan. |
-| Implementation-backed | `lab/scenarios/reference-routing-java-rust.md` | Primo scenario eseguibile. |
-| Implementation-backed | `lab/scenarios/routing-contracts-fake-provider.md` | Secondo scenario eseguibile. |
-| Implementation-backed | `lab/scenarios/map-scene-fake-renderer.md` | Terzo scenario eseguibile. |
-| Implementation-backed | `lab/scenarios/location-replay-deterministico.md` | Quarto scenario eseguibile. |
+| Implementation-backed | `../project/daily/2026-07-17-location-replay.md` | LocationSample, replay e benchmark. |
+| Implementation-backed | `../project/daily/2026-07-17-route-progress.md` | Route progress, finding e review plan. |
+| Implementation-backed | `lab/scenarios/reference-routing-java-rust.md` | Lab 1. |
+| Implementation-backed | `lab/scenarios/routing-contracts-fake-provider.md` | Lab 2. |
+| Implementation-backed | `lab/scenarios/map-scene-fake-renderer.md` | Lab 3. |
+| Implementation-backed | `lab/scenarios/location-replay-deterministico.md` | Lab 4. |
+| Implementation-backed | `lab/scenarios/route-progress-tracker.md` | Lab 5. |
 
-Aggiornare questa tabella quando un capitolo cambia stato o il codice rende
-obsolete parti della spiegazione.
+Aggiornare questa tabella quando codice o processi rendono obsoleta una
+spiegazione.

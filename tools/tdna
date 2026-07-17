@@ -12,9 +12,7 @@ RUST_MANIFEST="$ROOT/crates/tdna-reference-routing/Cargo.toml"
 ROUTE_FIXTURE="$ROOT/fixtures/routes/reference-network-v0.tdna"
 LOCATION_FIXTURE="$ROOT/fixtures/gps/reference-location-replay-v0.tdna"
 
-say() {
-    printf '%s\n' "$*"
-}
+say() { printf '%s\n' "$*"; }
 
 need() {
     if ! command -v "$1" >/dev/null 2>&1; then
@@ -39,20 +37,16 @@ compile_java() {
     rm -rf "$JAVA_BUILD"
     mkdir -p "$JAVA_BUILD/classes"
     find "$JAVA_MAIN" "$JAVA_TEST" -type f -name '*.java' | sort > "$JAVA_BUILD/sources.txt"
-    javac --release 21 -Xlint:all -Werror \
-        -d "$JAVA_BUILD/classes" \
-        @"$JAVA_BUILD/sources.txt"
+    javac --release 21 -Xlint:all -Werror -d "$JAVA_BUILD/classes" @"$JAVA_BUILD/sources.txt"
 }
 
 java_report() {
-    algorithm=$1
-    java -cp "$JAVA_BUILD/classes" "$JAVA_MAIN_CLASS" "$ROUTE_FIXTURE" "$algorithm"
+    java -cp "$JAVA_BUILD/classes" "$JAVA_MAIN_CLASS" "$ROUTE_FIXTURE" "$1"
 }
 
 rust_report() {
-    algorithm=$1
     CARGO_TARGET_DIR="$BUILD_DIR/rust" cargo run --quiet \
-        --manifest-path "$RUST_MANIFEST" -- "$ROUTE_FIXTURE" "$algorithm"
+        --manifest-path "$RUST_MANIFEST" -- "$ROUTE_FIXTURE" "$1"
 }
 
 check_java() {
@@ -80,17 +74,13 @@ check_rust() {
 check_contract() {
     say "== Cross-language route report contract =="
     need diff
-    if [ ! -d "$JAVA_BUILD/classes" ]; then
-        compile_java
-    fi
+    if [ ! -d "$JAVA_BUILD/classes" ]; then compile_java; fi
     need cargo
     mkdir -p "$BUILD_DIR/contract"
     for algorithm in dijkstra astar; do
         java_report "$algorithm" > "$BUILD_DIR/contract/java-$algorithm.json"
         rust_report "$algorithm" > "$BUILD_DIR/contract/rust-$algorithm.json"
-        diff -u \
-            "$BUILD_DIR/contract/java-$algorithm.json" \
-            "$BUILD_DIR/contract/rust-$algorithm.json"
+        diff -u "$BUILD_DIR/contract/java-$algorithm.json" "$BUILD_DIR/contract/rust-$algorithm.json"
     done
     say "PASS Java and Rust emitted byte-identical reports"
 }
@@ -108,22 +98,24 @@ check_architecture() {
 }
 
 check_kotlin() {
-    say "== Kotlin Multiplatform contracts, fakes and replay =="
+    say "== Kotlin Multiplatform contracts, fakes and navigation foundations =="
     need gradle
     gradle --no-daemon --stacktrace check
     mkdir -p "$BUILD_DIR/kotlin"
-    gradle --no-daemon --quiet :labs:routing-contracts-cli:run \
-        > "$BUILD_DIR/kotlin/routing-contracts-lab.json"
-    gradle --no-daemon --quiet :labs:map-scene-cli:run \
-        > "$BUILD_DIR/kotlin/map-scene-lab.json"
-    gradle --no-daemon --quiet :labs:location-replay-cli:run \
-        --args="$LOCATION_FIXTURE" \
+    gradle --no-daemon --quiet :labs:routing-contracts-cli:run > "$BUILD_DIR/kotlin/routing-contracts-lab.json"
+    gradle --no-daemon --quiet :labs:map-scene-cli:run > "$BUILD_DIR/kotlin/map-scene-lab.json"
+    gradle --no-daemon --quiet :labs:location-replay-cli:run --args="$LOCATION_FIXTURE" \
         > "$BUILD_DIR/kotlin/location-replay-lab.json"
-    gradle --no-daemon --quiet :labs:location-replay-cli:run \
-        --args="--benchmark 10000 7" \
+    gradle --no-daemon --quiet :labs:location-replay-cli:run --args="--benchmark 10000 7" \
         > "$BUILD_DIR/kotlin/location-replay-benchmark.json"
+    gradle --no-daemon --quiet :labs:route-progress-cli:run \
+        > "$BUILD_DIR/kotlin/route-progress-lab.json"
+    gradle --no-daemon --quiet :labs:route-progress-cli:run --args="--benchmark 10000 7" \
+        > "$BUILD_DIR/kotlin/route-progress-benchmark.json"
     say "Diagnostic location-replay benchmark:"
     cat "$BUILD_DIR/kotlin/location-replay-benchmark.json"
+    say "Diagnostic route-progress benchmark:"
+    cat "$BUILD_DIR/kotlin/route-progress-benchmark.json"
     say "PASS Kotlin reports written under build/kotlin"
 }
 
@@ -132,35 +124,18 @@ run_lab() {
     algorithm=${2:-dijkstra}
     case "$scenario" in
         reference-routing)
-            case "$algorithm" in
-                dijkstra|astar) ;;
-                *) say "ERROR: algorithm must be dijkstra or astar"; exit 2 ;;
-            esac
+            case "$algorithm" in dijkstra|astar) ;; *) say "ERROR: algorithm must be dijkstra or astar"; exit 2 ;; esac
             compile_java
             say "Java:"
             java_report "$algorithm"
-            if command -v cargo >/dev/null 2>&1; then
-                say "Rust:"
-                rust_report "$algorithm"
-            else
-                say "Rust: skipped because cargo is not installed"
-            fi
+            if command -v cargo >/dev/null 2>&1; then say "Rust:"; rust_report "$algorithm"; else say "Rust: skipped because cargo is not installed"; fi
             ;;
-        routing-contracts)
-            need gradle
-            gradle --no-daemon --quiet :labs:routing-contracts-cli:run
-            ;;
-        map-scene)
-            need gradle
-            gradle --no-daemon --quiet :labs:map-scene-cli:run
-            ;;
-        location-replay)
-            need gradle
-            gradle --no-daemon --quiet :labs:location-replay-cli:run \
-                --args="$LOCATION_FIXTURE"
-            ;;
+        routing-contracts) need gradle; gradle --no-daemon --quiet :labs:routing-contracts-cli:run ;;
+        map-scene) need gradle; gradle --no-daemon --quiet :labs:map-scene-cli:run ;;
+        location-replay) need gradle; gradle --no-daemon --quiet :labs:location-replay-cli:run --args="$LOCATION_FIXTURE" ;;
+        route-progress) need gradle; gradle --no-daemon --quiet :labs:route-progress-cli:run ;;
         *)
-            say "usage: sh tools/tdna lab {reference-routing [dijkstra|astar]|routing-contracts|map-scene|location-replay}"
+            say "usage: sh tools/tdna lab {reference-routing [dijkstra|astar]|routing-contracts|map-scene|location-replay|route-progress}"
             exit 2
             ;;
     esac
@@ -168,16 +143,19 @@ run_lab() {
 
 run_benchmark() {
     family=${1:-}
+    samples=${2:-10000}
+    iterations=${3:-7}
     case "$family" in
         location-replay)
-            samples=${2:-10000}
-            iterations=${3:-7}
             need gradle
-            gradle --no-daemon --quiet :labs:location-replay-cli:run \
-                --args="--benchmark $samples $iterations"
+            gradle --no-daemon --quiet :labs:location-replay-cli:run --args="--benchmark $samples $iterations"
+            ;;
+        route-progress)
+            need gradle
+            gradle --no-daemon --quiet :labs:route-progress-cli:run --args="--benchmark $samples $iterations"
             ;;
         *)
-            say "usage: sh tools/tdna bench location-replay [sample-count] [iterations]"
+            say "usage: sh tools/tdna bench {location-replay|route-progress} [sample-count] [odd-iterations]"
             exit 2
             ;;
     esac
@@ -194,24 +172,12 @@ case "$command" in
         version_line rustc rustc --version
         version_line gradle gradle --version
         ;;
-    check-java)
-        check_java
-        ;;
-    check-rust)
-        check_rust
-        ;;
-    check-contract)
-        check_contract
-        ;;
-    check-docs)
-        check_docs
-        ;;
-    check-architecture)
-        check_architecture
-        ;;
-    check-kotlin)
-        check_kotlin
-        ;;
+    check-java) check_java ;;
+    check-rust) check_rust ;;
+    check-contract) check_contract ;;
+    check-docs) check_docs ;;
+    check-architecture) check_architecture ;;
+    check-kotlin) check_kotlin ;;
     check)
         check_docs
         check_architecture
@@ -221,18 +187,9 @@ case "$command" in
         check_kotlin
         say "PASS foundation checks"
         ;;
-    lab)
-        shift
-        run_lab "$@"
-        ;;
-    bench)
-        shift
-        run_benchmark "$@"
-        ;;
-    clean)
-        rm -rf "$BUILD_DIR"
-        say "Removed $BUILD_DIR"
-        ;;
+    lab) shift; run_lab "$@" ;;
+    bench) shift; run_benchmark "$@" ;;
+    clean) rm -rf "$BUILD_DIR"; say "Removed $BUILD_DIR" ;;
     help|-h|--help)
         cat <<'HELP'
 Usage: sh tools/tdna COMMAND
@@ -244,18 +201,17 @@ Commands:
   check-java                          compile and test Java reference routing
   check-rust                          format and test Rust reference routing
   check-contract                      compare Java/Rust reports byte-for-byte
-  check-kotlin                        test KMP contracts, fakes and replay
+  check-kotlin                        test KMP contracts, fakes and navigation foundations
   check                               run the complete foundation verification
   lab reference-routing [algorithm]   run the Java/Rust routing Lab
   lab routing-contracts               run the KMP routing-provider Lab
   lab map-scene                       run the KMP map-scene Lab
   lab location-replay                 run the deterministic location replay Lab
-  bench location-replay [n] [runs]    run a diagnostic replay microbenchmark
+  lab route-progress                  run the matched route-progress Lab
+  bench location-replay [n] [runs]    run the location-replay microbenchmark
+  bench route-progress [n] [runs]     run the route-progress microbenchmark
   clean                               remove generated build output
 HELP
         ;;
-    *)
-        say "ERROR: unknown command '$command'"
-        exit 2
-        ;;
+    *) say "ERROR: unknown command '$command'"; exit 2 ;;
 esac

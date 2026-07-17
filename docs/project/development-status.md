@@ -8,90 +8,77 @@ Last updated: 2026-07-17
 
 ## Completed slices
 
-- Java/Rust reference routing — issue #3, PR #4;
-- provider-neutral routing contracts — issue #5, PR #6;
-- two-clean-review governance — issue #8, PR #9;
-- provider-neutral MapScene — issue #7, PR #10;
-- serial PR governance — issue #14, PR #15, merge
-  `76680433089842db5805d28eb50416a23c7d0a88`.
+| Slice | Issue / PR | Merge |
+| --- | --- | --- |
+| Java/Rust reference routing | #3 / #4 | `d122f1b4871719087e79a50b185ab302d810cb20` |
+| Provider-neutral routing contracts | #5 / #6 | `2a28d1654988cef4188986342f76fd7d19be358f` |
+| Two-clean-review governance | #8 / #9 | `044e0773dd9afb1530db35688a00c56bfbd5eace` |
+| MapScene and fake renderer | #7 / #10 | `2128f24b4a6ab00aeb437ed48a0af2910f33e9ec` |
+| Serial PR governance | #14 / #15 | `76680433089842db5805d28eb50416a23c7d0a88` |
+| LocationSample and deterministic replay | #11 / #16 | `020f8495f7fbbae81f1463b098b0ddd2a079c873` |
 
 ## Active slice
 
-**Canonical LocationSample and deterministic replay — pre-review complete**
+**Canonical matched position and route progress tracker — substantive work complete, final gate pending**
 
-- issue [#11](https://github.com/kinderp/tdna/issues/11);
-- PR [#16](https://github.com/kinderp/tdna/pull/16);
-- branch `agent/location-sample-replay`;
+- issue [#17](https://github.com/kinderp/tdna/issues/17);
+- PR [#18](https://github.com/kinderp/tdna/pull/18);
+- branch `agent/matched-route-progress`;
+- base `020f8495f7fbbae81f1463b098b0ddd2a079c873`;
 - risk `R2`;
-- chapter `docs/it/46-location-sample-e-replay-deterministico.md`;
-- scenario `docs/it/lab/scenarios/location-replay-deterministico.md`;
-- report `docs/project/daily/2026-07-17-location-replay.md`.
+- chapter `docs/it/47-posizione-matched-e-route-progress.md`;
+- scenario `docs/it/lab/scenarios/route-progress-tracker.md`;
+- report `docs/project/daily/2026-07-17-route-progress.md`.
 
 ## Implemented
 
-- cross-domain `GeoPoint` with signed-zero normalization;
-- bounded `LocationSample` with monotonic time and sequence;
-- non-mutating inspection and explicit accepted/rejected gate;
-- rational playback rate with remainder preservation;
-- virtual clock with first-sample baseline;
-- atomic accepted transition after arithmetic preview;
-- deterministic replay state machine;
-- bounded summary without event-history retention;
-- strict versioned synthetic fixture parser;
-- exact Lab report;
-- diagnostic benchmark retained as CI artifact;
+- canonical `RouteCoordinate` and `MatchedRoutePosition`;
+- independent sequence/time/route-progress checks;
+- stationary accepted and regressions rejected without mutation;
+- deterministic active-leg boundary policy;
+- binary-search leg and maneuver lookup;
+- explicit `Arrive` tie-break;
+- public snapshot invariants;
+- route-overlay binding with full geometry verification at install time;
+- compact `O(1)` map progress projection;
 - common/JVM/Linux tests;
-- architecture boundaries;
-- chapter, Lab scenario, tracepoints, tooling and guided reading paths.
+- deterministic Lab report;
+- multi-leg diagnostic benchmark with preprocessing outside the timer;
+- chapter, scenario, code map, tracepoints and indexed report.
 
 ## Findings resolved
 
-1. public summary counters were not bounded;
-2. fixture expectation counts could exceed the scenario;
-3. benchmark output was not retained;
-4. even iteration counts made median semantics ambiguous;
-5. public summary allowed processed samples without an accepted baseline;
-6. playback overflow could partially mutate runner state;
-7. repository entry points and commenting status were stale.
+1. linear leg/maneuver scans;
+2. same-ID overlay with different geometry;
+3. unrepresentative benchmark route;
+4. tracker preprocessing inside the measured window;
+5. boundary result absent from Lab evidence;
+6. non-Arrive maneuver exposed after arrival;
+7. projector test omitted same-length altered geometry;
+8. intermediate Kotlin named-argument error caught by CI;
+9. tracepoint incorrectly claimed distance updates;
+10. stable README/feature status used merge-unstable PR wording.
 
-Every substantive fix reset the clean-review count. No final round has been
-claimed yet.
+Every substantive fix reset the clean-review counter.
 
-## Benchmark observation
+## Final gate
 
-Run #97 on technical head `2b27a731e98c0456e2532ef3ebfc850523ab0ef4`:
-
-```text
-10.000 samples
-7 measured iterations after 3 warm-ups
-median 2.973.838 ns
-median 297,38 ns/sample
-```
-
-Diagnostic only; no mobile, GPS, battery or road claim.
-
-## Pull-request inventory
-
-- PR #16 is the only open PR;
-- old PR #12 remains closed and supplies no review evidence;
-- branch starts from verified post-governance `main`.
-
-## Remaining before merge
-
-- Foundation CI green on the final substantive head;
-- clean review round 1;
-- clean review round 2 on the same SHA;
-- no substantive commit after the rounds;
-- ready and expected-head merge;
-- verify issue closure and new `main`.
+- sole open PR: yes;
+- code, tests, chapter, scenario, indexes and reports: complete;
+- benchmark artifact: recorded from CI #110;
+- final substantive SHA: determined by the commit containing this status record;
+- CI on that exact SHA: pending;
+- unresolved review threads: must be zero;
+- clean review rounds: `0 / 2`;
+- merge: only after ready state and expected-head guard.
 
 ## Milestone still missing after this slice
 
-- matched-position/map-matching seed;
-- missed-exit/off-route state machine;
+- real map matching or a separate fake matcher;
+- missed-exit/off-route/reroute state machine;
 - Gradle Wrapper;
 - Android/iOS targets;
-- real MapLibre or routing provider adapter.
+- real MapLibre/routing provider adapter.
 
 ## Maintainer decisions
 

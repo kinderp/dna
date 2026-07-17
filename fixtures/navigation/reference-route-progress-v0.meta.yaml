@@ -1,0 +1,38 @@
+id: reference-route-progress-v0
+kind: synthetic-code-fixture
+coordinate_reference: WGS84
+source: project-generated
+privacy: public-synthetic
+license: project-internal-pending-ADR-0009
+implementation:
+  route: labs/route-progress-cli/src/main/kotlin/org/traveldna/lab/progress/Main.kt#referenceRoute
+  positions: labs/route-progress-cli/src/main/kotlin/org/traveldna/lab/progress/Main.kt#runLab
+purpose: >-
+  Teach the boundary between an upstream map matcher and a deterministic route
+  progress tracker, including stationary updates, explicit regression rejection,
+  two-leg boundary policy, upcoming maneuvers, arrival and compact map deltas.
+route:
+  geometry_points: 4
+  legs: 2
+  shared_leg_boundary_index: 2
+  route_id: reference-progress-route-v0
+expected:
+  input_positions: 6
+  accepted: 5
+  rejected: 1
+  rejection_reason: RegressedAlongRoute
+  boundary_active_leg: 1
+  boundary_maneuver: Continue
+  final_geometry_index: 3
+  final_fraction: 0.0
+  final_active_leg: 1
+  upcoming_maneuver: Arrive
+  arrived: true
+  projected_delta_index: 3
+non_goals:
+  - map matching
+  - GPS filtering
+  - distance or ETA
+  - off-route detection
+  - rerouting
+  - real road accuracy

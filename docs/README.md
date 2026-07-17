@@ -11,17 +11,16 @@ teaching documentation for Travel DNA.
 - [`project/`](project/README.md): live development state and foundation records.
 - [`project/daily/`](project/daily/README.md): permanent index of daily reports.
 - [`commenting-style.md`](commenting-style.md): source-comment rules.
-- [`commenting-status.md`](commenting-status.md): current comment/documentation review state.
+- [`commenting-status.md`](commenting-status.md): current review state.
 
 ## Recommended starting points
 
 - New reader: [`it/01-visione-prodotto.md`](it/01-visione-prodotto.md)
-- Guided reading paths: [`it/03-guida-lettura-documentazione.md`](it/03-guida-lettura-documentazione.md)
+- Guided paths: [`it/03-guida-lettura-documentazione.md`](it/03-guida-lettura-documentazione.md)
 - Contributor: [`it/00-regole-operative.md`](it/00-regole-operative.md)
 - Reviewer/maintainer: [`it/06-review-e-merge.md`](it/06-review-e-merge.md)
 - Current development state: [`project/development-status.md`](project/development-status.md)
-- Software architecture: [`it/20-architettura-generale.md`](it/20-architettura-generale.md)
-- Technology decisions: [`it/52-matrice-tecnologie-decisioni.md`](it/52-matrice-tecnologie-decisioni.md)
+- Architecture: [`it/20-architettura-generale.md`](it/20-architettura-generale.md)
 - Navigation fundamentals: [`it/24-routing-e-navigazione.md`](it/24-routing-e-navigazione.md)
 - Teaching scenarios: [`it/lab/README.md`](it/lab/README.md)
 
@@ -34,9 +33,11 @@ teaching documentation for Travel DNA.
 3. [`45-map-scene-e-fake-renderer.md`](it/45-map-scene-e-fake-renderer.md):
    declarative map scene, bounded deltas and semantic fake renderer.
 4. [`46-location-sample-e-replay-deterministico.md`](it/46-location-sample-e-replay-deterministico.md):
-   monotonic location samples, ordering gate, virtual clock and replay.
+   monotonic samples, ordering gate, virtual clock and replay.
+5. [`47-posizione-matched-e-route-progress.md`](it/47-posizione-matched-e-route-progress.md):
+   already-matched positions, route progress, maneuver/arrival policy and map delta.
 
-Run all foundation checks from the repository root:
+Run all foundation checks:
 
 ```bash
 sh tools/tdna check
@@ -49,8 +50,9 @@ sh tools/tdna lab reference-routing dijkstra
 sh tools/tdna lab routing-contracts
 sh tools/tdna lab map-scene
 sh tools/tdna lab location-replay
+sh tools/tdna lab route-progress
 ```
 
-Hand-written teaching documentation remains the primary explanation. Generated
-references, graphs, test reports and benchmark observations must stay in
-recognizable generated paths and must never replace the narrative source.
+Hand-written documentation remains the primary explanation. Generated reports,
+benchmarks and graphs stay in recognizable generated paths and never replace the
+narrative source.

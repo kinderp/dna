@@ -18,77 +18,68 @@ Il progetto nasce da quattro idee unite:
 La **Documentation Foundation v0** è presente e la milestone
 **Foundations and Travel DNA Lab v0** è in corso.
 
-Sono disponibili quattro vertical slice didattiche:
+La sequenza didattica implementation-backed comprende cinque slice:
 
 ```text
 1. grafo sintetico -> Java/Rust -> Dijkstra/A* -> report confrontato
 2. RouteRequest -> RoutePlannerPort -> fake provider -> RoutePlan canonico
 3. RoutePlan -> MapScene/MapSceneDelta -> FakeMapRenderer -> snapshot
 4. fixture GPS sintetica -> LocationSample -> clock/replay -> report bounded
+5. MatchedRoutePosition -> route progress -> manovra/arrival -> delta mappa
 ```
 
-Non esiste ancora un navigatore mobile di produzione. Le slice stabiliscono
-metodo, contratti, fixture, test, CI, prestazioni diagnostiche e documentazione
-prima di introdurre GPS reale, OpenStreetMap, MapLibre, Valhalla, Ferrostar,
-Android o iOS.
+Questi sono laboratori e contratti di fondazione, non un navigatore mobile di
+produzione. Lo stato vivo di pubblicazione, CI e review è registrato in
+[development-status.md](docs/project/development-status.md) e nelle pull request.
 
-## Laboratorio 1 — algoritmo di routing
+## Laboratori
 
-Prerequisiti:
-
-- Java 21;
-- Python 3;
-- shell POSIX;
-- Rust stable per il confronto completo.
+### 1 — algoritmo di routing
 
 ```bash
 sh tools/tdna check-java
 sh tools/tdna lab reference-routing astar
 ```
 
-Capitolo:
-[Routing di riferimento in Java e Rust](docs/it/43-reference-routing-java-rust.md).
+[Capitolo 43 — Routing Java/Rust](docs/it/43-reference-routing-java-rust.md)
 
-## Laboratorio 2 — contratto e provider
-
-Prerequisiti aggiuntivi:
-
-- Gradle compatibile; la CI usa Gradle 9.5.1;
-- Kotlin 2.4.0 risolto dal version catalog.
+### 2 — contratto e provider
 
 ```bash
 sh tools/tdna check-architecture
 sh tools/tdna lab routing-contracts
 ```
 
-Capitolo:
-[Contratti routing e fake provider](docs/it/44-contratti-routing-e-fake-provider.md).
+[Capitolo 44 — Contratti routing e fake provider](docs/it/44-contratti-routing-e-fake-provider.md)
 
-## Laboratorio 3 — scena cartografica
+### 3 — scena cartografica
 
 ```bash
 sh tools/tdna lab map-scene
 ```
 
-Il Lab installa una route e marker semantici in una `MapScene`, applica delta
-bounded e osserva un fake renderer senza MapLibre o GPU.
+[Capitolo 45 — MapScene e fake renderer](docs/it/45-map-scene-e-fake-renderer.md)
 
-Capitolo:
-[MapScene e fake renderer](docs/it/45-map-scene-e-fake-renderer.md).
-
-## Laboratorio 4 — posizione e replay
+### 4 — posizione e replay
 
 ```bash
 sh tools/tdna lab location-replay
 sh tools/tdna bench location-replay 10000 7
 ```
 
-Il Lab riproduce campioni sintetici con tempo monotono, rifiuta sequence e
-timestamp non crescenti e produce un summary deterministico. Il benchmark è
-soltanto diagnostico e non misura GPS, batteria o prestazioni mobili.
+[Capitolo 46 — LocationSample e replay](docs/it/46-location-sample-e-replay-deterministico.md)
 
-Capitolo:
-[LocationSample e replay deterministico](docs/it/46-location-sample-e-replay-deterministico.md).
+### 5 — posizione matched e route progress
+
+```bash
+sh tools/tdna lab route-progress
+sh tools/tdna bench route-progress 10000 7
+```
+
+[Capitolo 47 — Posizione matched e route progress](docs/it/47-posizione-matched-e-route-progress.md)
+
+Il quinto Lab riceve posizioni già associate alla route. Non implementa map
+matching reale, GPS filtering, distanza, ETA, off-route o rerouting.
 
 ## Verifica completa
 
@@ -97,16 +88,9 @@ sh tools/tdna doctor
 sh tools/tdna check
 ```
 
-Il comando controlla:
-
-- link e code fence della documentazione;
-- confini architetturali Kotlin;
-- Java e Rust;
-- contratto cross-language;
-- Kotlin Multiplatform JVM/Linux;
-- fake route planner e fake map renderer;
-- Lab location replay;
-- benchmark diagnostico senza threshold.
+Il comando controlla documentazione, confini architetturali, Java, Rust,
+contratto cross-language, Kotlin Multiplatform JVM/Linux, tutti i Lab e i
+benchmark diagnostici senza threshold.
 
 ## Da dove iniziare
 
@@ -117,7 +101,6 @@ Il comando controlla:
 - [Stato dello sviluppo](docs/project/development-status.md)
 - [Report giornalieri](docs/project/daily/README.md)
 - [Architettura](docs/it/20-architettura-generale.md)
-- [Tecnologie](docs/it/52-matrice-tecnologie-decisioni.md)
 - [Navigazione](docs/it/24-routing-e-navigazione.md)
 - [Travel DNA Lab](docs/it/lab/README.md)
 - [ADR](docs/adr/README.md)

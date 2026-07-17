@@ -1,22 +1,24 @@
-# Report di sviluppo — 17 luglio 2026 — LocationSample e replay deterministico
+# Report finale — 17 luglio 2026 — LocationSample e replay deterministico
 
-## Stato del report
+## Esito
 
-`pre-review complete`
+La quarta vertical slice della fondazione è stata completata e mergiata.
 
-Il ledger autorevole dei round finali è la timeline della
-[PR #16](https://github.com/kinderp/tdna/pull/16). Questo report viene chiuso
-prima dello SHA finale: gli esiti dei round, la CI finale e il merge saranno
-registrati nel ledger senza creare un commit auto-invalidante.
+- issue: [#11](https://github.com/kinderp/tdna/issues/11), chiusa;
+- PR: [#16](https://github.com/kinderp/tdna/pull/16), merged;
+- base: `76680433089842db5805d28eb50416a23c7d0a88`;
+- final substantive head: `97b15bf8accf440118d20eb8e4848c26dc61cb50`;
+- Foundation CI: run
+  [#100](https://github.com/kinderp/tdna/actions/runs/29577722826), verde;
+- review round 1: `4722346834`, clean;
+- review round 2: `4722349391`, clean sullo stesso SHA;
+- merge: `020f8495f7fbbae81f1463b098b0ddd2a079c873`.
 
-## Obiettivo
-
-Costruire la quarta vertical slice eseguibile di **Foundations and Travel DNA
-Lab v0**:
+## Obiettivo raggiunto
 
 ```text
 fixture sintetica
--> GeoPoint condiviso
+-> GeoPoint cross-domain
 -> LocationSample
 -> ordering gate
 -> clock virtuale
@@ -26,27 +28,14 @@ fixture sintetica
 -> report deterministico
 ```
 
-## Tracciabilità
-
-- issue: [#11](https://github.com/kinderp/tdna/issues/11);
-- PR: [#16](https://github.com/kinderp/tdna/pull/16);
-- branch: `agent/location-sample-replay`;
-- base verificata: `76680433089842db5805d28eb50416a23c7d0a88`;
-- technical head benchmarkato: `2b27a731e98c0456e2532ef3ebfc850523ab0ef4`;
-- capitolo: `docs/it/46-location-sample-e-replay-deterministico.md`;
-- scenario: `docs/it/lab/scenarios/location-replay-deterministico.md`.
-
-Il substantive head finale sarà il commit che contiene questo report e gli
-ultimi indici; il suo SHA esatto sarà registrato nel ledger PR.
-
-## Codice introdotto
+## Moduli
 
 ### `shared/geo-contracts`
 
-- `GeoPoint` WGS84 cross-domain;
-- normalizzazione dello zero firmato;
-- uguaglianza e hash semantici;
-- compatibilità sorgente temporanea in `routing-contracts`.
+- `GeoPoint` WGS84;
+- zero firmato normalizzato;
+- uguaglianza/hash stabili;
+- alias temporaneo per il routing.
 
 ### `shared/location-contracts`
 
@@ -54,284 +43,85 @@ ultimi indici; il suo SHA esatto sarà registrato nel ledger PR.
 - `LocationSequence`;
 - `LocationSampleOrigin`;
 - `LocationSample` bounded;
-- `LocationSampleGate` con ispezione non mutante;
-- decisioni accepted/rejected con motivo esplicito.
+- gate con ispezione non mutante e commit esplicito.
 
 ### `shared/location-replay`
 
-- `PlaybackRate` razionale normalizzato;
-- `LocationReplayScenario` immutabile e bounded;
-- `VirtualReplayClock`;
-- `ReplayDelayScaler` con preview/commit e resto;
-- `DeterministicReplayRunner` con transizione atomica;
-- `ReplayEvent`, `ReplayState` e `ReplaySummary`.
+- `PlaybackRate` razionale;
+- scenario immutabile e bounded;
+- clock virtuale;
+- delay scaler con preview/commit e resto;
+- state machine `Ready/Running/Paused/Completed/Cancelled`;
+- transizione accepted atomica;
+- summary senza event history crescente.
 
-### `labs/location-replay-cli`
+### CLI e fixture
 
+- formato `TDNA_LOCATION_REPLAY_V0`;
 - parser JVM rigoroso;
-- report canonico;
-- benchmark diagnostico con numero dispari di run;
-- test parser, ground truth e argomenti benchmark.
+- sei campioni sintetici e due rifiuti intenzionali;
+- report JSON esatto;
+- benchmark diagnostico;
+- artifact CI conservato per 14 giorni.
 
-### `fixtures/gps`
+## Decisioni
 
-- `TDNA_LOCATION_REPLAY_V0`;
-- sei campioni sintetici;
-- una sequence duplicata;
-- un timestamp monotono non crescente;
-- metadati di provenance, privacy e non-obiettivi.
+1. Il runtime usa tempo monotono; il tempo civile resta a diario/UI.
+2. Sequence e timestamp crescono entrambi.
+3. Il primo accepted stabilisce la baseline con delay zero.
+4. Il replay non ordina o corregge input stantii.
+5. Il rate è una frazione intera con resto conservato.
+6. Parser e file I/O restano fuori dal common hot path.
+7. Una transizione viene verificata interamente prima di mutare stato.
+8. Il benchmark è una osservazione diagnostica, non un gate.
 
-## Decisioni architetturali
+## Finding risolti
 
-1. `GeoPoint` appartiene a un modulo geografico cross-domain, non al routing.
-2. Il runtime usa tempo monotono; il tempo civile resta a diario e UI.
-3. Sequence e timestamp devono crescere entrambi.
-4. Il replay conserva l'ordine dichiarato e non corregge input stantii.
-5. Il primo accepted stabilisce la baseline con delay zero.
-6. La velocità è una frazione intera, non un `Double`.
-7. Il resto della divisione viene conservato tra campioni.
-8. Parser e file I/O restano fuori dal modulo common e dal futuro hot path.
-9. Il runner conserva stato bounded, non la cronologia degli eventi.
-10. Una transizione accepted viene preparata completamente prima di mutare stato.
-11. Fixture e report sono didattici, non API pubbliche o telemetria.
-12. Il benchmark è osservazione diagnostica e non un gate prestazionale.
+1. contatori pubblici non bounded;
+2. aspettative fixture oltre il massimo dello scenario;
+3. benchmark non conservato;
+4. mediana ambigua con un numero pari di run;
+5. summary processato senza accepted baseline;
+6. overflow che poteva mutare parzialmente gate, clock e indice;
+7. README e commenting status obsoleti;
+8. indice italiano legato allo stato draft e quindi instabile dopo il merge.
 
-## Finding e correzioni
+Ogni finding ha azzerato il contatore; i due round finali sono stati eseguiti
+soltanto sullo SHA `97b15bf8…`.
 
-### Finding 1 — contatori pubblici non bounded
+## Benchmark registrato
 
-`ReplaySummary` accettava contatori fino a `Int.MAX_VALUE` benché lo scenario
-fosse limitato a 100.000 campioni.
+Evidenza tecnica:
 
-Correzione:
-
-- contatori bounded a `LocationReplayScenario.MaxSamples`;
-- somme accepted/rejected e reason counts in `Long`;
-- reason counts positivi e bounded;
-- stati `Ready` e `Completed` coerenti;
-- delay zero quando non esiste un accepted;
-- regression test con `Int.MAX_VALUE`.
-
-### Finding 2 — aspettative fixture non bounded
-
-Accepted, rejected e reason count del parser potevano superare lo scenario.
-
-Correzione:
-
-- valori bounded a 100.000;
-- somme in `Long`;
-- accepted + rejected uguale al numero dei campioni;
-- reason count uguale ai rifiuti;
-- test per quantità oltre limite e combinazioni impossibili.
-
-### Finding 3 — benchmark non conservato
-
-Il risultato viveva soltanto nello stdout della CI.
-
-Correzione:
-
-- `check-kotlin` salva Lab e benchmark JSON;
-- Foundation CI pubblica `foundation-kotlin-observations` per 14 giorni;
-- nessuna soglia di pass/fail.
-
-### Finding 4 — mediana ambigua con run pari
-
-Il benchmark accettava un numero pari di iterazioni ma chiamava mediana
-l'elemento superiore centrale.
-
-Correzione:
-
-- iterazioni obbligatoriamente dispari;
-- intervallo bounded `[1, 25]`;
-- test per zero, pari e fuori limite;
-- uso documentato di sette run.
-
-### Finding 5 — summary processato senza accepted
-
-Un `ReplaySummary` costruito manualmente poteva dichiarare campioni processati ma
-nessuna baseline accettata, stato impossibile per uno stream strutturalmente
-valido.
-
-Correzione:
-
-```text
-processed > 0 -> accepted > 0
-```
-
-con test di rifiuto.
-
-### Finding 6 — transizione accepted non atomica
-
-Con timestamp estremo e rate lento, un overflow del delay poteva avvenire dopo
-che gate, clock e indice erano già avanzati.
-
-Correzione:
-
-```text
-gate.inspect
--> clock.deltaTo
--> delayScaler.preview
--> total-overflow check
--> commit gate
--> commit clock
--> commit rate remainder
--> increment counters/index
-```
-
-Il test provoca ripetutamente l'overflow e verifica che:
-
-- `processedSamples` resti 1;
-- clock e last sequence restino sulla prima baseline;
-- delay resti zero;
-- lo stato resti `Running`;
-- lo stesso campione possa fallire di nuovo senza corruzione aggiuntiva.
-
-### Finding 7 — entry point e stato commenti obsoleti
-
-README radice, indice `docs` e commenting status dichiaravano ancora due Lab e
-moduli non implementati.
-
-Correzione:
-
-- quattro Lab descritti e collegati;
-- sequenza didattica 43–46;
-- plugin, map e location modules classificati teaching-ready/hot-path reviewed;
-- comandi e artifact replay documentati.
-
-Ogni finding ha azzerato il contatore delle review pulite. Nessun round finale è
-stato dichiarato prima della chiusura di questa history.
-
-## Test e verifiche
-
-Copertura principale:
-
-- WGS84 e zero firmato;
-- accuratezza, velocità e bearing invalidi;
-- sequence duplicata e tempo non crescente;
-- inspect non mutante e baseline accepted;
-- rifiuti che non muovono clock o rate remainder;
-- timestamp iniziale non zero;
-- rate normalizzato e resto conservato;
-- pause, step, resume e cancel;
-- summary e aspettative bounded;
-- transizione atomica in caso di overflow;
-- parser rigoroso e report esatto;
-- benchmark arguments bounded/dispari;
-- common, JVM e Linux x64;
-- architecture boundary check.
-
-## Benchmark diagnostico osservato
-
-Evidenza:
-
-- Foundation CI run
-  [#97](https://github.com/kinderp/tdna/actions/runs/29577113153);
-- technical head `2b27a731e98c0456e2532ef3ebfc850523ab0ef4`;
-- artifact ID `8405564857`;
-- artifact digest
-  `sha256:f9fa90fdbce6631c5f1f473f9d26768c16d737ccabcc01249b4a0390071bda80`;
-- scadenza artifact: 31 luglio 2026.
-
-Ambiente:
-
-```text
-GitHub-hosted runner
-Ubuntu 24.04.4
-Java 21
-Gradle 9.5.1
-Kotlin 2.4.0
-10.000 campioni validi
-3 warm-up
-7 iterazioni
-```
-
-Output:
+- run [#97](https://github.com/kinderp/tdna/actions/runs/29577113153);
+- head `2b27a731e98c0456e2532ef3ebfc850523ab0ef4`;
+- artifact `8405564857`;
+- digest `sha256:f9fa90fdbce6631c5f1f473f9d26768c16d737ccabcc01249b4a0390071bda80`.
 
 ```json
 {"benchmark":"location-replay-v0","samples":10000,"warmups":3,"iterations":7,"min_elapsed_ns":400325,"median_elapsed_ns":2973838,"max_elapsed_ns":11811276,"median_ns_per_sample":297.38}
 ```
 
-Interpretazione limitata:
+Ambiente: Ubuntu 24.04, Java 21, Gradle 9.5.1, Kotlin 2.4.0.
 
-- mediana osservata: circa `2,97 ms` per 10.000 campioni;
-- mediana osservata: `297,38 ns/campione`;
-- forte variabilità tra minimo e massimo;
-- nessuna soglia o promessa pubblica;
-- il dato serve come baseline diagnostica del core in-memory.
+Il dato non include parser, GPS, rete, database, map matching, route progress,
+MapLibre, Android/iOS o batteria.
 
-Non misura:
+## Documentazione
 
-- parsing fixture;
-- GPS o sensori;
-- rete/database;
-- map matching;
-- route progress;
-- MapLibre/GPU;
-- Android/iOS;
-- batteria;
-- viaggio su strada.
+- [Capitolo 46](../../it/46-location-sample-e-replay-deterministico.md)
+- [Scenario Lab](../../it/lab/scenarios/location-replay-deterministico.md)
+- [Tracepoint Model](../../it/41-tracepoint-model-v0.md)
+- [Mappa del codice](../../it/40-mappa-codice-e-stati.md)
 
-La CI finale sul substantive head rieseguirà benchmark e Lab; il ledger PR
-registrerà il run finale senza modificare questo report.
+## Debito rimandato
 
-## Documentazione prodotta
+- adapter Android/iOS;
+- GPS reale;
+- filtro e map matcher;
+- route progress, poi realizzato nella slice successiva;
+- off-route/reroute;
+- Gradle Wrapper;
+- benchmark dispositivo/batteria.
 
-- capitolo 46 implementation-backed;
-- scenario Lab eseguibile;
-- reading paths e Lab roadmap;
-- feature/documentation/commenting status;
-- tracepoint model;
-- tooling guide;
-- milestone e development status;
-- README radice e indice `docs`;
-- questo report e indice permanente.
-
-## Review plan
-
-### Round 1
-
-Focus:
-
-- correttezza dei contratti;
-- invarianti temporali;
-- bounds e overflow;
-- atomicità delle transizioni;
-- state machine e ownership;
-- fixture parser;
-- test di regressione.
-
-### Round 2
-
-Focus:
-
-- dipendenze e provider isolation;
-- forma del futuro hot path;
-- privacy e provenance;
-- correttezza delle affermazioni benchmark;
-- documentazione e percorsi studenti;
-- CI, scope e non-obiettivi.
-
-Servono due round consecutivi sullo stesso substantive head finale.
-
-## Decisioni richieste
-
-Nessuna. Il maintainer ha autorizzato il merge autonomo soltanto dopo CI verde,
-due round puliti sullo stesso SHA, assenza di thread e expected-head guard.
-
-## Debito e non-obiettivi
-
-- nessun adapter Android/iOS;
-- nessun GPS reale;
-- nessun map matching;
-- nessun route progress;
-- nessun off-route/reroute;
-- nessuna coroutine cancellation concorrente;
-- nessuna misura batteria;
-- nessuna affidabilità stradale;
-- Gradle Wrapper ancora assente.
-
-## Prossimo passo
-
-Fissare il substantive head con questo report, ottenere Foundation CI verde,
-eseguire due round puliti, mergiare PR #16 e verificare issue e nuovo `main`.
-Dopo il merge, la slice successiva partirà dal nuovo `main` con una sola PR.
+Nessuna decisione del maintainer rimane aperta per questa slice.

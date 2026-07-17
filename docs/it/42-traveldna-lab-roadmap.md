@@ -3,17 +3,8 @@
 ## Obiettivo
 
 Travel DNA Lab trasforma architettura e test in percorsi didattici. Uno studente
-deve poter seguire un fatto dall'input all'output, capire gli stati, eseguire una
-fixture e modificare un componente senza conoscere tutto il sistema.
-
-## Cosa non è il Lab v0
-
-- dashboard di produzione;
-- tracing sempre attivo;
-- simulatore 3D;
-- secondo modello dati del prodotto;
-- scusa per aggiungere I/O al percorso caldo;
-- dimostrazione automatica di affidabilità stradale.
+deve seguire un fatto dall'input all'output, capire ownership e stati, eseguire
+una fixture e modificare un componente senza conoscere tutto il sistema.
 
 ## Stati
 
@@ -23,14 +14,14 @@ fixture e modificare un componente senza conoscere tutto il sistema.
 | `stable-doc` | Percorso consolidato, codice non necessariamente presente. |
 | `executable` | Comando, fixture/fake e test esistono. |
 | `public-output` | Formato macchina versionato; non ancora usato. |
-| `deprecated` | Scenario sostituito con successore indicato. |
+| `deprecated` | Scenario sostituito con successore. |
 
 ## Formato scenario
 
 ```text
 id, status, learning goal, prerequisites, user story, platforms
 fixture/fake, trigger, expected evidence, tracepoints
-module/function path, state changes, output
+module/function path, state ownership, output
 performance, privacy/safety, existing/missing/future tests
 common failures, non-goals, related docs
 ```
@@ -39,37 +30,39 @@ common failures, non-goals, related docs
 
 | Scenario | Cosa insegna | Comando | Capitolo |
 | --- | --- | --- | --- |
-| [Reference routing Java/Rust](lab/scenarios/reference-routing-java-rust.md) | Grafo, Dijkstra, A*, determinismo e contract diff. | `sh tools/tdna lab reference-routing astar` | [43](43-reference-routing-java-rust.md) |
-| [Routing contracts e fake provider](lab/scenarios/routing-contracts-fake-provider.md) | Porta, capability, provenance, fake e conformance. | `sh tools/tdna lab routing-contracts` | [44](44-contratti-routing-e-fake-provider.md) |
-| [MapScene e fake renderer](lab/scenarios/map-scene-fake-renderer.md) | Scena statica, delta, marker semantici e renderer contract. | `sh tools/tdna lab map-scene` | [45](45-map-scene-e-fake-renderer.md) |
-| [LocationSample e replay](lab/scenarios/location-replay-deterministico.md) | Tempo monotono, ordering gate, clock virtuale, rate e fixture. | `sh tools/tdna lab location-replay` | [46](46-location-sample-e-replay-deterministico.md) |
+| [Reference routing](lab/scenarios/reference-routing-java-rust.md) | Grafo, Dijkstra, A* e contract diff. | `sh tools/tdna lab reference-routing astar` | [43](43-reference-routing-java-rust.md) |
+| [Routing contracts](lab/scenarios/routing-contracts-fake-provider.md) | Porta, capability, provenance e fake. | `sh tools/tdna lab routing-contracts` | [44](44-contratti-routing-e-fake-provider.md) |
+| [MapScene](lab/scenarios/map-scene-fake-renderer.md) | Scena, delta e renderer contract. | `sh tools/tdna lab map-scene` | [45](45-map-scene-e-fake-renderer.md) |
+| [Location replay](lab/scenarios/location-replay-deterministico.md) | Tempo monotono, gate, clock e rate. | `sh tools/tdna lab location-replay` | [46](46-location-sample-e-replay-deterministico.md) |
+| [Route progress](lab/scenarios/route-progress-tracker.md) | Matched position, leg, manovra, arrival e map binding. | `sh tools/tdna lab route-progress` | [47](47-posizione-matched-e-route-progress.md) |
 
-I quattro scenari mostrano una progressione:
+Progressione:
 
 ```text
-43: come si calcola una route
-44: come l'app richiede una route
-45: come la route diventa scena e delta
-46: come arrivano e si riproducono i campioni di posizione
+43: calcolare una route
+44: richiedere una route senza dipendere dal provider
+45: installare route/scena e applicare delta
+46: normalizzare e riprodurre campioni di posizione
+47: accettare una posizione matched e produrre progresso/delta
 ```
 
 ## Scenari `stable-doc` successivi
 
-| Scenario | Cosa insegna | Dipendenza per diventare eseguibile |
+| Scenario | Cosa insegna | Dipendenza |
 | --- | --- | --- |
-| [Render canonical route](lab/scenarios/render-canonical-route.md) | Adapter grafico e verifica fake/reale. | Adapter MapLibre. |
-| [Missed exit and reroute](lab/scenarios/navigation-missed-exit-reroute.md) | Map matching, progress, off-route e route replacement. | Location replay, matched position e fake guidance. |
-| [Chat with external navigation](lab/scenarios/chat-with-external-navigation.md) | Foreground navigator, push, store e voice reply. | Conversation core e platform fake. |
-| [Daily page](lab/scenarios/daily-page-photos-thoughts.md) | Eventi, media e controllo utente. | Journey store e media fake. |
-| [DNA exchange](lab/scenarios/dna-exchange-privacy.md) | Approssimazione, consenso e revoca. | Privacy filter e presence fake. |
+| [Missed exit and reroute](lab/scenarios/navigation-missed-exit-reroute.md) | Evidenza off-route, conferma, reroute e route replacement. | Route progress e fake guidance. |
+| [Render canonical route](lab/scenarios/render-canonical-route.md) | Adapter MapLibre e confronto fake/reale. | Adapter grafico. |
+| [Chat with external navigation](lab/scenarios/chat-with-external-navigation.md) | Push, store e voice reply. | Conversation core. |
+| [Daily page](lab/scenarios/daily-page-photos-thoughts.md) | Eventi, media e controllo utente. | Journey store. |
+| [DNA exchange](lab/scenarios/dna-exchange-privacy.md) | Approssimazione, consenso e revoca. | Presence/privacy filter. |
 
 ## Livelli didattici
 
 - **A — leggere:** diagramma, glossario, output e non-obiettivi;
 - **B — eseguire:** fixture/fake, test, report e CLI;
-- **C — modificare:** cambiare scenario, aggiungere caso limite o test;
+- **C — modificare:** caso limite, policy o test;
 - **D — misurare:** benchmark, memoria, frame, batteria e FFI;
-- **E — progettare:** ADR, contratto, threat model o sostituzione provider.
+- **E — progettare:** ADR, contratto, threat model o provider replacement.
 
 ## Tracciabilità
 
@@ -78,50 +71,50 @@ use case
 -> bounded context
 -> contratto/tracepoint
 -> modulo/funzione
--> stato/dato
+-> stato/owner
 -> test
 -> benchmark
--> issue/PR
+-> issue/PR/report
 ```
 
-### Location replay
+### Route progress
 
 ```text
-issue #11 -> PR #16
--> TDNA_LOCATION_REPLAY_V0
--> GeoPoint/LocationSample
--> LocationSampleGate
--> VirtualReplayClock/PlaybackRate
--> DeterministicReplayRunner
--> report e benchmark
--> capitolo 46
+issue #17 -> PR #18
+-> MatchedRoutePosition
+-> RouteProgressTracker
+-> RouteProgressSnapshot
+-> RouteProgressMapBinding
+-> MapSceneDelta.UpdateRouteProgress
+-> Lab/benchmark
+-> capitolo 47
 ```
 
 ## Evoluzione strumenti
 
 ### Fase 1 — corrente
 
-- Markdown e Mermaid;
+- Markdown/Mermaid;
 - fixture e fake;
 - Java, Rust e Kotlin CLI;
-- report JSON ristretto;
+- report JSON ristretti;
 - test common/JVM/Linux;
 - architecture checks;
-- benchmark diagnostico senza threshold.
+- benchmark diagnostici senza threshold.
 
 ### Fase 2
 
-- timeline visuale accepted/rejected;
-- raw, filtered e matched position;
-- route progress;
-- state inspector del missed-exit scenario.
+- fake map matcher;
+- timeline raw/filtered/matched/progress;
+- off-route state inspector;
+- missed-exit/reroute scenario.
 
 ### Fase 3
 
+- adapter reali controllati;
 - link generati al codice;
 - call graph mirati;
-- benchmark comparison;
-- preview PR.
+- benchmark comparison e preview PR.
 
 ### Fase 4
 
@@ -132,5 +125,5 @@ issue #11 -> PR #16
 
 ## Regola
 
-Prima pochi scenari spiegati bene, poi copertura ampia. Un Lab che tenta di
-mostrare tutto diventa incomprensibile.
+Prima pochi scenari spiegati bene, poi copertura ampia. Un Lab eseguibile non è
+una promessa di capacità mobile o affidabilità su strada.
