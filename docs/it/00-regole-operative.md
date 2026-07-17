@@ -224,7 +224,17 @@ lì.
 Usare:
 
 ```text
-Milestone -> issue madre -> issue figlie -> draft PR -> review -> merge
+Milestone
+-> issue madre
+-> issue figlie
+-> draft PR
+-> CI verde
+-> review round
+-> eventuali fix e reset del conteggio
+-> due review round consecutivi senza finding
+-> PR ready
+-> merge
+-> chiusura issue
 ```
 
 Applicare label almeno per area e tipo. Esempi futuri:
@@ -243,7 +253,83 @@ Livelli di rischio:
 - `R2`: navigazione, background, provider, sincronizzazione;
 - `R3`: posizione, chat in auto, privacy, sicurezza, FFI o schema pubblico.
 
-R2 e R3 richiedono review più profonda e prove mirate.
+R2 e R3 richiedono review più profonda e prove mirate. Il requisito dei due round
+consecutivi vale comunque per **ogni** pull request; cambia la profondità, non il
+numero minimo.
+
+### 11.1 Che cosa conta come review round
+
+Un review round è una nuova lettura end-to-end del contenuto corrente della PR.
+Deve registrare nella PR:
+
+- SHA del substantive head revisionato;
+- focus del round;
+- rischi e file controllati;
+- finding trovati oppure dichiarazione esplicita `no new findings`;
+- test e CI osservati;
+- numero corrente di round puliti consecutivi.
+
+I due round non devono essere la copia dello stesso controllo: il secondo deve
+rileggere il risultato con un focus diverso o con una nuova verifica completa.
+Possono essere eseguiti dallo stesso reviewer solo come passaggi realmente
+separati e documentati.
+
+### 11.2 Finding, fix e reset
+
+Un finding è qualunque problema che richieda una modifica sostanziale a codice,
+test, contratto, documentazione stabile, fixture, workflow o scope della PR.
+
+Quando un round produce almeno un finding:
+
+```text
+finding
+-> fix
+-> test o prova di regressione quando applicabile
+-> CI sul nuovo head
+-> clean-review counter = 0
+```
+
+Dopo il fix devono quindi avvenire **due nuovi round consecutivi senza finding**.
+Un round precedente al fix non può essere riutilizzato.
+
+### 11.3 Quali commit invalidano i round puliti
+
+Qualunque commit sostanziale dopo un round pulito invalida la sequenza e riporta
+il contatore a zero. Sono sostanziali le modifiche a:
+
+- codice;
+- test;
+- contratti;
+- documentazione stabile;
+- fixture;
+- build e CI;
+- report che dichiarano lo stato tecnico della slice.
+
+Non invalidano da soli la sequenza:
+
+- aggiornamenti alla descrizione della PR;
+- commenti di review;
+- label o milestone;
+- rerun della stessa CI senza modifica del commit.
+
+La regola pratica è: i due round puliti devono riferirsi allo stesso substantive
+head SHA.
+
+### 11.4 Gate di ready, merge e chiusura
+
+Una PR non può essere marcata ready, chiusa come completata o mergiata finché non
+sono contemporaneamente vere queste condizioni:
+
+1. tutti i finding sono risolti o esplicitamente convertiti in non-obiettivi
+   approvati;
+2. la CI richiesta è verde sul substantive head corrente;
+3. esistono due review round consecutivi senza nuovi finding sullo stesso head;
+4. PR body e report giornaliero contengono l'evidenza dei due round;
+5. documentazione, issue e stato milestone sono coerenti.
+
+L'issue collegata viene chiusa dal merge o subito dopo il merge, non soltanto
+perché l'implementazione è pronta. La procedura dettagliata e gli esempi vivono
+in [06-review-e-merge.md](06-review-e-merge.md).
 
 ## 12. Definition of Done
 
@@ -258,4 +344,8 @@ Una slice è conclusa quando, per quanto applicabile:
 - cancellazione, retry e lifecycle sono definiti;
 - il comportamento offline è noto;
 - privacy e guida sicura sono verificate;
-- documentazione e tracciabilità sono aggiornate.
+- documentazione e tracciabilità sono aggiornate;
+- la CI richiesta è verde sul substantive head corrente;
+- due review round consecutivi sullo stesso substantive head non hanno prodotto
+  nuovi finding;
+- PR, issue, milestone e report registrano lo stesso stato.
