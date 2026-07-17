@@ -22,43 +22,44 @@ class FakeMapMatcherTest {
         val report = runImmediate {
             MapMatcherContractProbe.verify(
                 matcher,
-                FakeMapMatchFixtures.MatchedRequest,
-                FakeMapMatchFixtures.UnmatchedRequest,
+                FakeMapMatchFixtures.Route,
+                FakeMapMatchFixtures.MatchedSample,
+                FakeMapMatchFixtures.UnmatchedSample,
             )
         }
         assertEquals(FakeMapMatcher.Id.value, report.providerId)
-        assertEquals(4, report.checks.size)
+        assertEquals(5, report.checks.size)
     }
 
     @Test
     fun catalogMissIsAnExplicitUnmatchedOutcome() {
         val matcher = FakeMapMatcher(emptyList())
-        val result = runImmediate { matcher.match(FakeMapMatchFixtures.MatchedRequest) }
+        val session = matcher.bind(FakeMapMatchFixtures.Route)
+        val result = runImmediate { session.match(FakeMapMatchFixtures.MatchedSample) }
         val unmatched = assertIs<MapMatchResult.Unmatched>(result)
         assertEquals("fake.catalog-miss", unmatched.unmatched.providerDiagnosticCode)
     }
 
     @Test
-    fun requestRecordingIsBoundedAndResettable() {
-        val matcher = FakeMapMatchFixtures.matcher(maxRecordedRequests = 2)
-        runImmediate {
-            FakeMapMatchFixtures.Requests.take(3).forEach { matcher.match(it) }
-        }
-        assertEquals(3L, matcher.totalRequestCount)
-        assertEquals(FakeMapMatchFixtures.Requests.subList(1, 3), matcher.recordedRequests)
-        matcher.resetRecordedRequests()
-        assertEquals(0L, matcher.totalRequestCount)
-        assertEquals(emptyList(), matcher.recordedRequests)
+    fun callRecordingIsBoundedAndResettable() {
+        val matcher = FakeMapMatchFixtures.matcher(maxRecordedCalls = 2)
+        val session = matcher.bind(FakeMapMatchFixtures.Route)
+        runImmediate { FakeMapMatchFixtures.Samples.take(3).forEach { session.match(it) } }
+        assertEquals(3L, matcher.totalMatchCount)
+        assertEquals(FakeMapMatchFixtures.Samples.subList(1, 3), matcher.recordedCalls.map { it.sample })
+        matcher.resetRecordedCalls()
+        assertEquals(0L, matcher.totalMatchCount)
+        assertEquals(emptyList(), matcher.recordedCalls)
     }
 
     @Test
     fun invalidMatchedCatalogEntryIsRejectedAtConstruction() {
-        val request = FakeMapMatchFixtures.MatchedRequest
+        val sample = FakeMapMatchFixtures.MatchedSample
         val invalid = MapMatchResult.Matched(
             position = MatchedRoutePosition(
-                routeId = request.route.id,
+                routeId = FakeMapMatchFixtures.Route.id,
                 sampleSequence = LocationSequence(99),
-                monotonicTime = request.sample.monotonicTime,
+                monotonicTime = sample.monotonicTime,
                 coordinate = RouteCoordinate(0, 0.0),
                 lateralDistanceMeters = 0.0,
                 confidence = MatchConfidence.High,
@@ -66,8 +67,25 @@ class FakeMapMatcherTest {
             provenance = MapMatchProvenance(FakeMapMatcher.Id),
         )
         assertFailsWith<IllegalArgumentException> {
-            FakeMapMatcher(listOf(FakeMapMatchEntry(request, invalid)))
+            FakeMapMatcher(listOf(FakeMapMatchEntry(FakeMapMatchFixtures.Route, sample, invalid)))
         }
+    }
+
+    @Test
+    fun bindRejectsAReusedRouteIdWithDifferentGeometry() {
+        val matcher = FakeMapMatchFixtures.matcher()
+        val original = FakeMapMatchFixtures.Route
+        val altered = org.traveldna.routing.contracts.RoutePlan(
+            id = original.id,
+            geometry = original.geometry.mapIndexed { index, point ->
+                if (index == 1) org.traveldna.geo.contracts.GeoPoint(point.latitude + 0.001, point.longitude) else point
+            },
+            legs = original.legs,
+            distanceMeters = original.distanceMeters,
+            durationSeconds = original.durationSeconds,
+            provenance = original.provenance,
+        )
+        assertFailsWith<IllegalArgumentException> { matcher.bind(altered) }
     }
 }
 
@@ -75,9 +93,7 @@ private fun <T> runImmediate(block: suspend () -> T): T {
     var outcome: Result<T>? = null
     block.startCoroutine(object : Continuation<T> {
         override val context = EmptyCoroutineContext
-        override fun resumeWith(result: Result<T>) {
-            outcome = result
-        }
+        override fun resumeWith(result: Result<T>) { outcome = result }
     })
     return checkNotNull(outcome) { "deterministic fake unexpectedly suspended" }.getOrThrow()
 }

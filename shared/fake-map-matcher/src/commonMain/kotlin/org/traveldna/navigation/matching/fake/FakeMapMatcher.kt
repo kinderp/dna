@@ -1,8 +1,8 @@
 package org.traveldna.navigation.matching.fake
 
 import org.traveldna.location.contracts.LocationSample
-import org.traveldna.navigation.matching.contracts.MapMatchRequest
 import org.traveldna.navigation.matching.contracts.MapMatchResult
+import org.traveldna.navigation.matching.contracts.MapMatchSession
 import org.traveldna.navigation.matching.contracts.MapMatchUnmatched
 import org.traveldna.navigation.matching.contracts.MapMatchUnmatchedReason
 import org.traveldna.navigation.matching.contracts.MapMatcherPort
@@ -12,84 +12,105 @@ import org.traveldna.plugin.sdk.KnownPlatforms
 import org.traveldna.plugin.sdk.PluginDescriptor
 import org.traveldna.plugin.sdk.PluginId
 import org.traveldna.routing.contracts.RouteId
+import org.traveldna.routing.contracts.RoutePlan
 
 data class FakeMapMatchEntry(
-    val request: MapMatchRequest,
+    val route: RoutePlan,
+    val sample: LocationSample,
     val result: MapMatchResult,
 )
 
-/**
- * Deterministic exact-catalog map matcher for tests and teaching.
- *
- * It performs no geometric search or snapping. Lookup is indexed by route ID and
- * the immutable location sample, avoiding a hash of the full route per call.
- */
+data class FakeMapMatchCall(
+    val routeId: RouteId,
+    val sample: LocationSample,
+)
+
+/** Deterministic exact-catalog matcher; it performs no search or snapping. */
 class FakeMapMatcher(
     entries: List<FakeMapMatchEntry>,
     override val descriptor: PluginDescriptor = defaultDescriptor,
-    private val maxRecordedRequests: Int = DefaultMaxRecordedRequests,
+    private val maxRecordedCalls: Int = DefaultMaxRecordedCalls,
 ) : MapMatcherPort {
     private data class Key(val routeId: RouteId, val sample: LocationSample)
 
+    private val routesById: Map<RouteId, RoutePlan>
     private val outcomesByKey: Map<Key, MapMatchResult>
-    private val recentRequests = mutableListOf<MapMatchRequest>()
-    private var requestCount: Long = 0L
+    private val recentCalls = mutableListOf<FakeMapMatchCall>()
+    private var matchCount: Long = 0L
 
-    val recordedRequests: List<MapMatchRequest> get() = recentRequests.toList()
-    val totalRequestCount: Long get() = requestCount
+    val recordedCalls: List<FakeMapMatchCall> get() = recentCalls.toList()
+    val totalMatchCount: Long get() = matchCount
 
     init {
         require(MapMatchingCapabilities.MatchRoute in descriptor.capabilities) {
             "fake matcher descriptor must declare navigation.map-match"
         }
-        require(maxRecordedRequests in 1..MaxRecordedRequests) {
-            "max recorded requests must be within [1, $MaxRecordedRequests]"
+        require(maxRecordedCalls in 1..MaxRecordedCalls) {
+            "max recorded calls must be within [1, $MaxRecordedCalls]"
         }
         require(entries.size <= MaxCatalogEntries) {
             "fake map-match catalog may contain at most $MaxCatalogEntries entries"
         }
-        val indexed = linkedMapOf<Key, MapMatchResult>()
+
+        val routes = linkedMapOf<RouteId, RoutePlan>()
+        val outcomes = linkedMapOf<Key, MapMatchResult>()
         entries.forEach { entry ->
+            val existingRoute = routes.putIfAbsent(entry.route.id, entry.route)
+            require(existingRoute == null || existingRoute == entry.route) {
+                "fake catalog reuses a route id for a different canonical route"
+            }
             if (entry.result is MapMatchResult.Matched) {
-                entry.result.requireMatches(entry.request, descriptor.id)
+                entry.result.requireMatches(entry.route, entry.sample, descriptor.id)
             }
-            val previous = indexed.put(Key(entry.request.route.id, entry.request.sample), entry.result)
-            require(previous == null) {
-                "fake map-match catalog contains duplicate route/sample keys"
+            require(outcomes.put(Key(entry.route.id, entry.sample), entry.result) == null) {
+                "fake catalog contains duplicate route/sample keys"
             }
         }
-        outcomesByKey = indexed.toMap()
+        routesById = routes.toMap()
+        outcomesByKey = outcomes.toMap()
     }
 
-    override suspend fun match(request: MapMatchRequest): MapMatchResult {
-        record(request)
-        return outcomesByKey[Key(request.route.id, request.sample)]
-            ?: MapMatchResult.Unmatched(
-                MapMatchUnmatched(
-                    reason = MapMatchUnmatchedReason.NoCandidate,
-                    providerDiagnosticCode = "fake.catalog-miss",
-                ),
-            )
-    }
-
-    fun resetRecordedRequests() {
-        recentRequests.clear()
-        requestCount = 0L
-    }
-
-    private fun record(request: MapMatchRequest) {
-        check(requestCount < Long.MAX_VALUE) { "fake map-matcher request counter overflow" }
-        requestCount += 1L
-        if (recentRequests.size == maxRecordedRequests) {
-            recentRequests.removeAt(0)
+    override fun bind(route: RoutePlan): MapMatchSession {
+        val catalogRoute = routesById[route.id]
+        require(catalogRoute == null || catalogRoute == route) {
+            "fake matcher cannot bind a different route snapshot with a reused route id"
         }
-        recentRequests += request
+        return Session(route)
+    }
+
+    fun resetRecordedCalls() {
+        recentCalls.clear()
+        matchCount = 0L
+    }
+
+    private inner class Session(
+        override val route: RoutePlan,
+    ) : MapMatchSession {
+        override suspend fun match(sample: LocationSample): MapMatchResult {
+            record(route.id, sample)
+            return outcomesByKey[Key(route.id, sample)]
+                ?: MapMatchResult.Unmatched(
+                    MapMatchUnmatched(
+                        reason = MapMatchUnmatchedReason.NoCandidate,
+                        providerDiagnosticCode = "fake.catalog-miss",
+                    ),
+                )
+        }
+    }
+
+    private fun record(routeId: RouteId, sample: LocationSample) {
+        check(matchCount < Long.MAX_VALUE) { "fake map-matcher call counter overflow" }
+        matchCount += 1L
+        if (recentCalls.size == maxRecordedCalls) {
+            recentCalls.removeAt(0)
+        }
+        recentCalls += FakeMapMatchCall(routeId, sample)
     }
 
     companion object {
         const val MaxCatalogEntries: Int = 100_000
-        const val MaxRecordedRequests: Int = 10_000
-        const val DefaultMaxRecordedRequests: Int = 1_024
+        const val MaxRecordedCalls: Int = 10_000
+        const val DefaultMaxRecordedCalls: Int = 1_024
 
         val Id = PluginId("org.traveldna.fake-map-matcher")
 

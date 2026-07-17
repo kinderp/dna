@@ -18,30 +18,34 @@ import org.traveldna.routing.contracts.RouteProvenance
 
 class MapMatchingContractsTest {
     @Test
-    fun matchedPostconditionPreservesRequestIdentityAndGeometryBounds() {
-        val request = request()
-        matched(request).requireMatches(request, ProviderId)
+    fun matchedPostconditionPreservesRouteSampleIdentityAndGeometryBounds() {
+        val route = route()
+        val sample = sample(route.geometry.first())
+        matched(route, sample).requireMatches(route, sample, ProviderId)
 
         assertFailsWith<IllegalArgumentException> {
-            matched(request, routeId = RouteId("other-route-v0")).requireMatches(request, ProviderId)
+            matched(route, sample, routeId = RouteId("other-route-v0"))
+                .requireMatches(route, sample, ProviderId)
         }
         assertFailsWith<IllegalArgumentException> {
-            matched(request, sequence = 2L).requireMatches(request, ProviderId)
+            matched(route, sample, sequence = 2L).requireMatches(route, sample, ProviderId)
         }
         assertFailsWith<IllegalArgumentException> {
-            matched(request, index = 99).requireMatches(request, ProviderId)
+            matched(route, sample, index = 99).requireMatches(route, sample, ProviderId)
         }
         assertFailsWith<IllegalArgumentException> {
-            matched(request, providerId = PluginId("org.traveldna.other-matcher"))
-                .requireMatches(request, ProviderId)
+            matched(route, sample, providerId = PluginId("org.traveldna.other-matcher"))
+                .requireMatches(route, sample, ProviderId)
         }
     }
 
     @Test
     fun finalGeometryPointRequiresZeroFraction() {
-        val request = request()
+        val route = route()
+        val sample = sample(route.geometry.last())
         assertFailsWith<IllegalArgumentException> {
-            matched(request, index = 1, fraction = 0.5).requireMatches(request, ProviderId)
+            matched(route, sample, index = 1, fraction = 0.5)
+                .requireMatches(route, sample, ProviderId)
         }
     }
 
@@ -58,10 +62,10 @@ class MapMatchingContractsTest {
         }
     }
 
-    private fun request(): MapMatchRequest {
+    private fun route(): RoutePlan {
         val a = GeoPoint(0.0, 0.0)
         val b = GeoPoint(0.0, 0.01)
-        val route = RoutePlan(
+        return RoutePlan(
             id = RouteId("contract-match-route-v0"),
             geometry = listOf(a, b),
             legs = listOf(RouteLeg(0, 1, a, b, 1_000L, 60L, emptyList())),
@@ -69,22 +73,21 @@ class MapMatchingContractsTest {
             durationSeconds = 60L,
             provenance = RouteProvenance(PluginId("org.traveldna.contract-route-provider")),
         )
-        return MapMatchRequest(
-            route = route,
-            sample = LocationSample(
-                sequence = LocationSequence(1),
-                monotonicTime = MonotonicInstant(1_000L),
-                position = a,
-                horizontalAccuracyMeters = 5.0,
-                origin = LocationSampleOrigin.Replay,
-            ),
-        )
     }
 
+    private fun sample(point: GeoPoint): LocationSample = LocationSample(
+        sequence = LocationSequence(1),
+        monotonicTime = MonotonicInstant(1_000L),
+        position = point,
+        horizontalAccuracyMeters = 5.0,
+        origin = LocationSampleOrigin.Replay,
+    )
+
     private fun matched(
-        request: MapMatchRequest,
-        routeId: RouteId = request.route.id,
-        sequence: Long = request.sample.sequence.value,
+        route: RoutePlan,
+        sample: LocationSample,
+        routeId: RouteId = route.id,
+        sequence: Long = sample.sequence.value,
         index: Int = 0,
         fraction: Double = 0.0,
         providerId: PluginId = ProviderId,
@@ -92,7 +95,7 @@ class MapMatchingContractsTest {
         position = MatchedRoutePosition(
             routeId = routeId,
             sampleSequence = LocationSequence(sequence),
-            monotonicTime = request.sample.monotonicTime,
+            monotonicTime = sample.monotonicTime,
             coordinate = RouteCoordinate(index, fraction),
             lateralDistanceMeters = 1.0,
             confidence = MatchConfidence.High,

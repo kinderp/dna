@@ -1,10 +1,11 @@
 package org.traveldna.navigation.matching.testkit
 
-import org.traveldna.navigation.matching.contracts.MapMatchRequest
+import org.traveldna.location.contracts.LocationSample
 import org.traveldna.navigation.matching.contracts.MapMatchResult
 import org.traveldna.navigation.matching.contracts.MapMatcherPort
 import org.traveldna.navigation.matching.contracts.MapMatchingCapabilities
 import org.traveldna.navigation.matching.contracts.requireMatches
+import org.traveldna.routing.contracts.RoutePlan
 
 data class MapMatcherContractReport(
     val providerId: String,
@@ -15,8 +16,9 @@ data class MapMatcherContractReport(
 object MapMatcherContractProbe {
     suspend fun verify(
         matcher: MapMatcherPort,
-        matchedRequest: MapMatchRequest,
-        unmatchedRequest: MapMatchRequest,
+        route: RoutePlan,
+        matchedSample: LocationSample,
+        unmatchedSample: LocationSample,
     ): MapMatcherContractReport {
         val checks = mutableListOf<String>()
         require(MapMatchingCapabilities.MatchRoute in matcher.descriptor.capabilities) {
@@ -24,20 +26,24 @@ object MapMatcherContractProbe {
         }
         checks += "declares-map-match"
 
-        val first = matcher.match(matchedRequest)
-        require(first is MapMatchResult.Matched) { "fixture-defined matched request did not match" }
-        first.requireMatches(matchedRequest, matcher.descriptor.id)
+        val session = matcher.bind(route)
+        require(session.route == route) { "bound session changed the canonical route" }
+        checks += "binds-canonical-route"
+
+        val first = session.match(matchedSample)
+        require(first is MapMatchResult.Matched) { "fixture-defined matched sample did not match" }
+        first.requireMatches(route, matchedSample, matcher.descriptor.id)
         checks += "returns-canonical-match"
 
         if (MapMatchingCapabilities.Deterministic in matcher.descriptor.capabilities) {
-            val second = matcher.match(matchedRequest)
-            require(first == second) { "deterministic matcher changed result for identical request" }
+            val second = session.match(matchedSample)
+            require(first == second) { "deterministic matcher changed result for identical input" }
             checks += "deterministic-repeat"
         }
 
-        val unmatched = matcher.match(unmatchedRequest)
+        val unmatched = session.match(unmatchedSample)
         require(unmatched is MapMatchResult.Unmatched) {
-            "fixture-defined unmatched request must return Unmatched, not a failure"
+            "fixture-defined unmatched sample must return Unmatched, not a failure"
         }
         checks += "explicit-unmatched"
 

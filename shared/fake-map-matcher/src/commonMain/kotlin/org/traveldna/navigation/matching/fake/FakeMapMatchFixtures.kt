@@ -9,7 +9,6 @@ import org.traveldna.navigation.contracts.MatchConfidence
 import org.traveldna.navigation.contracts.MatchedRoutePosition
 import org.traveldna.navigation.contracts.RouteCoordinate
 import org.traveldna.navigation.matching.contracts.MapMatchProvenance
-import org.traveldna.navigation.matching.contracts.MapMatchRequest
 import org.traveldna.navigation.matching.contracts.MapMatchResult
 import org.traveldna.navigation.matching.contracts.MapMatchUnmatched
 import org.traveldna.navigation.matching.contracts.MapMatchUnmatchedReason
@@ -30,44 +29,42 @@ object FakeMapMatchFixtures {
         sample(3, 3_000, Route.geometry[2]),
         sample(4, 4_000, Route.geometry[3]),
     )
-    val Requests: List<MapMatchRequest> = Samples.map { MapMatchRequest(Route, it) }
-    val MatchedRequest: MapMatchRequest = Requests[0]
-    val UnmatchedRequest: MapMatchRequest = Requests[2]
+    val MatchedSample: LocationSample = Samples[0]
+    val UnmatchedSample: LocationSample = Samples[2]
 
     private val entries: List<FakeMapMatchEntry> = listOf(
-        matchedEntry(Requests[0], 0),
-        matchedEntry(Requests[1], 1),
+        matchedEntry(Samples[0], 0),
+        matchedEntry(Samples[1], 1),
         FakeMapMatchEntry(
-            Requests[2],
+            Route,
+            Samples[2],
             MapMatchResult.Unmatched(
-                MapMatchUnmatched(
-                    MapMatchUnmatchedReason.NoCandidate,
-                    "fixture.no-candidate",
-                ),
+                MapMatchUnmatched(MapMatchUnmatchedReason.NoCandidate, "fixture.no-candidate"),
             ),
         ),
-        matchedEntry(Requests[3], 2),
-        matchedEntry(Requests[4], 3),
+        matchedEntry(Samples[3], 2),
+        matchedEntry(Samples[4], 3),
     )
 
-    fun matcher(maxRecordedRequests: Int = FakeMapMatcher.DefaultMaxRecordedRequests): FakeMapMatcher =
-        FakeMapMatcher(entries, maxRecordedRequests = maxRecordedRequests)
+    fun matcher(maxRecordedCalls: Int = FakeMapMatcher.DefaultMaxRecordedCalls): FakeMapMatcher =
+        FakeMapMatcher(entries, maxRecordedCalls = maxRecordedCalls)
 
-    private fun matchedEntry(request: MapMatchRequest, index: Int): FakeMapMatchEntry =
+    private fun matchedEntry(sample: LocationSample, index: Int): FakeMapMatchEntry =
         FakeMapMatchEntry(
-            request = request,
+            route = Route,
+            sample = sample,
             result = MapMatchResult.Matched(
                 position = MatchedRoutePosition(
-                    routeId = request.route.id,
-                    sampleSequence = request.sample.sequence,
-                    monotonicTime = request.sample.monotonicTime,
+                    routeId = Route.id,
+                    sampleSequence = sample.sequence,
+                    monotonicTime = sample.monotonicTime,
                     coordinate = RouteCoordinate(index, 0.0),
                     lateralDistanceMeters = 1.5,
                     confidence = MatchConfidence.High,
                 ),
                 provenance = MapMatchProvenance(
                     providerId = FakeMapMatcher.Id,
-                    providerMatchId = "fixture-match-${request.sample.sequence.value}",
+                    providerMatchId = "fixture-match-${sample.sequence.value}",
                 ),
             ),
         )
@@ -91,31 +88,15 @@ object FakeMapMatchFixtures {
             id = RouteId("reference-map-match-route-v0"),
             geometry = listOf(a, b, c, d),
             legs = listOf(
-                RouteLeg(
-                    0,
-                    2,
-                    a,
-                    c,
-                    2_400L,
-                    160L,
-                    listOf(
-                        RouteManeuver(0, ManeuverType.Depart, a, "Depart"),
-                        RouteManeuver(1, ManeuverType.TurnRight, b, "Turn right"),
-                        RouteManeuver(2, ManeuverType.KeepRight, c, "Finish first leg"),
-                    ),
-                ),
-                RouteLeg(
-                    2,
-                    3,
-                    c,
-                    d,
-                    1_200L,
-                    80L,
-                    listOf(
-                        RouteManeuver(2, ManeuverType.Continue, c, "Continue"),
-                        RouteManeuver(3, ManeuverType.Arrive, d, "Arrive"),
-                    ),
-                ),
+                RouteLeg(0, 2, a, c, 2_400L, 160L, listOf(
+                    RouteManeuver(0, ManeuverType.Depart, a, "Depart"),
+                    RouteManeuver(1, ManeuverType.TurnRight, b, "Turn right"),
+                    RouteManeuver(2, ManeuverType.KeepRight, c, "Finish first leg"),
+                )),
+                RouteLeg(2, 3, c, d, 1_200L, 80L, listOf(
+                    RouteManeuver(2, ManeuverType.Continue, c, "Continue"),
+                    RouteManeuver(3, ManeuverType.Arrive, d, "Arrive"),
+                )),
             ),
             distanceMeters = 3_600L,
             durationSeconds = 240L,

@@ -13,11 +13,6 @@ object MapMatchingCapabilities {
     val Offline = CapabilityId("navigation.map-match.offline")
 }
 
-data class MapMatchRequest(
-    val route: RoutePlan,
-    val sample: LocationSample,
-)
-
 enum class MapMatchUnmatchedReason {
     NoCandidate,
     InsufficientConfidence,
@@ -106,21 +101,30 @@ sealed interface MapMatchResult {
     data class Failure(val error: MapMatchError) : MapMatchResult
 }
 
-/** Provider-neutral route-constrained map-matching boundary. */
-interface MapMatcherPort : TravelDnaPlugin {
-    suspend fun match(request: MapMatchRequest): MapMatchResult
+/** Route-bound matching session used by the per-sample hot path. */
+interface MapMatchSession {
+    val route: RoutePlan
+
+    suspend fun match(sample: LocationSample): MapMatchResult
 }
 
-/** Verifies that a matched position is a valid projection of this exact request. */
-fun MatchedRoutePosition.requireMatches(request: MapMatchRequest): MatchedRoutePosition {
-    require(routeId == request.route.id) { "matched route id differs from request route" }
-    require(sampleSequence == request.sample.sequence) { "matched sequence differs from request sample" }
-    require(monotonicTime == request.sample.monotonicTime) { "matched time differs from request sample" }
-    require(coordinate.completedGeometryIndex in request.route.geometry.indices) {
-        "matched geometry index lies outside the request route"
+/** Provider-neutral factory that validates/binds a route once per session. */
+interface MapMatcherPort : TravelDnaPlugin {
+    fun bind(route: RoutePlan): MapMatchSession
+}
+
+fun MatchedRoutePosition.requireMatches(
+    route: RoutePlan,
+    sample: LocationSample,
+): MatchedRoutePosition {
+    require(routeId == route.id) { "matched route id differs from the bound route" }
+    require(sampleSequence == sample.sequence) { "matched sequence differs from the input sample" }
+    require(monotonicTime == sample.monotonicTime) { "matched time differs from the input sample" }
+    require(coordinate.completedGeometryIndex in route.geometry.indices) {
+        "matched geometry index lies outside the bound route"
     }
     require(
-        coordinate.completedGeometryIndex != request.route.geometry.lastIndex ||
+        coordinate.completedGeometryIndex != route.geometry.lastIndex ||
             coordinate.fractionToNext == 0.0,
     ) {
         "matched final geometry point cannot contain next-segment progress"
@@ -129,10 +133,11 @@ fun MatchedRoutePosition.requireMatches(request: MapMatchRequest): MatchedRouteP
 }
 
 fun MapMatchResult.Matched.requireMatches(
-    request: MapMatchRequest,
+    route: RoutePlan,
+    sample: LocationSample,
     expectedProviderId: PluginId,
 ): MapMatchResult.Matched {
-    position.requireMatches(request)
+    position.requireMatches(route, sample)
     require(provenance.providerId == expectedProviderId) {
         "map-match provenance provider differs from the selected plugin"
     }

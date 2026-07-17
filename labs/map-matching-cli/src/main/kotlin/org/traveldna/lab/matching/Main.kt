@@ -13,8 +13,8 @@ import org.traveldna.navigation.contracts.MatchConfidence
 import org.traveldna.navigation.contracts.MatchedRoutePosition
 import org.traveldna.navigation.contracts.RouteCoordinate
 import org.traveldna.navigation.matching.contracts.MapMatchProvenance
-import org.traveldna.navigation.matching.contracts.MapMatchRequest
 import org.traveldna.navigation.matching.contracts.MapMatchResult
+import org.traveldna.navigation.matching.contracts.MapMatchSession
 import org.traveldna.navigation.matching.contracts.requireMatches
 import org.traveldna.navigation.matching.fake.FakeMapMatchEntry
 import org.traveldna.navigation.matching.fake.FakeMapMatchFixtures
@@ -30,11 +30,10 @@ import org.traveldna.routing.contracts.RouteProvenance
 fun main(args: Array<String>) {
     when {
         args.isEmpty() -> runLab()
-        args.size in 2..3 && args[0] == "--benchmark" -> {
-            val samples = args[1].toInt()
-            val iterations = args.getOrNull(2)?.toInt() ?: DefaultBenchmarkIterations
-            runBenchmark(samples, iterations)
-        }
+        args.size in 2..3 && args[0] == "--benchmark" -> runBenchmark(
+            args[1].toInt(),
+            args.getOrNull(2)?.toInt() ?: DefaultBenchmarkIterations,
+        )
         else -> {
             System.err.println("usage: map-matching-cli | --benchmark SAMPLE_COUNT [ODD_ITERATIONS]")
             kotlin.system.exitProcess(2)
@@ -46,11 +45,13 @@ private fun runLab() {
     val probe = runImmediate {
         MapMatcherContractProbe.verify(
             FakeMapMatchFixtures.matcher(),
-            FakeMapMatchFixtures.MatchedRequest,
-            FakeMapMatchFixtures.UnmatchedRequest,
+            FakeMapMatchFixtures.Route,
+            FakeMapMatchFixtures.MatchedSample,
+            FakeMapMatchFixtures.UnmatchedSample,
         )
     }
     val matcher = FakeMapMatchFixtures.matcher()
+    val session = matcher.bind(FakeMapMatchFixtures.Route)
     val tracker = RouteProgressTracker(FakeMapMatchFixtures.Route)
     var matched = 0
     var unmatched = 0
@@ -58,10 +59,10 @@ private fun runLab() {
     var unmatchedReason = "none"
 
     runImmediate {
-        FakeMapMatchFixtures.Requests.forEach { request ->
-            when (val result = matcher.match(request)) {
+        FakeMapMatchFixtures.Samples.forEach { sample ->
+            when (val result = session.match(sample)) {
                 is MapMatchResult.Matched -> {
-                    result.requireMatches(request, matcher.descriptor.id)
+                    result.requireMatches(session.route, sample, matcher.descriptor.id)
                     matched += 1
                     if (tracker.accept(result.position) is org.traveldna.navigation.contracts.RouteProgressDecision.Accepted) {
                         progressAccepted += 1
@@ -83,7 +84,7 @@ private fun runLab() {
     check(progressAccepted == ExpectedMatched)
     check(finalSnapshot.arrived)
     check(finalSnapshot.position.coordinate == RouteCoordinate(3, 0.0))
-    check(matcher.totalRequestCount == FakeMapMatchFixtures.Requests.size.toLong())
+    check(matcher.totalMatchCount == FakeMapMatchFixtures.Samples.size.toLong())
 
     println(
         "{\"scenario\":\"reference-map-matching-v0\"," +
@@ -95,7 +96,7 @@ private fun runLab() {
             "\"progress_accepted\":$progressAccepted," +
             "\"final_index\":${finalSnapshot.position.coordinate.completedGeometryIndex}," +
             "\"arrived\":${finalSnapshot.arrived}," +
-            "\"calls\":${matcher.totalRequestCount}}",
+            "\"calls\":${matcher.totalMatchCount}}",
     )
 }
 
@@ -107,17 +108,16 @@ private fun runBenchmark(sampleCount: Int, iterations: Int) {
         "benchmark iterations must be odd and within [1, $MaxBenchmarkIterations]"
     }
     val route = benchmarkRoute(sampleCount)
-    val requests = List(sampleCount) { index ->
-        MapMatchRequest(route, benchmarkSample(index, route.geometry[index]))
-    }
-    val entries = requests.mapIndexed { index, request ->
+    val samples = List(sampleCount) { index -> benchmarkSample(index, route.geometry[index]) }
+    val entries = samples.mapIndexed { index, sample ->
         FakeMapMatchEntry(
-            request,
+            route,
+            sample,
             MapMatchResult.Matched(
                 position = MatchedRoutePosition(
                     routeId = route.id,
-                    sampleSequence = request.sample.sequence,
-                    monotonicTime = request.sample.monotonicTime,
+                    sampleSequence = sample.sequence,
+                    monotonicTime = sample.monotonicTime,
                     coordinate = RouteCoordinate(index, 0.0),
                     lateralDistanceMeters = 1.0,
                     confidence = MatchConfidence.High,
@@ -126,20 +126,21 @@ private fun runBenchmark(sampleCount: Int, iterations: Int) {
             ),
         )
     }
-    val matcher = FakeMapMatcher(entries, maxRecordedRequests = 1)
+    val matcher = FakeMapMatcher(entries, maxRecordedCalls = 1)
+    val session = matcher.bind(route)
     val tracker = RouteProgressTracker(route)
 
     repeat(BenchmarkWarmups) {
-        matcher.resetRecordedRequests()
+        matcher.resetRecordedCalls()
         tracker.reset()
-        runPipeline(matcher, tracker, requests)
+        runPipeline(session, tracker, samples)
         verifyBenchmarkOutcome(tracker, sampleCount)
     }
     val elapsed = LongArray(iterations) {
-        matcher.resetRecordedRequests()
+        matcher.resetRecordedCalls()
         tracker.reset()
         val started = System.nanoTime()
-        runPipeline(matcher, tracker, requests)
+        runPipeline(session, tracker, samples)
         val duration = System.nanoTime() - started
         verifyBenchmarkOutcome(tracker, sampleCount)
         duration
@@ -159,13 +160,13 @@ private fun runBenchmark(sampleCount: Int, iterations: Int) {
 }
 
 private fun runPipeline(
-    matcher: FakeMapMatcher,
+    session: MapMatchSession,
     tracker: RouteProgressTracker,
-    requests: List<MapMatchRequest>,
+    samples: List<LocationSample>,
 ) {
     runImmediate {
-        requests.forEach { request ->
-            val result = matcher.match(request) as MapMatchResult.Matched
+        samples.forEach { sample ->
+            val result = session.match(sample) as MapMatchResult.Matched
             tracker.accept(result.position)
         }
     }
@@ -202,14 +203,12 @@ private fun <T> runImmediate(block: suspend () -> T): T {
     var outcome: Result<T>? = null
     block.startCoroutine(object : Continuation<T> {
         override val context = EmptyCoroutineContext
-        override fun resumeWith(result: Result<T>) {
-            outcome = result
-        }
+        override fun resumeWith(result: Result<T>) { outcome = result }
     })
     return checkNotNull(outcome) { "deterministic fake unexpectedly suspended" }.getOrThrow()
 }
 
-private const val ExpectedContractChecks: Int = 4
+private const val ExpectedContractChecks: Int = 5
 private const val ExpectedMatched: Int = 4
 private const val ExpectedUnmatched: Int = 1
 private const val BenchmarkWarmups: Int = 3
