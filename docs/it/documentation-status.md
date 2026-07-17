@@ -11,12 +11,13 @@
 
 | Stato | Documento | Nota |
 | --- | --- | --- |
-| Foundation complete | `00-regole-operative.md` | Costituzione operativa v0. |
+| Implementation-backed | `00-regole-operative.md` | Costituzione operativa con gate dei due round puliti. |
 | Foundation complete | `01-visione-prodotto.md` | Visione consolidata. |
 | Foundation complete | `02-glossario.md` | Glossario iniziale. |
 | Implementation-backed | `03-guida-lettura-documentazione.md` | Percorsi verso i Lab e la codebase. |
-| Foundation complete | `04-come-contribuire.md` | Flusso contributivo v0. |
+| Implementation-backed | `04-come-contribuire.md` | Flusso contributivo e gate di review. |
 | Foundation complete | `05-tracciabilita-conversazione.md` | Origine dei temi iniziali. |
+| Implementation-backed | `06-review-e-merge.md` | Substantive head, reset e due review consecutive. |
 | Foundation complete | `10-ddd-bounded-context.md` | Confini strategici v0. |
 | Foundation complete | `11-use-case-principali.md` | Use case prioritari. |
 | Implementation-backed | `12-stato-funzionalita.md` | Distingue Lab e prodotto. |
@@ -56,6 +57,7 @@
 | Implementation-backed | `../project/daily/README.md` | Indice storico dei report. |
 | Implementation-backed | `../project/daily/2026-07-16.md` | Reference routing Java/Rust. |
 | Implementation-backed | `../project/daily/2026-07-17.md` | Contratti routing KMP e fake provider. |
+| Implementation-backed | `../project/daily/2026-07-17-review-policy.md` | Governance dei due round e hardening manovre. |
 | Implementation-backed | `lab/scenarios/reference-routing-java-rust.md` | Primo scenario eseguibile. |
 | Implementation-backed | `lab/scenarios/routing-contracts-fake-provider.md` | Secondo scenario eseguibile. |
 
