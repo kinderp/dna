@@ -21,20 +21,21 @@ sh tools/tdna COMMAND
 | `check-java` | Compile Java 21 sources with warnings-as-errors and run tests. |
 | `check-rust` | Run `cargo fmt --check` and Rust tests. |
 | `check-contract` | Compare Java and Rust route reports byte-for-byte. |
-| `check-kotlin` | Run KMP contract/fake-provider tests and emit the routing-contracts Lab report. |
+| `check-kotlin` | Run KMP contract/fake-provider/fake-renderer tests and emit both KMP Lab reports. |
 | `check` | Run the complete foundation verification. |
 | `lab reference-routing [dijkstra\|astar]` | Execute the Java/Rust Lab. |
-| `lab routing-contracts` | Execute the KMP provider-neutral contracts Lab. |
+| `lab routing-contracts` | Execute the KMP provider-neutral routing Lab. |
+| `lab map-scene` | Execute the provider-neutral MapScene/fake-renderer Lab. |
 | `clean` | Remove generated `build/` output. |
 
 Examples:
 
 ```bash
 sh tools/tdna doctor
-sh tools/tdna check-java
 sh tools/tdna check-architecture
 sh tools/tdna check-kotlin
 sh tools/tdna lab routing-contracts
+sh tools/tdna lab map-scene
 sh tools/tdna check
 ```
 
@@ -57,16 +58,26 @@ reproducible reference environment.
 
 ## Generated outputs
 
-Current commands write only under generated directories:
-
 ```text
 build/java/reference-routing/
 build/rust/
 build/contract/
-build/kotlin/
+build/kotlin/routing-contracts-lab.json
+build/kotlin/map-scene-lab.json
 ```
 
 Gradle and Cargo may also use their standard caches outside the repository.
+
+## Architecture checker
+
+`tools/check_architecture.py` verifies allowed imports in shared Kotlin modules.
+It also scans executable code for forbidden provider tokens after removing
+comments and string/character literals. This distinction permits source comments
+that explain a MapLibre boundary while still rejecting actual provider use in a
+canonical module.
+
+The checker is intentionally lightweight and does not replace a future Gradle
+dependency-graph gate.
 
 ## Design rules
 
@@ -80,8 +91,6 @@ Gradle and Cargo may also use their standard caches outside the repository.
   the same pull request.
 
 ## Future commands
-
-The interface will grow only when real modules exist. Candidate commands are:
 
 ```text
 sh tools/tdna build

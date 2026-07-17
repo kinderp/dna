@@ -20,72 +20,79 @@ Last updated: 2026-07-17
 - issue [#5](https://github.com/kinderp/tdna/issues/5);
 - PR [#6](https://github.com/kinderp/tdna/pull/6);
 - merge commit `2a28d1654988cef4188986342f76fd7d19be358f`;
-- chapter `docs/it/44-contratti-routing-e-fake-provider.md`;
-- scenario `docs/it/lab/scenarios/routing-contracts-fake-provider.md`.
+- chapter `docs/it/44-contratti-routing-e-fake-provider.md`.
+
+### Review governance and route-maneuver hardening
+
+- issue [#8](https://github.com/kinderp/tdna/issues/8);
+- PR [#9](https://github.com/kinderp/tdna/pull/9);
+- merge commit `044e0773dd9afb1530db35688a00c56bfbd5eace`;
+- two consecutive clean review rounds are now mandatory on every PR;
+- `roadName` and `exitNumber` are bounded and regression-tested.
 
 ## Active slice
 
-**Governance: two consecutive clean review rounds — implementation complete,
-final CI and clean reviews pending**
+**Provider-neutral MapScene and deterministic fake renderer — draft, realigned to current `main`**
 
-- issue [#8](https://github.com/kinderp/tdna/issues/8);
-- draft PR [#9](https://github.com/kinderp/tdna/pull/9);
-- branch `agent/two-clean-review-policy`;
-- operational rule `docs/it/00-regole-operative.md`;
-- detailed chapter `docs/it/06-review-e-merge.md`;
-- report `docs/project/daily/2026-07-17-review-policy.md`.
+- issue [#7](https://github.com/kinderp/tdna/issues/7);
+- draft PR [#10](https://github.com/kinderp/tdna/pull/10);
+- branch `agent/provider-neutral-map-scene`;
+- chapter `docs/it/45-map-scene-e-fake-renderer.md`;
+- scenario `docs/it/lab/scenarios/map-scene-fake-renderer.md`;
+- report `docs/project/daily/2026-07-17-map-scene.md`.
 
-## Implemented foundation capabilities
+## Implemented in the active slice
 
-- Gradle/Kotlin Multiplatform bootstrap;
-- JVM and Linux x64 targets;
-- generic plugin SDK;
-- bounded runtime platform/capability metadata;
-- canonical route request, plan, legs, maneuvers and provenance;
-- defensive collection snapshots;
-- request-to-route waypoint postconditions;
-- canonical error/result model;
-- provider-neutral `RoutePlannerPort`;
-- deterministic fake planner and call recording;
-- reusable conformance probe;
-- executable Java/Rust and Kotlin Labs;
-- architecture checker;
-- extended Foundation CI;
-- indexed daily reports;
-- mandatory two-clean-review policy on the PR #9 branch.
+- provider-neutral `MapScene`, camera, route overlay and marker contracts;
+- bounded immutable scene and delta collections;
+- static-scene versus frequent-delta split;
+- canonical route progress in `[0, 1)`;
+- map renderer capability and error model;
+- deterministic fake renderer with semantic snapshot and call history;
+- reusable renderer conformance probe;
+- route-to-overlay projector;
+- executable map-scene JVM Lab;
+- architecture checker that ignores explanatory comments and literals.
 
-## Review-policy hardening
+## Findings and realignment
 
-The first audit of the new policy found that provider-controlled maneuver
-`roadName` and `exitNumber` values were non-blank but unbounded. PR #9 adds:
+1. the first checker treated provider names in comments as executable dependencies;
+2. route progress admitted the duplicate representation `fraction = 1.0`;
+3. the full probe exercised capabilities it did not require;
+4. a first-pass set of MapScene files remained beside the reviewed model and
+   caused Kotlin redeclarations;
+5. the first merge-tree realignment preserved the MapScene code but selected
+   obsolete governance and routing files from the feature branch.
 
-```text
-MaxRoadNameLength = 256
-MaxExitNumberLength = 64
-```
+The final corrective commit restores `main` as source of truth for governance
+and routing hardening, removes duplicate contracts and merges only the MapScene
+content and its documentation. Every prior clean review of PR #10 is invalidated;
+CI and two fresh rounds are required on the new substantive head.
 
-with common Kotlin regression tests. Because a finding required a substantive
-change, the clean-review counter was reset to zero as the new policy requires.
+## Pull-request discipline
+
+- only PR #10 is open;
+- accidental PR #13 was closed without merge;
+- stacked PR #12 was closed without merge and its branch was preserved;
+- no next PR will be opened until PR #10 is merged or explicitly abandoned.
 
 ## Milestone still missing
 
 - `LocationSample` and deterministic clock;
 - GPS replay runner;
-- `MapScene` and fake map renderer;
 - missed-exit guidance state machine;
 - first benchmark report;
 - committed Gradle Wrapper;
 - Android/iOS targets;
-- real provider adapter.
+- real MapLibre or routing provider adapter.
 
 ## Next executable step
 
-After PR #9 reaches two clean rounds and is merged, continue issue
-[#7](https://github.com/kinderp/tdna/issues/7): provider-neutral map-scene
-contracts, route overlay projection and `FakeMapRenderer`.
+Obtain green CI and two consecutive clean review rounds for PR #10 on one final
+substantive head. After merge, realign from `main` before restoring the location
+replay work.
 
 ## Maintainer decisions
 
-No product or architectural decision is currently required. Merge authority
-remains with the maintainer after each PR satisfies CI and two consecutive clean
-review rounds.
+No product or architecture decision is required. The maintainer has granted
+standing authorization for autonomous merge after every documented gate is met.
