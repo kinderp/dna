@@ -2,7 +2,8 @@
 
 Questo documento è la costituzione pratica del progetto. Deve restare più breve
 e stabile dei manuali specialistici. Le procedure dettagliate vivono nei
-capitoli collegati.
+capitoli collegati, in particolare in
+[06-review-e-merge.md](06-review-e-merge.md).
 
 ## 1. Obiettivo del metodo
 
@@ -25,11 +26,12 @@ GitHub Discussion  -> ragionamento ancora aperto
 ADR                -> decisione architetturale specifica
 Documentazione     -> spiegazione consolidata corrente
 Issue              -> lavoro da svolgere
-Pull request       -> modifica concreta e verificabile
+Pull request       -> una modifica concreta e verificabile
 PR review ledger   -> evidenza dei round sullo stesso head
 Test               -> evidenza eseguibile del comportamento
 Benchmark          -> evidenza misurata del costo
 Field audit        -> comportamento osservato in condizioni reali
+Indice report      -> navigazione storica fra le sessioni
 Git                -> storia cronologica
 ```
 
@@ -46,7 +48,8 @@ Prima di modificare codice o contratti:
 4. leggere `documentation-status.md`;
 5. leggere `50-registro-milestone.md` e la roadmap corrente;
 6. scegliere i documenti del componente interessato;
-7. aprire codice e test reali, quando esistono.
+7. aprire codice e test reali, quando esistono;
+8. controllare SHA corrente di `main`, PR aperte e dipendenze della slice.
 
 Non leggere tutta la documentazione senza criterio: mescolare visione futura,
 contratto corrente e note storiche porta a implementare troppo.
@@ -67,6 +70,8 @@ Prima di un passo non banale, rispondere:
 | Quali test o replay servono? | Rende il passo verificabile. |
 | Quali documenti vanno aggiornati? | Mantiene la codebase studiabile. |
 | È scope corrente o roadmap? | Impedisce espansione incontrollata. |
+| Da quale SHA di `main` parte? | Evita branch costruiti su una base obsoleta. |
+| Esiste già una PR aperta? | Protegge il flusso seriale. |
 
 ## 5. Micro-step e vertical slice
 
@@ -94,6 +99,45 @@ PR 1 data class vuota; PR 2 metodo vuoto; PR 3 import; PR 4 primo uso.
 
 Ogni slice deve produrre una prova osservabile: test, replay, screenshot di test,
 benchmark, contratto o scenario Lab.
+
+### 5.1 Una sola PR aperta
+
+Durante lo sviluppo ordinario autonomo può essere aperta **una sola pull request
+alla volta**.
+
+```text
+main verificato
+-> branch della slice
+-> una draft PR
+-> CI, finding, fix e review
+-> merge o abbandono esplicito
+-> verifica del nuovo main
+-> soltanto allora branch e PR successivi
+```
+
+È consentito preparare issue, ricerca, note e decisioni future mentre una PR è
+aperta. Non è consentito aprire in anticipo la loro PR.
+
+Non creare:
+
+- PR stacked per lavorare “più avanti”;
+- PR vuote o placeholder;
+- PR chiamate `noop` usate come segnaposto;
+- una nuova PR da un branch che dipende da modifiche non ancora mergiate.
+
+Un'eccezione per PR parallele richiede una decisione esplicita del maintainer,
+registrata nelle issue e nelle PR coinvolte.
+
+### 5.2 Chiusura amministrativa
+
+Una PR accidentale, duplicata, stacked o abbandonata può essere chiusa senza i
+due round puliti perché non distribuisce alcuna modifica. La chiusura deve:
+
+- dichiarare il motivo;
+- non mergiare il contenuto;
+- non essere registrata come lavoro completato;
+- indicare se il branch viene conservato;
+- richiedere riallineamento al futuro `main` prima di un eventuale nuovo uso.
 
 ## 6. Regole architetturali
 
@@ -217,23 +261,25 @@ Una modifica non banale aggiorna almeno uno tra:
 - guida contributori.
 
 Se una spiegazione importante nasce in chat o review, non resta soltanto lì.
+Ogni sessione significativa produce o aggiorna un report Markdown indicizzato.
 
-## 11. GitHub e review
+## 11. GitHub, review e merge
 
-Usare:
+La sequenza normativa ordinaria è:
 
 ```text
-Milestone
--> issue madre
--> issue figlie
--> draft PR
--> CI verde
--> review round
+verifica main e PR aperte
+-> issue della slice
+-> branch dal main corrente
+-> una draft PR
+-> CI e review
 -> eventuali fix e reset
--> due review round consecutivi senza finding
+-> review pulita 1
+-> review pulita 2 sullo stesso SHA
 -> PR ready
--> merge del maintainer
--> chiusura issue
+-> merge autorizzato con expected-head guard
+-> verifica PR, issue e nuovo main
+-> riallineamento prima della slice successiva
 ```
 
 Livelli di rischio:
@@ -243,8 +289,8 @@ Livelli di rischio:
 - `R2`: navigazione, background, provider, sincronizzazione;
 - `R3`: posizione, chat in auto, privacy, sicurezza, FFI o schema pubblico.
 
-Il requisito dei due round consecutivi vale per **ogni** PR. Cambia la profondità,
-non il numero minimo.
+Il requisito dei due round consecutivi vale per **ogni PR che distribuisce una
+modifica**. Cambia la profondità, non il numero minimo.
 
 ### 11.1 Review round
 
@@ -259,7 +305,7 @@ della PR registra:
 - numero di round puliti consecutivi.
 
 I due round hanno focus differenti o complementari. Possono essere svolti dallo
-stesso reviewer solo come passaggi realmente separati e documentati.
+stesso reviewer o agente solo come passaggi realmente separati e documentati.
 
 ### 11.2 Finding, fix e reset
 
@@ -316,20 +362,51 @@ Non viene modificato dopo i round soltanto per copiarne gli esiti, perché il nu
 commit invaliderebbe le review. Dopo il merge, una successiva PR documentale può
 riconciliare il report con CI finale, round puliti e merge commit.
 
-### 11.5 Gate di ready, merge e chiusura
+### 11.5 Autorità di merge
 
-Una PR non può essere marcata ready, chiusa come completata o mergiata finché:
+Un agente può marcare ready e mergiare soltanto quando:
 
-1. tutti i finding sono risolti o trasformati in non-obiettivi approvati;
-2. la CI richiesta è verde sul substantive head corrente;
-3. esistono due round consecutivi senza finding sullo stesso head;
-4. il ledger PR contiene evidenza dei round e il report contiene link, finding
-   history e review plan;
-5. documentazione, issue e milestone sono coerenti con lo stato pre-merge.
+1. il maintainer ha concesso autorizzazione esplicita o permanente;
+2. esiste una sola PR ordinaria aperta;
+3. la CI richiesta è verde sul substantive head corrente;
+4. non esistono finding o thread aperti;
+5. due round consecutivi puliti riferiscono lo stesso SHA;
+6. nessun commit sostanziale segue i round;
+7. issue, milestone, report e PR body sono coerenti;
+8. il merge usa l'expected head SHA revisionato.
+
+Senza autorizzazione, l'agente lascia la PR ready al maintainer. Se lo SHA cambia,
+compare una nuova PR, la CI diventa obsoleta o un gate è ambiguo, il merge si
+ferma.
+
+### 11.6 Verifica e riallineamento dopo il merge
+
+Dopo il merge e prima di aprire la PR successiva:
+
+1. verificare che GitHub riporti `merged`;
+2. verificare lo stato dell'issue collegata;
+3. leggere il nuovo SHA di `main`;
+4. registrare merge e lavoro rimandato nel luogo previsto;
+5. creare il branch successivo da quel nuovo `main`;
+6. riallineare o ricreare eventuali branch conservati;
+7. verificare nuovamente che non esistano altre PR aperte.
+
+### 11.7 Gate di ready, merge e chiusura
+
+Una PR non può essere marcata ready o mergiata finché:
+
+- tutti i finding sono risolti o trasformati in non-obiettivi approvati;
+- la CI richiesta è verde sul substantive head corrente;
+- esistono due round consecutivi senza finding sullo stesso head;
+- non esistono thread aperti;
+- il ledger PR contiene evidenza dei round;
+- il report contiene link, finding history e review plan;
+- documentazione, issue e milestone sono coerenti con lo stato pre-merge;
+- rimane l'unica PR ordinaria aperta;
+- l'autorità di merge è chiara.
 
 L'issue collegata viene chiusa dal merge o subito dopo, non soltanto perché
-l'implementazione è pronta. La procedura dettagliata vive in
-[06-review-e-merge.md](06-review-e-merge.md).
+l'implementazione è pronta.
 
 ## 12. Definition of Done
 
@@ -348,4 +425,6 @@ Una slice è conclusa quando, per quanto applicabile:
 - la CI richiesta è verde sul substantive head corrente;
 - due review round consecutivi sullo stesso head non hanno prodotto finding;
 - il ledger PR e il report storico rispettano i ruoli definiti sopra;
-- issue e milestone sono pronte a essere aggiornate dal merge.
+- la PR è stata mergiata o amministrativamente chiusa con motivazione;
+- issue e `main` sono stati verificati;
+- nessuna nuova PR è stata aperta prima del completamento di questa sequenza.

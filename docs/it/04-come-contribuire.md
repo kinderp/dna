@@ -1,25 +1,28 @@
 # Come contribuire a Travel DNA
 
-## Modello di contributo
+## Modello di contributo seriale
 
 ```text
 repository upstream
--> fork personale
--> branch di lavoro
+-> verifica main e PR aperte
+-> fork personale o branch autorizzato
+-> branch di lavoro dal main corrente
 -> issue o sub-issue
--> draft pull request
+-> una draft pull request
 -> CI
 -> review e fix
--> due review round consecutivi senza finding
+-> clean review round 1
+-> clean review round 2 sullo stesso SHA
 -> ready
--> merge
--> chiusura issue
+-> merge autorizzato
+-> verifica issue e nuovo main
+-> soltanto allora branch e PR successivi
 ```
 
 Il branch `main` deve restare stabile e studiabile. I nuovi contributori non
 lavorano direttamente su `main`.
 
-La procedura normativa di review è descritta in
+La procedura normativa di review e merge è descritta in
 [06-review-e-merge.md](06-review-e-merge.md).
 
 ## Prima di iniziare
@@ -30,7 +33,9 @@ La procedura normativa di review è descritta in
 4. leggere il documento del componente;
 5. identificare test e scenari Lab;
 6. eseguire la baseline disponibile;
-7. creare un branch descrittivo.
+7. controllare la lista delle PR aperte;
+8. leggere lo SHA corrente di `main`;
+9. creare un branch descrittivo da quel `main`.
 
 Nomi indicativi:
 
@@ -41,6 +46,39 @@ test-missed-exit-replay
 perf-measure-navigation-snapshot
 fix-presence-expiry
 ```
+
+## Una sola PR alla volta
+
+Nel flusso ordinario del progetto esiste una sola PR aperta.
+
+Mentre una PR è attiva si possono:
+
+- preparare issue future;
+- discutere alternative;
+- scrivere note non committate;
+- eseguire ricerca e spike separati;
+- conservare un branch non pubblicato come PR.
+
+Non si possono aprire:
+
+- PR stacked dipendenti dalla PR corrente;
+- PR placeholder o vuote;
+- PR `noop` usate come segnaposto;
+- PR basate su una versione di `main` precedente all'ultimo merge.
+
+Un'eccezione richiede autorizzazione esplicita del maintainer e tracciabilità in
+ogni PR coinvolta.
+
+### Chiusura senza merge
+
+Una PR accidentale, duplicata, stacked o abbandonata può essere chiusa
+amministrativamente senza due review pulite, perché non distribuisce codice. Il
+commento di chiusura deve spiegare:
+
+- perché non è una review unit valida;
+- che non è stata mergiata;
+- se il branch viene conservato;
+- che prima di un nuovo uso dovrà essere riallineato al `main` futuro.
 
 ## Good first issue
 
@@ -76,11 +114,12 @@ Una milestone usa una issue madre con:
 - issue figlie;
 - PR collegate.
 
-Le issue figlie rappresentano vertical slice o prove specifiche.
+Le issue figlie rappresentano vertical slice o prove specifiche. Creare una issue
+non equivale ad aprire la sua PR.
 
-## Prima di modificare il codice
+## Scheda del task
 
-Compilare la scheda del task:
+Prima di modificare il codice registrare:
 
 ```text
 use case
@@ -94,6 +133,8 @@ test
 benchmark
 documentazione
 scope
+base main SHA
+inventario PR aperte
 ```
 
 ## Test locali
@@ -114,7 +155,7 @@ sh tools/tdna check
 La CI deve usare gli stessi comandi o task sottostanti. Non deve esistere una
 procedura segreta disponibile soltanto al server.
 
-## Aggiungere un test
+## Scegliere il test
 
 | Contratto | Test |
 | --- | --- |
@@ -139,6 +180,8 @@ La PR spiega:
 - comportamento utente;
 - bounded context e piattaforme;
 - livello di rischio;
+- base `main` usata;
+- inventario delle PR aperte;
 - contratti modificati;
 - provider coinvolti;
 - impatto su prestazioni e batteria;
@@ -174,18 +217,19 @@ fix deve essere collegato al finding e accompagnato da un test quando possibile.
 
 ### Due round consecutivi obbligatori
 
-Ogni PR, compresa una PR `R0` di sola documentazione, richiede due review round
-consecutivi senza nuovi finding prima del passaggio a ready o del merge.
+Ogni PR che può essere mergiata, compresa una PR `R0` di sola documentazione,
+richiede due review round consecutivi senza nuovi finding prima del passaggio a
+ready o del merge.
 
-Ogni round registra nella timeline review o nella descrizione della PR:
+Ogni round registra:
 
 ```text
 head SHA
-focus
+rischio e focus
 file e contratti controllati
 CI e test osservati
 finding oppure no new findings
-clean round count
+clean-round count
 ```
 
 Se un round trova un problema:
@@ -195,7 +239,7 @@ fix
 -> test
 -> nuovo substantive head
 -> CI
--> clean round count = 0
+-> clean-round count = 0
 ```
 
 Dopo il fix servono due nuovi round puliti. I round precedenti non contano.
@@ -218,8 +262,6 @@ Non li invalidano da soli:
 - review submission o commento;
 - label o milestone;
 - rerun CI sullo stesso SHA.
-
-I due round devono riferirsi allo stesso substantive head.
 
 ### Focus consigliati
 
@@ -255,18 +297,33 @@ due round puliti e merge commit.
 
 Prima del merge verificare:
 
+- [ ] questa è l'unica PR ordinaria aperta;
 - [ ] CI verde sul substantive head corrente;
-- [ ] nessun finding aperto;
-- [ ] review round pulito 1 registrato nel ledger PR;
-- [ ] review round pulito 2 registrato nel ledger PR;
+- [ ] nessun finding o thread aperto;
+- [ ] review round pulito 1 registrato;
+- [ ] review round pulito 2 registrato sullo stesso SHA;
 - [ ] nessun commit sostanziale successivo;
 - [ ] PR body aggiornato senza cambiare il head;
-- [ ] report presente con finding history, review plan e link alla PR;
+- [ ] report presente e indicizzato;
 - [ ] documentazione e milestone coerenti con lo stato pre-merge;
-- [ ] issue pronta a chiudersi con il merge.
+- [ ] issue pronta a chiudersi con il merge;
+- [ ] autorità di merge esplicita;
+- [ ] expected-head guard pronto.
 
-Il merge resta una decisione del maintainer quando previsto. L'issue si chiude
-con il merge o subito dopo, non con la sola prontezza tecnica.
+Un agente può mergiare soltanto con autorizzazione esplicita o permanente del
+maintainer. Altrimenti lascia la PR ready.
+
+## Dopo il merge
+
+Prima di aprire la PR successiva:
+
+1. verificare che la PR sia `merged`;
+2. verificare l'issue collegata;
+3. registrare il nuovo SHA di `main`;
+4. aggiornare o pianificare la riconciliazione storica;
+5. creare il branch successivo dal nuovo `main`;
+6. riallineare eventuali branch conservati;
+7. verificare che non esistano altre PR aperte.
 
 ## Commit
 

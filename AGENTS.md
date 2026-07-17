@@ -15,7 +15,7 @@ Before changing code or stable documentation, read:
 4. `docs/it/50-registro-milestone.md`
 5. the current milestone roadmap and the component contract relevant to the task
 
-Before reviewing or merging a pull request, also read:
+Before reviewing, marking ready, closing or merging a pull request, also read:
 
 6. `docs/it/06-review-e-merge.md`
 
@@ -36,6 +36,15 @@ Answer these questions in the issue, PR, work log or task note:
 8. Which tests, replay scenarios or benchmarks are required?
 9. Which documentation and Lab scenarios must be updated?
 10. Is this current milestone scope or future roadmap?
+
+Before creating a branch or PR, inspect the repository state:
+
+```text
+current main SHA
+open pull requests
+active issue and dependency status
+last merged slice
+```
 
 ## Architectural invariants
 
@@ -68,10 +77,45 @@ Answer these questions in the issue, PR, work log or task note:
 - A hot-path change must state expected cost and the benchmark used or planned.
 - A privacy-sensitive change must include abuse cases and a data-flow review.
 
+## Serial pull-request workflow
+
+Normal autonomous development uses **one open pull request at a time**.
+
+The normative sequence is:
+
+```text
+verify no ordinary PR is open
+-> update local/remote view of main
+-> create branch from the current main SHA
+-> implement one coherent issue slice
+-> open one draft PR
+-> findings, fixes and CI
+-> two clean reviews on one substantive head
+-> ready and authorized merge
+-> verify PR merged, issue state and new main SHA
+-> only then create the next branch and PR
+```
+
+Rules:
+
+- do not open stacked PRs merely to keep working ahead;
+- do not create placeholder, empty or `noop` PRs;
+- do not open the next PR while the current PR is open;
+- after every merge, the next branch starts from the newly verified `main`;
+- an issue may be prepared while a PR is open, but its implementation PR waits;
+- an exception for parallel PRs requires an explicit maintainer decision recorded
+  in the affected issues and PRs;
+- accidental, duplicate, stacked or abandoned PRs may be closed administratively
+  without two clean rounds because they ship no change, but the reason must be
+  explicit and they must not be recorded as completed or merged work.
+
+A branch may be preserved after administrative closure, but it must be rebased,
+recreated or otherwise realigned from the future `main` before a new PR is opened.
+
 ## Pull request review gate
 
-Every pull request requires **two consecutive clean review rounds** before it can
-be marked ready, closed as complete or merged.
+Every pull request that may ship a change requires **two consecutive clean review
+rounds** before it can be marked ready or merged.
 
 For each round record in the PR review timeline or body:
 
@@ -100,25 +144,45 @@ Rules:
 - the committed daily report records context, finding history, review plan and a
   link to that ledger, but is not changed after clean rounds merely to copy their
   outcome;
-- final review and merge status is reconciled into the historical report through
-  a later reviewed documentation change;
-- agents must not merge when merge authority remains with the maintainer.
+- final review and merge status is reconciled into historical documentation
+  through a later reviewed change.
 
 A green CI run is necessary but does not count as a review round. Two clean
 reviews are necessary but do not replace CI.
 
+## Merge authority
+
+An agent may mark ready and merge only when all of these are true:
+
+- the maintainer has granted explicit or standing merge authorization;
+- exactly one ordinary PR is open;
+- the PR head still equals the reviewed substantive SHA;
+- required CI is green on that SHA;
+- no finding or unresolved review thread remains;
+- two consecutive clean rounds are recorded on that same SHA;
+- no substantive commit followed the rounds;
+- issue, milestone, report and PR body agree with the pre-merge state.
+
+Use an expected-head guard when merging. If the head moved, CI is stale, another
+PR appeared, or authorization is unclear, do not merge. Without maintainer
+authorization, leave the PR ready for the maintainer.
+
+After merge, verify the merge result, linked issue state and new `main` commit
+before starting the next branch.
+
 ## Source of truth
 
 ```text
-Discussion      = open reasoning and alternatives
-ADR             = a specific architectural decision
-Docs            = consolidated current explanation and teaching material
-Issue           = work to perform
-Pull request    = concrete reviewable change
-PR review ledger= same-head evidence for ready and merge
-Tests           = executable evidence
-Benchmarks      = measured cost under a declared scenario
-Git history     = chronological evidence
+Discussion       = open reasoning and alternatives
+ADR              = a specific architectural decision
+Docs             = consolidated explanation and teaching material
+Issue            = work to perform
+Pull request     = one concrete reviewable change
+PR review ledger = same-head evidence for ready and merge
+Tests            = executable evidence
+Benchmarks       = measured cost under a declared scenario
+Daily index      = historical navigation across work sessions
+Git history      = chronological evidence
 ```
 
 ## Scope guard
