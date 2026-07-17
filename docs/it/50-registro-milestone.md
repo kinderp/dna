@@ -30,66 +30,38 @@ dipendenze, risultati e lavoro rimandato.
 
 Avvio: **2026-07-16**
 
-### Slice A — reference routing
+### Slice completate
 
-- issue [#3](https://github.com/kinderp/tdna/issues/3);
-- PR [#4](https://github.com/kinderp/tdna/pull/4);
-- stato **merged**;
-- merge `d122f1b4871719087e79a50b185ab302d810cb20`.
-
-### Slice B — provider-neutral routing contracts
-
-- issue [#5](https://github.com/kinderp/tdna/issues/5);
-- PR [#6](https://github.com/kinderp/tdna/pull/6);
-- stato **merged**;
-- merge `2a28d1654988cef4188986342f76fd7d19be358f`.
-
-### Slice C — review governance e routing hardening
-
-- issue [#8](https://github.com/kinderp/tdna/issues/8);
-- PR [#9](https://github.com/kinderp/tdna/pull/9);
-- stato **merged**;
-- merge `044e0773dd9afb1530db35688a00c56bfbd5eace`.
-
-### Slice D — MapScene e fake renderer
-
-- issue [#7](https://github.com/kinderp/tdna/issues/7);
-- PR [#10](https://github.com/kinderp/tdna/pull/10);
-- stato **merged**;
-- final head `a18e73ad015951545c808d489ee66c57c5d1c80d`;
-- CI #80, due round puliti;
-- merge `2128f24b4a6ab00aeb437ed48a0af2910f33e9ec`.
-
-### Slice E — flusso PR seriale
-
-- issue [#14](https://github.com/kinderp/tdna/issues/14);
-- PR [#15](https://github.com/kinderp/tdna/pull/15);
-- stato **merged**;
-- final head `272e0b54495f610d7fd63b4bdafaea24f8d18bcf`;
-- CI #84, review `4719885953` e `4719891465`;
-- merge `76680433089842db5805d28eb50416a23c7d0a88`.
+| Slice | Issue / PR | Stato | Merge |
+| --- | --- | --- | --- |
+| Reference routing | #3 / #4 | merged | `d122f1b4871719087e79a50b185ab302d810cb20` |
+| Routing contracts | #5 / #6 | merged | `2a28d1654988cef4188986342f76fd7d19be358f` |
+| Review governance | #8 / #9 | merged | `044e0773dd9afb1530db35688a00c56bfbd5eace` |
+| MapScene/fake renderer | #7 / #10 | merged | `2128f24b4a6ab00aeb437ed48a0af2910f33e9ec` |
+| Serial PR governance | #14 / #15 | merged | `76680433089842db5805d28eb50416a23c7d0a88` |
 
 ### Slice F — LocationSample e replay deterministico
 
 - issue [#11](https://github.com/kinderp/tdna/issues/11);
 - PR [#16](https://github.com/kinderp/tdna/pull/16);
 - branch `agent/location-sample-replay`;
-- stato **implementation/documentation in progress; final CI and reviews pending**.
+- stato **pre-review complete; final CI and two clean rounds pending**.
 
 Deliverable:
 
-- [x] `GeoPoint` cross-domain con zero firmato canonico;
+- [x] `GeoPoint` cross-domain e zero firmato canonico;
 - [x] `LocationSample`, sequence, monotonic time e origin;
-- [x] ordering gate con rifiuto esplicito;
+- [x] ordering gate con inspect/commit;
 - [x] rate razionale e resto;
 - [x] clock virtuale;
-- [x] state machine replay bounded;
+- [x] transizione accepted atomica;
+- [x] state machine e summary bounded;
 - [x] fixture sintetica e parser JVM;
 - [x] Lab/report deterministico;
 - [x] benchmark diagnostico e artifact CI;
 - [x] chapter 46 e scenario Lab;
-- [x] bounds/overflow hardening;
-- [ ] indici, stato e report finale allineati;
+- [x] reading paths, tracepoint, tooling e indici;
+- [x] report pre-review con finding history e benchmark;
 - [ ] Foundation CI sul substantive head finale;
 - [ ] clean review round 1;
 - [ ] clean review round 2;

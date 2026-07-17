@@ -23,7 +23,7 @@ I report collegano issue, PR, commit, test e ADR; non li sostituiscono.
 
 | Data / sessione | Tema principale | Issue / PR | Esito |
 | --- | --- | --- | --- |
-| [2026-07-17 — LocationSample e replay](2026-07-17-location-replay.md) | Geo contract, tempo monotono, ordering gate, replay, fixture e benchmark. | [#11](https://github.com/kinderp/tdna/issues/11) / [#16](https://github.com/kinderp/tdna/pull/16) | In sviluppo; report pre-review. |
+| [2026-07-17 — LocationSample e replay](2026-07-17-location-replay.md) | Geo contract, tempo monotono, ordering gate, replay atomico, fixture e benchmark. | [#11](https://github.com/kinderp/tdna/issues/11) / [#16](https://github.com/kinderp/tdna/pull/16) | Pre-review complete; CI finale e due round richiesti. |
 | [2026-07-17 — disciplina PR seriale](2026-07-17-pr-discipline.md) | Una sola PR, merge autorizzato, expected head e riallineamento. | [#14](https://github.com/kinderp/tdna/issues/14) / [#15](https://github.com/kinderp/tdna/pull/15) | Mergiata; merge `76680433089842db5805d28eb50416a23c7d0a88`. |
 | [2026-07-17 — MapScene](2026-07-17-map-scene.md) | MapScene, delta, fake renderer e route projector. | [#7](https://github.com/kinderp/tdna/issues/7) / [#10](https://github.com/kinderp/tdna/pull/10) | Mergiata; CI #80 e merge `2128f24b4a6ab00aeb437ed48a0af2910f33e9ec`. |
 | [2026-07-17 — review policy](2026-07-17-review-policy.md) | Due review consecutive e hardening `RouteManeuver`. | [#8](https://github.com/kinderp/tdna/issues/8) / [#9](https://github.com/kinderp/tdna/pull/9) | Mergiata; merge `044e0773dd9afb1530db35688a00c56bfbd5eace`. |
