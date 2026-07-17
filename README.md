@@ -18,50 +18,59 @@ Il progetto nasce da quattro idee unite:
 La **Documentation Foundation v0** è presente e la milestone
 **Foundations and Travel DNA Lab v0** è in corso.
 
-Il repository contiene ora anche il primo laboratorio eseguibile:
+Sono disponibili due vertical slice didattiche:
 
 ```text
-rete stradale sintetica
--> parser Java e Rust
--> Dijkstra / A*
--> percorso deterministico
--> report confrontato fra i due linguaggi
+1. grafo sintetico -> Java/Rust -> Dijkstra/A* -> report confrontato
+2. RouteRequest -> RoutePlannerPort -> fake provider -> RoutePlan canonico
 ```
 
-Non contiene ancora un navigatore mobile di produzione. Il laboratorio serve a
-stabilire metodo, fixture, test, strumenti e documentazione prima di introdurre
+Non esiste ancora un navigatore mobile di produzione. Le slice stabiliscono
+metodo, contratti, fixture, test, CI e documentazione prima di introdurre
 OpenStreetMap, MapLibre, Valhalla, Ferrostar, Android o iOS.
 
-## Primo esperimento
+## Laboratorio 1 — algoritmo di routing
 
-Prerequisiti minimi per la parte Java:
+Prerequisiti minimi:
 
 - Java 21;
 - Python 3;
-- shell POSIX.
-
-Dalla root del repository:
+- shell POSIX;
+- Rust stable per il confronto completo.
 
 ```bash
-sh tools/tdna doctor
 sh tools/tdna check-java
 sh tools/tdna lab reference-routing astar
 ```
 
-Con Rust stable installato si può eseguire l'intera verifica:
+Capitolo:
+[Routing di riferimento in Java e Rust](docs/it/43-reference-routing-java-rust.md).
+
+## Laboratorio 2 — contratto e provider
+
+Prerequisiti aggiuntivi:
+
+- Gradle compatibile; la CI usa esattamente Gradle 9.5.1;
+- Kotlin 2.4.0 risolto dal version catalog.
 
 ```bash
+sh tools/tdna check-architecture
+sh tools/tdna check-kotlin
+sh tools/tdna lab routing-contracts
+```
+
+Capitolo:
+[Contratti routing e fake provider](docs/it/44-contratti-routing-e-fake-provider.md).
+
+## Verifica completa
+
+```bash
+sh tools/tdna doctor
 sh tools/tdna check
 ```
 
-Il comando completo controlla documentazione, implementazione Java,
-implementazione Rust e conformità byte-per-byte dei report.
-
-Capitolo didattico:
-[Primo laboratorio eseguibile: routing in Java e Rust](docs/it/43-reference-routing-java-rust.md).
-
-Scenario Lab:
-[Reference routing Java/Rust](docs/it/lab/scenarios/reference-routing-java-rust.md).
+Il comando completo controlla documentazione, confini architetturali, Java,
+Rust, confronto cross-language, Kotlin Multiplatform e fake provider.
 
 ## Da dove iniziare
 
@@ -69,6 +78,7 @@ Scenario Lab:
 - Studente o nuovo lettore: [docs/it/03-guida-lettura-documentazione.md](docs/it/03-guida-lettura-documentazione.md)
 - Contributore: [docs/it/00-regole-operative.md](docs/it/00-regole-operative.md)
 - Stato dello sviluppo: [docs/project/development-status.md](docs/project/development-status.md)
+- Report giornalieri: [docs/project/daily/README.md](docs/project/daily/README.md)
 - Architettura: [docs/it/20-architettura-generale.md](docs/it/20-architettura-generale.md)
 - Tecnologie: [docs/it/52-matrice-tecnologie-decisioni.md](docs/it/52-matrice-tecnologie-decisioni.md)
 - Navigazione: [docs/it/24-routing-e-navigazione.md](docs/it/24-routing-e-navigazione.md)

@@ -3,99 +3,93 @@
 ## Ruolo
 
 GitHub conserva lo stato vivo; questo documento conserva ordine, motivazione,
-dipendenze e risultati consolidati.
+dipendenze, risultati e lavoro rimandato.
 
-## Campi
+## Registro
 
-| Campo | Significato |
-| --- | --- |
-| Ordine | Sequenza logica. |
-| Nome | Milestone stabile. |
-| Stato | planned, in-progress, done, paused, superseded. |
-| Perché ora | Rischio o capacità sbloccata. |
-| Dipendenze | Cosa deve esistere. |
-| Deliverable | Evidenza di chiusura. |
-| Non-obiettivi | Scope escluso. |
-| GitHub | Milestone/issue/PR future. |
-| Documenti | Contratti e roadmap. |
+| Ordine | Milestone | Stato | Perché ora | Deliverable principali | Non-obiettivi |
+| --- | --- | --- | --- | --- | --- |
+| 0 | Documentation Foundation v0 | done | Fonte stabile prima del codice. | Regole, architettura, ADR, Lab e roadmap. | Codice mobile/backend. |
+| 1 | Foundations and Travel DNA Lab v0 | in-progress | Contratti e scenari prima degli SDK reali. | Multi-language build, canonical models, fakes, replay seed e CI. | GPS reale, MapLibre, Valhalla, chat. |
+| 2 | Canonical Route and Map Slice | planned | Verificare rendering e isolamento provider. | MapScene, fake renderer e adapter seed. | Turn-by-turn completo. |
+| 3 | Navigation Runtime Replay v0 | planned | Ridurre il rischio guidance. | Clock, replay, off-route e reroute. | Traffico live. |
+| 4 | External Navigation Companion v0 | planned | Valore con navigatori maturi. | Handoff, shadow route e recorder. | Automotive completo. |
+| 5 | Journey Journal v0 | planned | Valore autonomo e dati per DNA. | Event store, soste, media fake e DailyPage. | Cloud media pubblico. |
+| 6 | Conversation Core v0 | planned | Messaggistica durable e driver policy. | Outbox, fake server e voice surface. | Discovery live. |
+| 7 | Backend Modular Monolith v0 | planned | Supportare sync/chat. | Auth dev, sync e routing gateway. | Microservizi. |
+| 8 | OSM and Valhalla Integration v0 | planned | Route e POI reali dietro contratti. | Adapter/gateway e normalizer. | Scala planetaria. |
+| 9 | Automotive Messaging v0 | planned | Chat sicura con navigatore esterno. | Android Auto e CarPlay spike. | Split-screen arbitrario. |
+| 10 | Road Presence and Greetings v0 | planned | Prima funzione social live. | Coarse presence, TTL e abuse tests. | Tracking preciso. |
+| 11 | DNA Cards v0 | planned | Condivisione derivata dal diario. | Sanitizer, publish e revoke. | Matching opaco. |
+| 12 | Internal Navigation Beta | planned | Dopo prove di affidabilità. | Map, guidance, voice e field audit. | Parità traffico Waze. |
+| 13 | Offline Region v0 | future | Viaggio senza rete. | Package, tile, indice e routing data. | Whole-world offline. |
+| 14 | Travel DNA Guidance Core | future | Sostituire solo con valore misurato. | Rust shadow core. | Renderer riscritto. |
+| 15 | LoRa Communication Spike | future/open | Valutare casi senza copertura. | Esperimento e ADR. | Produzione senza prove. |
 
-Le date sono orientative e vengono registrate quando il lavoro parte davvero.
-La milestone 1 è iniziata il 16 luglio 2026 con la issue
-[`#3`](https://github.com/kinderp/tdna/issues/3).
+## Milestone 1 — Foundations and Travel DNA Lab v0
 
-## Registro iniziale
+Avvio: **2026-07-16**
 
-| Ordine | Milestone | Stato | Perché ora | Dipendenze | Deliverable principali | Non-obiettivi | Documenti |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 0 | Documentation Foundation v0 | done | Serve una fonte stabile prima del codice e prima di coinvolgere studenti. | Progettazione iniziale. | Regole, architettura, tracepoint, Lab, ADR, roadmap. | Codice mobile/backend. | Tutto il pacchetto v0. |
-| 1 | Foundations and Travel DNA Lab v0 | in-progress | Dimostrare contratti, replay e struttura multi-language senza dipendere da SDK reali. | Milestone 0. | Monorepo bootstrap, canonical geo, plugin SDK, fake providers, Java reference graph, Rust replay CLI, CI. | GPS reale, MapLibre, Valhalla, chat. | `20`, `21`, `22`, `30`, `31`, `41`, `42`, `43`; issue [#3](https://github.com/kinderp/tdna/issues/3). |
-| 2 | Canonical Route and Map Slice | planned | Verificare rendering nativo e provider isolation. | 1. | RoutePlan, MapScene, fake route, MapLibre adapters Android/iOS, benchmark base. | Turn-by-turn completo. | `23`, `24`, scenario render. |
-| 3 | Navigation Runtime Replay v0 | planned | Eliminare rischio guidance prima della strada. | 1–2. | Ferrostar adapter, replay missed exit, state machine, voice fake, performance report. | Produzione, traffic live. | `24`, `31`, `32`, scenario reroute. |
-| 4 | External Navigation Companion v0 | planned | Garantire valore con Waze/Maps prima del navigatore interno maturo. | 1, Journey session. | handoff adapters, shadow route v0, background recorder fake/integration, return flow. | Android Auto/CarPlay completi. | `25`, ADR 0003. |
-| 5 | Journey Journal v0 | planned | Valore autonomo e dati per DNA. | 1. | event store, stop fixture, media fake, DailyPage, edit preservation. | Cloud media, public sharing. | `26`, scenario diario. |
-| 6 | Conversation Core v0 | planned | Definire messaggistica durable e driver policy prima dell'auto. | 1, backend decision. | local outbox, fake server, voice surface fake, safety tests. | Social discovery live. | `27`, `29`, scenario chat. |
-| 7 | Backend Modular Monolith v0 | planned | Supportare sync/chat con confini chiari. | 1, ADR backend. | auth dev, sync, conversations, routing gateway, PostGIS setup. | Microservices. | `29`. |
-| 8 | OSM and Valhalla Integration v0 | planned | Route e POI reali dietro contratti. | 2, 7. | provider tile dev, Valhalla gateway, place normalizer, attribution. | Planet-scale production. | `23`, `24`, `36`. |
-| 9 | Automotive Messaging v0 | planned | Chat sicura con navigatore esterno. | 4, 6. | Android Auto notifications, CarPlay/SiriKit spike, simulator tests. | Arbitrary split-screen. | `25`, `33`. |
-| 10 | Road Presence and Greetings v0 | planned | Prima funzione social live con privacy forte. | 6, 7, threat model. | coarse presence, TTL, greeting, block, abuse tests. | Exact map tracking. | `27`, `33`, scenario DNA. |
-| 11 | DNA Cards v0 | planned | Condivisione derivata dal diario. | 5, 10. | sanitizer, preview, publish/revoke, compatibility v0. | Opaque ML matching. | `26`, `27`. |
-| 12 | Internal Navigation Beta | planned | Solo dopo reliability/performance evidence. | 2, 3, 8. | integrated route, guidance, map, voice, field audits, fallback. | Waze-equivalent traffic claim. | `24`, `32`. |
-| 13 | Offline Region v0 | future | Indipendenza e viaggio senza rete. | 8, 12, legal/licence design. | package format, tiles, place index, routing data, updater. | Whole-world offline. | `23`, `36`, `51`. |
-| 14 | Travel DNA Guidance Core | future | Ridurre dipendenza Ferrostar solo se valore misurato. | replay maturity, shadow comparison. | Rust core in shadow, rollout, fallback. | Map renderer rewrite. | `51`. |
-| 15 | LoRa Communication Spike | future/open | Valutare casi senza copertura con vincoli reali. | Discussione dedicata. | experiment report and ADR. | Produzione prima di prove. | `54`. |
+### Slice A — reference routing
 
-## Milestone 1: avanzamento corrente
+- issue [#3](https://github.com/kinderp/tdna/issues/3);
+- PR [#4](https://github.com/kinderp/tdna/pull/4);
+- stato **merged**;
+- merge commit `d122f1b4871719087e79a50b185ab302d810cb20`.
 
-Avvio: **2026-07-16**  
-Issue attiva: [#3 — executable Java/Rust reference-routing Lab](https://github.com/kinderp/tdna/issues/3)  
-Pull request draft: [#4 — executable Java/Rust routing Lab](https://github.com/kinderp/tdna/pull/4)  
-Branch di lavoro: `agent/foundation-reference-routing`
+Completati:
 
-Prima vertical slice:
+- [x] fixture sintetica;
+- [x] Java/Rust parser;
+- [x] Dijkstra e A*;
+- [x] report deterministico;
+- [x] contract diff;
+- [x] test, CI, capitolo 43 e Lab.
 
-- [x] fixture di grafo sintetica, versionata e con ground truth;
-- [x] parser rigoroso Java;
-- [x] parser rigoroso Rust;
-- [x] Dijkstra Java e Rust;
-- [x] A* Java e Rust;
-- [x] ricostruzione route deterministica;
-- [x] report fixture-scoped confrontabile;
-- [x] test Java;
-- [x] test Rust;
-- [x] contract test Java/Rust;
-- [x] wrapper `sh tools/tdna`;
-- [x] CI foundation;
-- [x] capitolo didattico e scenario Lab eseguibile;
-- [x] CI verde osservata sulla pull request, run `#13`;
-- [x] review finding corretti e due round consecutivi senza nuovi finding;
-- [ ] merge della vertical slice.
+### Slice B — provider-neutral routing contracts
 
-La slice chiude il **reference routing**, non la milestone intera. Restano fuori:
-contratti canonici KMP, plugin SDK, fake provider, GPS replay, missed-exit state
-machine e benchmark strutturato.
+- issue [#5](https://github.com/kinderp/tdna/issues/5);
+- PR draft [#6](https://github.com/kinderp/tdna/pull/6);
+- branch `agent/provider-neutral-routing-contracts`;
+- stato **review complete — merge pending**.
 
-## Milestone 1: criteri di chiusura
+Completati:
 
-`Foundations and Travel DNA Lab v0` è conclusa quando esistono:
+- [x] Gradle/KMP bootstrap;
+- [x] JVM e Linux x64;
+- [x] plugin SDK e runtime platform semantics;
+- [x] canonical routing models;
+- [x] immutable snapshots e bounded metadata;
+- [x] request/waypoint postconditions;
+- [x] `RoutePlannerPort`;
+- [x] fake planner e call recording;
+- [x] reusable conformance probe;
+- [x] architecture checker;
+- [x] CLI Lab;
+- [x] capitolo 44 e scenario;
+- [x] indice report giornalieri;
+- [x] CI completa verde, run `#19`;
+- [x] tre review round, ultimi senza finding bloccanti;
+- [ ] merge.
 
-- repository buildabile;
-- Java 21 e Rust toolchain documentati;
-- canonical `GeoPoint`, `RouteRequest`, `RoutePlan`, `LocationSample`;
-- plugin descriptor e capability;
-- fake route planner;
-- fake map renderer;
-- Java/Rust Dijkstra e A* reference su piccolo grafo;
-- Rust replay runner con clock virtuale;
-- scenario missed exit eseguibile con fake guidance;
-- contract test;
-- CI Linux;
-- documentazione aggiornata;
-- primo benchmark report con limiti.
+### Criteri di chiusura milestone
+
+- [x] repository e CI multi-language;
+- [x] Java/Rust reference routing;
+- [x] canonical routing contract seed;
+- [x] plugin descriptor e capability;
+- [x] fake route planner;
+- [ ] `LocationSample` e clock;
+- [ ] GPS replay;
+- [ ] MapScene e fake renderer;
+- [ ] missed-exit scenario;
+- [ ] benchmark report;
+- [ ] Gradle Wrapper;
+- [ ] documentazione finale milestone.
 
 ## Regole
 
-- ogni milestone ha issue madre;
-- ogni micro-step non banale ha issue/PR;
-- chiusura aggiorna stato, esito, lavoro rimandato;
-- una milestone futura non autorizza codice anticipato;
-- i deliverable sono prove, non percentuali vaghe.
+- ogni slice non banale ha issue e PR;
+- la chiusura registra prove e lavoro rimandato;
+- milestone future non autorizzano codice anticipato;
+- deliverable significa evidenza, non percentuale vaga.
