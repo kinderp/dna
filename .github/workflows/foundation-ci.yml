@@ -13,9 +13,9 @@ permissions:
 
 jobs:
   foundation:
-    name: Docs, Java, Rust and contract tests
+    name: Docs, Java, Rust, Kotlin and contract tests
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
 
     steps:
       - name: Check out repository
@@ -26,6 +26,13 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
+
+      - name: Set up Gradle 9.5.1
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: "9.5.1"
+          cache-provider: basic
+          add-job-summary: on-failure
 
       - name: Install stable Rust toolchain
         run: |
@@ -42,6 +49,13 @@ jobs:
           set -o pipefail
           sh tools/tdna check-docs 2>&1 | tee build/docs-check.log
 
+      - name: Check shared architecture boundaries
+        shell: bash
+        run: |
+          mkdir -p build
+          set -o pipefail
+          sh tools/tdna check-architecture 2>&1 | tee build/architecture-check.log
+
       - name: Check Java reference routing
         run: sh tools/tdna check-java
 
@@ -54,6 +68,13 @@ jobs:
 
       - name: Check Java and Rust contract
         run: sh tools/tdna check-contract
+
+      - name: Check Kotlin Multiplatform contracts
+        shell: bash
+        run: |
+          mkdir -p build
+          set -o pipefail
+          sh tools/tdna check-kotlin 2>&1 | tee build/kotlin-check.log
 
       - name: Upload diagnostic output on failure
         if: failure()
