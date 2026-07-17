@@ -138,7 +138,7 @@ class DeterministicReplayRunnerTest {
     }
 
     @Test
-    fun summarySnapshotsRejectionCountsAndValidatesPresenceFields() {
+    fun summarySnapshotsCountsAndRejectsUnboundedOrImpossibleState() {
         val mutableCounts = mutableMapOf(LocationSampleRejectionReason.NonIncreasingSequence to 1)
         val summary = ReplaySummary(
             state = ReplayState.Completed,
@@ -152,6 +152,7 @@ class DeterministicReplayRunnerTest {
         )
         mutableCounts.clear()
         assertEquals(1, summary.rejectionCounts.size)
+
         assertFailsWith<IllegalArgumentException> {
             ReplaySummary(
                 state = ReplayState.Ready,
@@ -162,6 +163,30 @@ class DeterministicReplayRunnerTest {
                 finalClock = MonotonicInstant.Zero,
                 totalPlaybackDelayMilliseconds = 0L,
                 lastAcceptedSequence = null,
+            )
+        }
+        assertFailsWith<IllegalArgumentException> {
+            ReplaySummary(
+                state = ReplayState.Completed,
+                processedSamples = 0,
+                acceptedSamples = 0,
+                rejectedSamples = 0,
+                rejectionCounts = emptyMap(),
+                finalClock = null,
+                totalPlaybackDelayMilliseconds = 0L,
+                lastAcceptedSequence = null,
+            )
+        }
+        assertFailsWith<IllegalArgumentException> {
+            ReplaySummary(
+                state = ReplayState.Running,
+                processedSamples = Int.MAX_VALUE,
+                acceptedSamples = Int.MAX_VALUE,
+                rejectedSamples = 0,
+                rejectionCounts = emptyMap(),
+                finalClock = MonotonicInstant.Zero,
+                totalPlaybackDelayMilliseconds = 0L,
+                lastAcceptedSequence = LocationSequence(0L),
             )
         }
     }

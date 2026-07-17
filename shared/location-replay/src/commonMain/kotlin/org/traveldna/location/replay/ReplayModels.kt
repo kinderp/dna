@@ -119,16 +119,33 @@ class ReplaySummary(
     val rejectionCounts: Map<LocationSampleRejectionReason, Int> = rejectionCounts.toMap()
 
     init {
-        require(processedSamples >= 0) { "processed sample count must be non-negative" }
-        require(acceptedSamples >= 0) { "accepted sample count must be non-negative" }
-        require(rejectedSamples >= 0) { "rejected sample count must be non-negative" }
-        require(acceptedSamples + rejectedSamples == processedSamples) {
+        require(processedSamples in 0..LocationReplayScenario.MaxSamples) {
+            "processed sample count must be within [0, ${LocationReplayScenario.MaxSamples}]"
+        }
+        require(acceptedSamples in 0..LocationReplayScenario.MaxSamples) {
+            "accepted sample count must be within [0, ${LocationReplayScenario.MaxSamples}]"
+        }
+        require(rejectedSamples in 0..LocationReplayScenario.MaxSamples) {
+            "rejected sample count must be within [0, ${LocationReplayScenario.MaxSamples}]"
+        }
+        val accountedSamples = acceptedSamples.toLong() + rejectedSamples.toLong()
+        require(accountedSamples == processedSamples.toLong()) {
             "accepted and rejected counts must equal processed samples"
         }
-        require(this.rejectionCounts.values.all { it > 0 }) {
-            "rejection counts must contain only positive values"
+        require(this.rejectionCounts.size <= LocationSampleRejectionReason.entries.size) {
+            "rejection counts contain unsupported reasons"
         }
-        require(this.rejectionCounts.values.sum() == rejectedSamples) {
+        require(
+            this.rejectionCounts.values.all {
+                it in 1..LocationReplayScenario.MaxSamples
+            },
+        ) {
+            "rejection counts must be positive and bounded by the scenario sample limit"
+        }
+        val rejectionTotal = this.rejectionCounts.values.fold(0L) { total, count ->
+            total + count.toLong()
+        }
+        require(rejectionTotal == rejectedSamples.toLong()) {
             "rejection reason counts must equal rejected samples"
         }
         require(totalPlaybackDelayMilliseconds >= 0L) {
@@ -139,6 +156,23 @@ class ReplaySummary(
         }
         require((acceptedSamples == 0) == (lastAcceptedSequence == null)) {
             "last accepted sequence must be present exactly when an accepted sample exists"
+        }
+        if (acceptedSamples == 0) {
+            require(totalPlaybackDelayMilliseconds == 0L) {
+                "replay without accepted samples cannot accumulate playback delay"
+            }
+        }
+        when (state) {
+            ReplayState.Ready -> require(processedSamples == 0) {
+                "ready replay cannot contain processed samples"
+            }
+            ReplayState.Completed -> require(processedSamples > 0 && acceptedSamples > 0) {
+                "completed replay must contain at least one accepted sample"
+            }
+            ReplayState.Running,
+            ReplayState.Paused,
+            ReplayState.Cancelled,
+            -> Unit
         }
     }
 }

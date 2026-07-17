@@ -25,15 +25,32 @@ class ReplayExpectations(
     val rejectionCounts: Map<LocationSampleRejectionReason, Int> = rejectionCounts.toMap()
 
     init {
-        require(accepted > 0) { "expected accepted samples must be positive" }
-        require(rejected >= 0) { "expected rejected samples must be non-negative" }
+        require(accepted in 1..LocationReplayScenario.MaxSamples) {
+            "expected accepted samples must be within [1, ${LocationReplayScenario.MaxSamples}]"
+        }
+        require(rejected in 0..LocationReplayScenario.MaxSamples) {
+            "expected rejected samples must be within [0, ${LocationReplayScenario.MaxSamples}]"
+        }
+        require(accepted.toLong() + rejected.toLong() <= LocationReplayScenario.MaxSamples.toLong()) {
+            "expected accepted and rejected samples exceed the scenario sample limit"
+        }
         require(finalTimeMilliseconds >= 0L) { "expected final time must be non-negative" }
         require(playbackDelayMilliseconds >= 0L) { "expected playback delay must be non-negative" }
         require(lastSequence >= 0L) { "expected last sequence must be non-negative" }
-        require(this.rejectionCounts.values.all { it > 0 }) {
-            "expected rejection counts must contain only positive values"
+        require(this.rejectionCounts.size <= LocationSampleRejectionReason.entries.size) {
+            "expected rejection counts contain unsupported reasons"
         }
-        require(this.rejectionCounts.values.sum() == rejected) {
+        require(
+            this.rejectionCounts.values.all {
+                it in 1..LocationReplayScenario.MaxSamples
+            },
+        ) {
+            "expected rejection counts must be positive and bounded by the scenario sample limit"
+        }
+        val rejectionTotal = this.rejectionCounts.values.fold(0L) { total, count ->
+            total + count.toLong()
+        }
+        require(rejectionTotal == rejected.toLong()) {
             "expected rejection reason counts must equal rejected samples"
         }
     }
@@ -128,14 +145,16 @@ object ReplayFixtureParser {
         val id = requireNotNull(scenarioId) { "$path: missing scenario declaration" }
         val rate = requireNotNull(playbackRate) { "$path: missing playback rate" }
         val expectations = ReplayExpectations(
-            accepted = requiredExpectation(scalarExpectations, "accepted").toIntChecked("accepted"),
-            rejected = requiredExpectation(scalarExpectations, "rejected").toIntChecked("rejected"),
+            accepted = requiredExpectation(scalarExpectations, "accepted").toSampleCount("accepted"),
+            rejected = requiredExpectation(scalarExpectations, "rejected").toSampleCount("rejected"),
             finalTimeMilliseconds = requiredExpectation(scalarExpectations, "final_time_ms"),
             playbackDelayMilliseconds = requiredExpectation(scalarExpectations, "playback_delay_ms"),
             lastSequence = requiredExpectation(scalarExpectations, "last_sequence"),
             rejectionCounts = rejectionCounts,
         )
-        require(expectations.accepted + expectations.rejected == samples.size) {
+        require(
+            expectations.accepted.toLong() + expectations.rejected.toLong() == samples.size.toLong(),
+        ) {
             "$path: accepted and rejected expectations must equal sample count"
         }
         return ParsedReplayFixture(
@@ -177,7 +196,7 @@ object ReplayFixtureParser {
             "non_increasing_monotonic_time" -> LocationSampleRejectionReason.NonIncreasingMonotonicTime
             else -> error("unknown rejection reason: ${parts[2]}")
         }
-        val count = parts[3].toInt()
+        val count = parts[3].toLong().toSampleCount("rejection reason")
         require(count > 0) { "rejection reason expectation must be positive" }
         require(rejectionCounts.putIfAbsent(reason, count) == null) {
             "duplicate rejection reason expectation: $reason"
@@ -195,8 +214,9 @@ object ReplayFixtureParser {
 
     private fun String.nullableDouble(): Double? = if (this == "-") null else toDouble()
 
-    private fun Long.toIntChecked(field: String): Int {
-        require(this in 0L..Int.MAX_VALUE.toLong()) { "$field expectation exceeds Int"
+    private fun Long.toSampleCount(field: String): Int {
+        require(this in 0L..LocationReplayScenario.MaxSamples.toLong()) {
+            "$field expectation must be within [0, ${LocationReplayScenario.MaxSamples}]"
         }
         return toInt()
     }

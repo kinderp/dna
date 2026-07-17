@@ -6,7 +6,9 @@ import kotlin.io.path.createTempFile
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import org.traveldna.location.contracts.LocationSampleRejectionReason
 import org.traveldna.location.replay.DeterministicReplayRunner
+import org.traveldna.location.replay.LocationReplayScenario
 
 class ReplayFixtureParserTest {
     @Test
@@ -64,7 +66,7 @@ class ReplayFixtureParserTest {
     }
 
     @Test
-    fun rejectsDuplicateAndInconsistentExpectations() {
+    fun rejectsDuplicateInconsistentAndUnboundedExpectations() {
         withFixture(
             """
             TDNA_LOCATION_REPLAY_V0
@@ -97,10 +99,34 @@ class ReplayFixtureParserTest {
         ) { path ->
             assertFailsWith<IllegalArgumentException> { ReplayFixtureParser.parse(path) }
         }
+
+        assertFailsWith<IllegalArgumentException> {
+            ReplayExpectations(
+                accepted = LocationReplayScenario.MaxSamples + 1,
+                rejected = 0,
+                finalTimeMilliseconds = 0L,
+                playbackDelayMilliseconds = 0L,
+                lastSequence = 0L,
+                rejectionCounts = emptyMap(),
+            )
+        }
+        assertFailsWith<IllegalArgumentException> {
+            ReplayExpectations(
+                accepted = 1,
+                rejected = LocationReplayScenario.MaxSamples,
+                finalTimeMilliseconds = 0L,
+                playbackDelayMilliseconds = 0L,
+                lastSequence = 0L,
+                rejectionCounts = mapOf(
+                    LocationSampleRejectionReason.NonIncreasingSequence to
+                        LocationReplayScenario.MaxSamples,
+                ),
+            )
+        }
     }
 
     @Test
-    fun rejectsMissingHeaderAndOversizedEmptyContract() {
+    fun rejectsMissingHeaderAndEmptyContract() {
         withFixture("scenario missing-header-v0") { path ->
             assertFailsWith<IllegalArgumentException> { ReplayFixtureParser.parse(path) }
         }
