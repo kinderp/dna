@@ -6,66 +6,65 @@ Last updated: 2026-07-17
 
 **Foundations and Travel DNA Lab v0 — in progress**
 
-The milestone builds executable contracts, fakes, replay foundations and
-teaching paths before mobile SDK integration.
-
 ## Completed slice
 
 **Java/Rust reference-routing Lab — merged**
 
-- issue: [#3](https://github.com/kinderp/tdna/issues/3);
-- PR: [#4](https://github.com/kinderp/tdna/pull/4);
-- merge commit: `d122f1b4871719087e79a50b185ab302d810cb20`;
-- documentation: `docs/it/43-reference-routing-java-rust.md`.
+- issue [#3](https://github.com/kinderp/tdna/issues/3);
+- PR [#4](https://github.com/kinderp/tdna/pull/4);
+- merge commit `d122f1b4871719087e79a50b185ab302d810cb20`;
+- chapter `docs/it/43-reference-routing-java-rust.md`.
 
-## Active vertical slice
+## Active slice
 
-**Provider-neutral routing contracts and deterministic fake planner — in review**
+**Provider-neutral routing contracts and deterministic fake planner — review complete, merge pending**
 
-- issue: [#5](https://github.com/kinderp/tdna/issues/5);
-- draft PR: [#6](https://github.com/kinderp/tdna/pull/6);
-- branch: `agent/provider-neutral-routing-contracts`;
-- chapter: `docs/it/44-contratti-routing-e-fake-provider.md`;
-- Lab: `docs/it/lab/scenarios/routing-contracts-fake-provider.md`.
+- issue [#5](https://github.com/kinderp/tdna/issues/5);
+- draft PR [#6](https://github.com/kinderp/tdna/pull/6);
+- branch `agent/provider-neutral-routing-contracts`;
+- implementation/documentation commit `ece0c6e26773b0b409f18e723b7e6249a3c3ee9a`;
+- chapter `docs/it/44-contratti-routing-e-fake-provider.md`;
+- scenario `docs/it/lab/scenarios/routing-contracts-fake-provider.md`.
 
-## Implemented in the active slice
+## Implemented
 
-- Gradle/Kotlin Multiplatform root build;
+- Gradle/Kotlin Multiplatform bootstrap;
 - JVM and Linux x64 targets;
 - generic plugin SDK;
-- bounded plugin descriptors and runtime platform IDs;
-- canonical geo and routing models;
-- route request/result invariants;
+- bounded runtime platform/capability metadata;
+- canonical route request, plan, legs, maneuvers and provenance;
 - defensive collection snapshots;
 - request-to-route waypoint postconditions;
+- canonical error/result model;
 - provider-neutral `RoutePlannerPort`;
-- canonical success and error model;
-- deterministic `FakeRoutePlanner`;
-- call recording and catalog miss behavior;
-- reusable `RoutePlannerContractProbe`;
-- executable JVM Lab CLI;
-- source-level architecture checker;
-- extended project tooling and CI;
-- second implementation-backed teaching chapter;
-- permanent daily-report index.
+- deterministic fake planner and call recording;
+- reusable conformance probe;
+- executable JVM Lab;
+- architecture checker;
+- extended Foundation CI;
+- chapter 44 and second executable Lab;
+- indexed daily reports.
 
-## Verification observed
+## Verification
 
-- Foundation CI run `#16`: initial KMP slice green;
-- Foundation CI run `#17`: immutability and waypoint fixes green;
-- Foundation CI run `#18`: failed only because the report index linked to the
-  not-yet-committed `2026-07-17.md`; the current commit supplies that report.
+Foundation CI run `#19` passed all steps on commit
+`ece0c6e26773b0b409f18e723b7e6249a3c3ee9a`:
 
-A final green run is required before the slice review closes.
+```text
+documentation             success
+architecture boundaries   success
+Java                       success
+Rust                       success
+Java/Rust contract         success
+Kotlin Multiplatform       success
+```
 
-## Review findings resolved
+## Review
 
-1. mutable caller/provider collections could invalidate canonical values;
-2. route validation could ignore requested waypoints;
-3. a Kotlin common source set was incorrectly modelled as a runtime platform;
-4. provider control metadata was not explicitly bounded.
-
-Each finding has code and regression-test coverage.
+- round 1: fixed mutable collection ownership and ignored waypoint risks;
+- round 2: fixed runtime-platform semantics and bounded metadata;
+- round 3: no new blocking findings;
+- privacy/safety: synthetic data only, no network or user information.
 
 ## Milestone still missing
 
@@ -75,15 +74,15 @@ Each finding has code and regression-test coverage.
 - missed-exit guidance state machine;
 - first benchmark report;
 - committed Gradle Wrapper;
-- Android and iOS targets;
+- Android/iOS targets;
 - real provider adapter.
 
 ## Next executable step
 
-Create provider-neutral map-scene contracts and `FakeMapRenderer`, then render a
-canonical `RoutePlan` through deltas without importing MapLibre.
+Create provider-neutral map-scene contracts and `FakeMapRenderer`, then project a
+canonical `RoutePlan` through scene deltas without MapLibre imports.
 
-## Decisions currently required from the maintainer
+## Maintainer decision
 
-None for continued development. PR #6 merge remains a maintainer action after
-CI and autonomous review close.
+Only the merge of PR #6. No product or architectural decision blocks subsequent
+planning.
