@@ -23,6 +23,7 @@ import org.traveldna.map.contracts.RouteOverlay
 import org.traveldna.map.contracts.RouteOverlayProgress
 import org.traveldna.map.contracts.RouteOverlayRole
 import org.traveldna.map.testkit.MapRendererContractProbe
+import org.traveldna.plugin.sdk.CapabilityId
 import org.traveldna.plugin.sdk.KnownPlatforms
 import org.traveldna.plugin.sdk.PluginDescriptor
 import org.traveldna.plugin.sdk.PluginId
@@ -114,18 +115,30 @@ class FakeMapRendererTest {
     }
 
     @Test
-    fun installRejectsStaticFeaturesMissingFromTheDescriptor() = runImmediate {
+    fun installRejectsStaticFeaturesMissingFromTheDescriptorAndPreservesActiveState() = runImmediate {
         val markerlessRenderer = FakeMapRenderer(
             descriptorWithout(MapRendererCapabilities.Markers),
         )
-        val markerFailure = markerlessRenderer.install(
-            scene(markers = listOf(dnaMarker("dna.static"))),
+        val activeScene = scene()
+        assertIs<MapRenderResult.Success>(markerlessRenderer.install(activeScene))
+        val beforeFailure = assertNotNull(markerlessRenderer.snapshot)
+
+        val unsupportedMarkerScene = MapScene(
+            id = MapSceneId("scene.unsupported-marker"),
+            camera = MapCamera(b, zoom = 10.0),
+            routeOverlays = activeScene.routeOverlays,
+            markers = listOf(dnaMarker("dna.static")),
         )
+        val markerFailure = markerlessRenderer.install(unsupportedMarkerScene)
         assertEquals(
             MapRenderErrorCode.UnsupportedOperation,
             assertIs<MapRenderResult.Failure>(markerFailure).error.code,
         )
-        assertEquals(null, markerlessRenderer.snapshot)
+        val afterFailure = assertNotNull(markerlessRenderer.snapshot)
+        assertEquals(beforeFailure.sceneId, afterFailure.sceneId)
+        assertEquals(beforeFailure.camera, afterFailure.camera)
+        assertEquals(beforeFailure.routeGeometry, afterFailure.routeGeometry)
+        assertEquals(beforeFailure.markers, afterFailure.markers)
 
         val selectionlessRenderer = FakeMapRenderer(
             descriptorWithout(MapRendererCapabilities.Selection),
@@ -133,7 +146,7 @@ class FakeMapRendererTest {
         val selectedScene = MapScene(
             id = MapSceneId("scene.static-selection"),
             camera = MapCamera(a, zoom = 12.0),
-            routeOverlays = scene().routeOverlays,
+            routeOverlays = activeScene.routeOverlays,
             selectedItemId = routeId,
         )
         val selectionFailure = selectionlessRenderer.install(selectedScene)
@@ -177,7 +190,7 @@ class FakeMapRendererTest {
         assertEquals(MapLocationSemantics.PublicPlace, scene.markers.single().locationSemantics)
     }
 
-    private fun descriptorWithout(capability: org.traveldna.plugin.sdk.CapabilityId): PluginDescriptor =
+    private fun descriptorWithout(capability: CapabilityId): PluginDescriptor =
         PluginDescriptor(
             id = FakeMapRenderer.Id,
             implementationVersion = "0.1.0-test",
