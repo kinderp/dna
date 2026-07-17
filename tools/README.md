@@ -1,34 +1,36 @@
 # Project tooling
 
-`tools/tdna` is the common entry point for Travel DNA foundation checks. It is a
-thin POSIX shell orchestrator: it calls native tools and does not reimplement
-Java, Cargo, Gradle or Python behavior.
+`tools/tdna` è il punto di ingresso comune per build, test, Lab e benchmark della
+fondazione Travel DNA. È un orchestratore POSIX sottile: invoca Java, Cargo,
+Gradle e Python senza reimplementarne il comportamento.
 
-Invoke it through `sh` so the same command works even when a ZIP extraction or a
-GitHub content operation does not preserve the executable bit:
+Eseguirlo tramite `sh` mantiene il comando utilizzabile anche quando un archivio
+ZIP o un'operazione sui contenuti GitHub non conserva il bit eseguibile:
 
 ```bash
 sh tools/tdna COMMAND
 ```
 
-## Current commands
+## Comandi correnti
 
-| Command | Purpose |
+| Comando | Scopo |
 | --- | --- |
-| `doctor` | Show Java, Python, Rust and Gradle toolchain availability. |
-| `check-docs` | Validate local Markdown links and balanced code fences. |
-| `check-architecture` | Enforce source-level dependency boundaries for shared Kotlin modules. |
-| `check-java` | Compile Java 21 sources with warnings-as-errors and run tests. |
-| `check-rust` | Run `cargo fmt --check` and Rust tests. |
-| `check-contract` | Compare Java and Rust route reports byte-for-byte. |
-| `check-kotlin` | Run KMP contract/fake-provider/fake-renderer tests and emit both KMP Lab reports. |
-| `check` | Run the complete foundation verification. |
-| `lab reference-routing [dijkstra\|astar]` | Execute the Java/Rust Lab. |
-| `lab routing-contracts` | Execute the KMP provider-neutral routing Lab. |
-| `lab map-scene` | Execute the provider-neutral MapScene/fake-renderer Lab. |
-| `clean` | Remove generated `build/` output. |
+| `doctor` | Mostra disponibilità/versioni di Java, Python, Rust e Gradle. |
+| `check-docs` | Verifica link Markdown locali e code fence bilanciate. |
+| `check-architecture` | Controlla i confini di import dei moduli Kotlin shared. |
+| `check-java` | Compila Java 21 con warning-as-error ed esegue i test. |
+| `check-rust` | Esegue `cargo fmt --check` e i test Rust. |
+| `check-contract` | Confronta byte-per-byte i report routing Java/Rust. |
+| `check-kotlin` | Esegue test KMP, tutti i Lab Kotlin e il benchmark replay diagnostico. |
+| `check` | Esegue l'intera Foundation CI localmente. |
+| `lab reference-routing [dijkstra\|astar]` | Esegue il Lab Java/Rust. |
+| `lab routing-contracts` | Esegue il Lab routing provider-neutral. |
+| `lab map-scene` | Esegue il Lab MapScene/fake renderer. |
+| `lab location-replay` | Esegue il Lab LocationSample/replay deterministico. |
+| `bench location-replay [n] [run-dispari]` | Esegue il microbenchmark diagnostico replay. |
+| `clean` | Rimuove `build/`. |
 
-Examples:
+Esempi:
 
 ```bash
 sh tools/tdna doctor
@@ -36,27 +38,36 @@ sh tools/tdna check-architecture
 sh tools/tdna check-kotlin
 sh tools/tdna lab routing-contracts
 sh tools/tdna lab map-scene
+sh tools/tdna lab location-replay
+sh tools/tdna bench location-replay 10000 7
 sh tools/tdna check
 ```
 
-## Current prerequisites
+## Prerequisiti
 
-The Java-only path requires:
+Il percorso Java richiede:
 
 - Java/Javac 21;
 - Python 3;
-- a POSIX shell.
+- shell POSIX.
 
-The Java/Rust path additionally requires stable Rust with Cargo and rustfmt.
-The Kotlin path additionally requires a compatible Gradle installation. The
-GitHub Actions workflow provisions Gradle 9.5.1 explicitly and resolves Kotlin
-2.4.0 through the version catalog.
+Il percorso Java/Rust richiede inoltre Rust stable, Cargo e rustfmt. Il percorso
+Kotlin richiede una versione Gradle compatibile. La GitHub Actions Foundation CI
+installa esplicitamente:
 
-A committed Gradle Wrapper is still a declared foundation task. Until it exists,
-local Gradle version management is the caller's responsibility; CI remains the
-reproducible reference environment.
+```text
+Ubuntu 24.04
+Java 21
+Gradle 9.5.1
+Kotlin 2.4.0
+Rust stable
+```
 
-## Generated outputs
+Il Gradle Wrapper committato è ancora un task dichiarato della fondazione. Fino
+alla sua introduzione, la CI è l'ambiente di riferimento riproducibile e la
+versione Gradle locale resta responsabilità del chiamante.
+
+## Output generati
 
 ```text
 build/java/reference-routing/
@@ -64,33 +75,56 @@ build/rust/
 build/contract/
 build/kotlin/routing-contracts-lab.json
 build/kotlin/map-scene-lab.json
+build/kotlin/location-replay-lab.json
+build/kotlin/location-replay-benchmark.json
 ```
 
-Gradle and Cargo may also use their standard caches outside the repository.
+La CI conserva per 14 giorni i due output location replay come artifact
+`foundation-kotlin-observations`. Il benchmark non è un gate: l'artifact serve a
+ricostruire scenario e ordine di grandezza osservato.
+
+## Benchmark location replay
+
+```bash
+sh tools/tdna bench location-replay 10000 7
+```
+
+Vincoli:
+
+- campioni fra 1 e 100.000;
+- iterazioni fra 1 e 25;
+- iterazioni obbligatoriamente dispari;
+- tre warm-up;
+- minimo, mediana unica e massimo;
+- nessuna soglia CI.
+
+Il benchmark misura soltanto il runner in-memory con campioni sintetici. Non
+misura parser, GPS, rete, database, map matching, MapLibre, batteria o dispositivo
+mobile.
 
 ## Architecture checker
 
-`tools/check_architecture.py` verifies allowed imports in shared Kotlin modules.
-It also scans executable code for forbidden provider tokens after removing
-comments and string/character literals. This distinction permits source comments
-that explain a MapLibre boundary while still rejecting actual provider use in a
-canonical module.
+`tools/check_architecture.py` verifica gli import ammessi nei moduli Kotlin
+shared. Analizza inoltre il codice eseguibile alla ricerca di token provider o
+piattaforma vietati dopo aver rimosso commenti e literal.
 
-The checker is intentionally lightweight and does not replace a future Gradle
-dependency-graph gate.
+La distinzione consente a un commento di spiegare il confine MapLibre o
+CoreLocation senza trasformarlo in una dipendenza. Il checker è intenzionalmente
+leggero e non sostituisce un futuro gate sul dependency graph Gradle.
 
-## Design rules
+## Regole di design
 
-- local and CI verification use the same project entry point;
-- missing mandatory tools make the relevant command fail explicitly;
-- `doctor` reports availability but never installs privileged system software;
-- generated project files stay under `build/` or configured tool target paths;
-- the wrapper must remain small enough that students can read it completely;
-- native commands remain documented and may be run directly while debugging;
-- adding a command requires implementation, documentation and CI alignment in
-  the same pull request.
+- locale e CI usano lo stesso entry point;
+- un tool obbligatorio mancante fa fallire il comando interessato;
+- `doctor` osserva e non installa software privilegiato;
+- gli artifact generati restano in `build/` o nei target configurati;
+- il wrapper deve restare leggibile integralmente da uno studente;
+- i comandi nativi restano documentati e utilizzabili per il debug;
+- un nuovo comando richiede implementazione, test, documentazione e CI nella
+  stessa PR;
+- un benchmark diagnostico non diventa una promessa prestazionale.
 
-## Future commands
+## Comandi futuri
 
 ```text
 sh tools/tdna build

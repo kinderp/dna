@@ -3,35 +3,36 @@
 ## Scopo
 
 Un tracepoint logico è un nome stabile per uno stage interno. Serve a spiegare,
-testare e visualizzare il percorso senza dipendere dal nome corrente di una
+testare e visualizzare un percorso senza dipendere dal nome corrente di una
 funzione o da una riga di log.
 
-Per v0 è documentale. Non introduce telemetria runtime né I/O nel percorso caldo.
+Per v0 i tracepoint sono documentali. Non introducono automaticamente telemetria,
+allocazioni o I/O nel percorso caldo.
 
-## Relazione tra oggetti
+## Relazione tra gli oggetti
 
 ```text
-canonical model    = contratto dati
-tracepoint          = nome logico dello stage
-Lab scenario        = percorso didattico
-runtime log         = diagnostica implementativa
-public telemetry    = eventuale contratto futuro separato
+canonical model     = contratto dati
+tracepoint           = nome logico dello stage
+Lab scenario         = percorso didattico
+runtime log          = diagnostica implementativa
+public telemetry     = eventuale contratto futuro separato
 ```
 
-## Campi
+## Campi concettuali
 
 | Campo | Significato |
 | --- | --- |
 | `name` | Nome stabile in maiuscolo. |
 | `domain` | navigation, map, journey, conversation, presence, provider. |
-| `stage` | receive, normalize, match, project, emit, persist, publish. |
-| `hot_path` | yes/no/conditional. |
-| `data_in` | Modello concettuale di ingresso. |
-| `data_out` | Modello concettuale di uscita. |
-| `evidence` | Test, snapshot, metric o log che dimostra lo stage. |
+| `stage` | receive, validate, accept, reject, match, project, emit, persist. |
+| `hot_path` | yes, no oppure conditional. |
+| `data_in` | Modello concettuale in ingresso. |
+| `data_out` | Modello concettuale in uscita. |
+| `evidence` | Test, fixture, snapshot, benchmark o report. |
 | `stability` | candidate, stable-doc, public-output, deprecated. |
-| `privacy` | Classe dati e vincoli. |
-| `non_goal` | Cosa non dimostra. |
+| `privacy` | Classe dei dati e vincoli. |
+| `non_goal` | Cosa il tracepoint non dimostra. |
 
 ## Stabilità
 
@@ -39,10 +40,10 @@ public telemetry    = eventuale contratto futuro separato
 candidate -> stable-doc -> public-output
 ```
 
-- `candidate`: può cambiare;
-- `stable-doc`: usato nei Lab e nella documentazione;
-- `public-output`: schema/versione/test richiesti;
-- `deprecated`: sostituto e migrazione.
+- `candidate`: può cambiare liberamente;
+- `stable-doc`: usato in capitoli e Lab;
+- `public-output`: richiede schema, versione e compatibilità;
+- `deprecated`: indica successore e migrazione.
 
 ## Naming
 
@@ -50,13 +51,13 @@ Buoni:
 
 ```text
 LOCATION_SAMPLE_RECEIVED
+LOCATION_SAMPLE_REJECTED
 POSITION_MAP_MATCHED
 ROUTE_PROGRESS_UPDATED
 OFF_ROUTE_CONFIRMED
 NAVIGATION_SNAPSHOT_PUBLISHED
 DAILY_PAGE_COMPOSED
 DRIVER_SAFE_MESSAGE_PUBLISHED
-PRESENCE_SIGNAL_APPROXIMATED
 ```
 
 Deboli:
@@ -69,112 +70,120 @@ MAPLIBRE_UPDATED
 VALHALLA_JSON_PARSED
 ```
 
-Il nome descrive il fatto Travel DNA, non il vendor.
+Il nome descrive un fatto Travel DNA, non il vendor o l'implementazione corrente.
 
 ## Percorso caldo
 
-Un tracepoint può descrivere il hot path, ma non lo rende più costoso. Per v0
-esiste in documentazione e test runner. Se diventa runtime:
+Un nome documentale non giustifica logging nel hot path. Un futuro trace runtime
+deve essere:
 
 - opt-in;
 - bounded;
 - senza payload sensibile;
-- benchmark;
-- politica di perdita;
-- schema versionato.
+- misurato;
+- accompagnato da una politica di perdita;
+- versionato se esposto.
 
-## Tracepoint iniziali
-
-### Reference routing Lab
-
-Questi tracepoint sono `stable-doc` per il primo scenario eseguibile. Non sono
-log runtime e non aggiungono istruzioni di tracing agli algoritmi.
+## Reference routing Lab
 
 | Nome | Stato | Significato |
 | --- | --- | --- |
-| `REFERENCE_FIXTURE_PARSED` | stable-doc | La fixture v0 è stata validata e trasformata in grafo/query/ground truth. |
-| `REFERENCE_FRONTIER_NODE_SELECTED` | stable-doc | La priority queue ha restituito il candidato deterministico corrente. |
-| `REFERENCE_EDGE_RELAXED` | stable-doc | Un costo migliore e il predecessore sono stati registrati. |
-| `REFERENCE_ROUTE_RECONSTRUCTED` | stable-doc | La catena dei predecessori è stata invertita in origine-destinazione. |
-| `REFERENCE_REPORT_EMITTED` | stable-doc | Una implementazione ha prodotto il report fixture-scoped. |
-| `REFERENCE_REPORTS_MATCHED` | stable-doc | Il contract test ha verificato report Java/Rust byte-identici. |
+| `REFERENCE_FIXTURE_PARSED` | stable-doc | La fixture grafo è validata. |
+| `REFERENCE_FRONTIER_NODE_SELECTED` | stable-doc | La priority queue seleziona il candidato. |
+| `REFERENCE_EDGE_RELAXED` | stable-doc | È registrato un costo migliore. |
+| `REFERENCE_ROUTE_RECONSTRUCTED` | stable-doc | La catena dei predecessori diventa route. |
+| `REFERENCE_REPORT_EMITTED` | stable-doc | Una implementazione emette il report. |
+| `REFERENCE_REPORTS_MATCHED` | stable-doc | Java e Rust coincidono. |
 
-Il tracepoint `REFERENCE_ROUTE_COMPUTED` può essere usato come fatto narrativo
-nello scenario, ma non è necessario come stage separato: la route è dimostrata
-da ricostruzione più report.
-
-### Navigation
+## Location replay Lab
 
 | Nome | Stato | Significato |
 | --- | --- | --- |
-| `LOCATION_SAMPLE_RECEIVED` | stable-doc | Il runtime riceve un campione. |
-| `LOCATION_SAMPLE_ACCEPTED` | stable-doc | Il campione supera validazione/ordine. |
-| `POSITION_MAP_MATCHED` | stable-doc | È stata prodotta una posizione matched con confidenza. |
-| `ROUTE_PROGRESS_UPDATED` | stable-doc | Progresso e distanza sono aggiornati. |
+| `LOCATION_REPLAY_FIXTURE_PARSED` | stable-doc | Header, campioni e ground truth sono validati dal parser JVM. |
+| `LOCATION_SAMPLE_RECEIVED` | stable-doc | Il runner osserva il prossimo campione nell'ordine dichiarato. |
+| `LOCATION_SAMPLE_ACCEPTED` | stable-doc | Sequence e tempo crescono rispetto alla baseline. |
+| `LOCATION_SAMPLE_REJECTED` | stable-doc | Il campione non modifica gate, clock o rate scaler. |
+| `REPLAY_CLOCK_BASELINE_ESTABLISHED` | stable-doc | Il primo accepted imposta il clock con delta zero. |
+| `REPLAY_CLOCK_ADVANCED` | stable-doc | Un accepted successivo produce un delta positivo. |
+| `REPLAY_STATE_CHANGED` | stable-doc | La state machine cambia stato tramite start/pause/resume/step/cancel. |
+| `LOCATION_REPLAY_COMPLETED` | stable-doc | Tutti i campioni dichiarati sono stati processati. |
+| `LOCATION_REPLAY_REPORT_EMITTED` | stable-doc | Summary e ground truth coincidono e la CLI emette il report. |
+
+Questi nomi non sono chiamate di logging nel runner. Le prove sono fixture, test,
+summary e output CLI.
+
+## Navigation
+
+| Nome | Stato | Significato |
+| --- | --- | --- |
+| `LOCATION_SAMPLE_RECEIVED` | stable-doc | Il runtime riceve un campione canonico. |
+| `LOCATION_SAMPLE_ACCEPTED` | stable-doc | Il campione supera il gate strutturale/temporale. |
+| `POSITION_MAP_MATCHED` | stable-doc | È prodotta una posizione matched con confidenza. |
+| `ROUTE_PROGRESS_UPDATED` | stable-doc | Progresso e distanze sono aggiornati. |
 | `MANEUVER_SELECTED` | stable-doc | È selezionata la manovra attiva. |
 | `OFF_ROUTE_SUSPECTED` | stable-doc | Evidenza iniziale non ancora confermata. |
 | `OFF_ROUTE_CONFIRMED` | stable-doc | La state machine conferma deviazione. |
-| `REROUTE_REQUESTED` | stable-doc | Parte un reroute unico. |
-| `ROUTE_REPLACED` | stable-doc | Una route valida sostituisce atomically la precedente. |
-| `NAVIGATION_SNAPSHOT_PUBLISHED` | stable-doc | Snapshot compatto pubblicato. |
+| `REROUTE_REQUESTED` | stable-doc | Parte un solo ricalcolo logico. |
+| `ROUTE_REPLACED` | stable-doc | Una nuova route valida sostituisce la precedente. |
+| `NAVIGATION_SNAPSHOT_PUBLISHED` | stable-doc | È pubblicato uno snapshot compatto. |
 
-### Map
-
-| Nome | Stato | Significato |
-| --- | --- | --- |
-| `MAP_BASE_SCENE_INSTALLED` | stable-doc | Stile, route e layer base installati. |
-| `MAP_PROGRESS_DELTA_APPLIED` | stable-doc | Aggiornato solo il progresso. |
-| `MAP_PRESENCE_DELTA_APPLIED` | candidate | Aggiornati compagni approssimati. |
-
-### External navigation
+## Map
 
 | Nome | Stato | Significato |
 | --- | --- | --- |
-| `EXTERNAL_NAVIGATION_LAUNCHED` | stable-doc | Handoff riuscito. |
-| `SHADOW_ROUTE_CONFIDENCE_CHANGED` | stable-doc | Cambia affidabilità del contesto. |
+| `MAP_BASE_SCENE_INSTALLED` | stable-doc | Scena statica, route e marker iniziali sono installati. |
+| `MAP_PROGRESS_DELTA_APPLIED` | stable-doc | È aggiornato soltanto il progresso. |
+| `MAP_PRESENCE_DELTA_APPLIED` | candidate | Sono aggiornati compagni approssimati. |
 
-### Journey/Journal
-
-| Nome | Stato | Significato |
-| --- | --- | --- |
-| `JOURNEY_EVENT_APPENDED` | stable-doc | Evento salvato localmente. |
-| `STOP_CANDIDATE_DETECTED` | stable-doc | Sosta proposta, non confermata. |
-| `MEDIA_ASSOCIATION_PROPOSED` | stable-doc | Foto candidata. |
-| `DAILY_PAGE_COMPOSED` | stable-doc | Bozza composta. |
-| `USER_EDIT_PRESERVED` | stable-doc | Rigenerazione conserva edit. |
-| `DNA_CARD_SANITIZED` | stable-doc | Frammento ripulito. |
-
-### Conversation
+## External navigation
 
 | Nome | Stato | Significato |
 | --- | --- | --- |
-| `MESSAGE_DURABLY_RECEIVED` | stable-doc | Messaggio presente nel local store. |
-| `DRIVE_POLICY_EVALUATED` | stable-doc | Determinate capability sicure. |
-| `DRIVER_SAFE_MESSAGE_PUBLISHED` | stable-doc | Messaggio esposto via superficie sicura. |
-| `VOICE_REPLY_QUEUED` | stable-doc | Risposta salvata per invio. |
+| `EXTERNAL_NAVIGATION_LAUNCHED` | stable-doc | Handoff a un navigatore esterno riuscito. |
+| `SHADOW_ROUTE_CONFIDENCE_CHANGED` | stable-doc | Cambia l'affidabilità del contesto ombra. |
 
-### Presence
+## Journey e Journal
 
 | Nome | Stato | Significato |
 | --- | --- | --- |
-| `PRESENCE_SIGNAL_APPROXIMATED` | stable-doc | Exact location ridotta prima della rete. |
-| `PRESENCE_SIGNAL_PUBLISHED` | candidate | Segnale inviato con TTL. |
-| `COMPANION_AGGREGATE_RECEIVED` | candidate | Read model approssimato. |
+| `JOURNEY_EVENT_APPENDED` | stable-doc | Un evento è salvato localmente. |
+| `STOP_CANDIDATE_DETECTED` | stable-doc | Una sosta viene proposta. |
+| `MEDIA_ASSOCIATION_PROPOSED` | stable-doc | Una foto è candidata a un momento. |
+| `DAILY_PAGE_COMPOSED` | stable-doc | È composta una bozza giornaliera. |
+| `USER_EDIT_PRESERVED` | stable-doc | Una rigenerazione conserva l'edit. |
+| `DNA_CARD_SANITIZED` | stable-doc | Il frammento condiviso è minimizzato. |
 
-## Template
+## Conversation
+
+| Nome | Stato | Significato |
+| --- | --- | --- |
+| `MESSAGE_DURABLY_RECEIVED` | stable-doc | Il messaggio è nel local store. |
+| `DRIVE_POLICY_EVALUATED` | stable-doc | Sono determinate le capability sicure. |
+| `DRIVER_SAFE_MESSAGE_PUBLISHED` | stable-doc | Il messaggio usa una superficie sicura. |
+| `VOICE_REPLY_QUEUED` | stable-doc | La risposta vocale è in outbox. |
+
+## Presence
+
+| Nome | Stato | Significato |
+| --- | --- | --- |
+| `PRESENCE_SIGNAL_APPROXIMATED` | stable-doc | La posizione precisa è ridotta prima della rete. |
+| `PRESENCE_SIGNAL_PUBLISHED` | candidate | Il segnale bounded viene inviato con TTL. |
+| `COMPANION_AGGREGATE_RECEIVED` | candidate | Arriva un read model approssimato. |
+
+## Esempio completo
 
 ```text
-Tracepoint: POSITION_MAP_MATCHED
+Tracepoint: LOCATION_SAMPLE_REJECTED
 Status: stable-doc
 Domain: navigation
-Stage: match
-Hot path: yes
-Data in: accepted LocationSample + active RoutePlan
-Data out: MatchedPosition(confidence, segment, fraction)
-Evidence: replay timeline and navigation contract tests
-Privacy: exact location remains process-local
-Meaning: runtime selected the most plausible route position
-Non-goal: does not prove the user is physically on that road
+Stage: reject
+Hot path: yes in futuro
+Data in: LocationSample + last accepted baseline
+Data out: rejection reason, unchanged baseline
+Evidence: deterministic replay test and Lab report
+Privacy: exact synthetic position remains process-local
+Meaning: sequence or monotonic time did not increase
+Non-goal: does not evaluate GPS quality or map matching
 ```
 
 ## Promozione a output pubblico
