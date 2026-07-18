@@ -7,13 +7,19 @@ tracepoint logici, test, prestazioni e proprietà di sicurezza.
 
 1. leggere [Tracepoint Model v0](../41-tracepoint-model-v0.md);
 2. aprire lo scenario;
-3. eseguire o ispezionare fixture/fake;
+3. eseguire o ispezionare fixture, fake o policy;
 4. seguire funzioni e ownership;
 5. confrontare output e test;
 6. rispondere alle domande;
 7. provare una variante senza rompere il contratto.
 
-## Scenari eseguibili
+## Scenario di engineering
+
+| Scenario | Cosa insegna | Comando |
+| --- | --- | --- |
+| [Gradle Wrapper riproducibile](scenarios/gradle-wrapper-riproducibile.md) | Bootstrap, checksum, Action SHA e trust model. | `sh tools/tdna lab build-bootstrap` |
+
+## Scenari navigation eseguibili
 
 | Scenario | Cosa insegna | Comando |
 | --- | --- | --- |
@@ -43,5 +49,5 @@ sh tools/tdna bench off-route 10000 7
 | [Pagina del giorno](scenarios/daily-page-photos-thoughts.md) | stable-doc | Eventi, media, pensieri e privacy. |
 | [Scambio DNA](scenarios/dna-exchange-privacy.md) | stable-doc | Consenso, minimizzazione e revoca. |
 
-`executable` significa che comando, dati/fake e test esistono; non significa
+`executable` significa che comando, dati/fake/policy e test esistono; non significa
 capacità di prodotto o affidabilità su strada.
