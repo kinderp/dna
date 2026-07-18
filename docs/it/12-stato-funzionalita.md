@@ -24,13 +24,15 @@ prodotto. Lo stato vivo di CI e merge è in
 | `MapScene` e fake renderer | executable lab | Scena statica, delta, snapshot e conformance. |
 | `LocationSample` e ordering gate | executable lab | Sequence e tempo monotono. |
 | Clock virtuale e replay | executable lab | Rate razionale, stato bounded e fixture ground truth. |
-| `MatchedRoutePosition` | executable lab | Output provider-neutral di un matcher futuro; non esegue matching. |
+| `MatchedRoutePosition` | executable lab | Modello provider-neutral associato a una route. |
 | Route progress tracker | executable lab | Leg, manovra, arrival e rifiuti deterministici. |
 | Route-progress map binding | executable lab | Geometria verificata all'installazione e update `O(1)`. |
-| Benchmark replay/progress | executable lab | JVM CI diagnostica, nessuna soglia o pretesa mobile. |
+| `MapMatcherPort` e sessione route-bound | executable lab | Confine provider-neutral fra sample e matched position. |
+| Fake map matcher/testkit | executable lab | Matched, Unmatched, Failure, fresh-session determinism e diagnostica bounded. |
+| Benchmark replay/progress/matching | executable lab | JVM CI diagnostica, nessuna soglia o pretesa mobile. |
 | Tooling foundation | executable lab | Documentazione, architettura, Java, Rust e KMP. |
 | Gradle/KMP bootstrap | executable lab | JVM/Linux CI; wrapper locale ancora mancante. |
-| Map matching reale | prototype planned | Candidati, scoring, confidenza e isteresi separati. |
+| Map matching stradale reale | prototype planned | Candidate search, scoring, topology, heading e isteresi. |
 | Off-route e rerouting | prototype planned | Scenario missed-exit deterministico. |
 | MapLibre adapter | prototype planned | Dopo contratti e benchmark dispositivo. |
 | Valhalla/Ferrostar adapter | prototype planned | Dietro porte Travel DNA. |
@@ -51,10 +53,11 @@ RouteRequest -> fake planner -> RoutePlan
 RoutePlan -> MapScene -> fake renderer
 Location fixture -> gate -> virtual clock -> replay summary
 MatchedRoutePosition -> progress snapshot -> map binding/delta
+LocationSample -> fake matcher -> Matched/Unmatched/Failure -> progress
 ```
 
-Non sono dimostrati GPS o strade reali, map matching, distanza/ETA, off-route,
-rerouting, MapLibre, adapter mobile, batteria o affidabilità su strada.
+Non sono dimostrati GPS o strade reali, map matching geometrico, distanza/ETA,
+off-route, rerouting, MapLibre, adapter mobile, batteria o affidabilità su strada.
 
 ## Regola di comunicazione
 

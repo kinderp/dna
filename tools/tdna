@@ -13,24 +13,8 @@ ROUTE_FIXTURE="$ROOT/fixtures/routes/reference-network-v0.tdna"
 LOCATION_FIXTURE="$ROOT/fixtures/gps/reference-location-replay-v0.tdna"
 
 say() { printf '%s\n' "$*"; }
-
-need() {
-    if ! command -v "$1" >/dev/null 2>&1; then
-        say "ERROR: required command '$1' is not available."
-        return 1
-    fi
-}
-
-version_line() {
-    name=$1
-    shift
-    if command -v "$name" >/dev/null 2>&1; then
-        version=$($@ 2>&1 | sed -n '1p')
-        printf '%-10s %s\n' "$name" "$version"
-    else
-        printf '%-10s %s\n' "$name" "MISSING"
-    fi
-}
+need() { if ! command -v "$1" >/dev/null 2>&1; then say "ERROR: required command '$1' is not available."; return 1; fi; }
+version_line() { name=$1; shift; if command -v "$name" >/dev/null 2>&1; then version=$($@ 2>&1 | sed -n '1p'); printf '%-10s %s\n' "$name" "$version"; else printf '%-10s %s\n' "$name" "MISSING"; fi; }
 
 compile_java() {
     need javac
@@ -39,63 +23,13 @@ compile_java() {
     find "$JAVA_MAIN" "$JAVA_TEST" -type f -name '*.java' | sort > "$JAVA_BUILD/sources.txt"
     javac --release 21 -Xlint:all -Werror -d "$JAVA_BUILD/classes" @"$JAVA_BUILD/sources.txt"
 }
-
-java_report() {
-    java -cp "$JAVA_BUILD/classes" "$JAVA_MAIN_CLASS" "$ROUTE_FIXTURE" "$1"
-}
-
-rust_report() {
-    CARGO_TARGET_DIR="$BUILD_DIR/rust" cargo run --quiet \
-        --manifest-path "$RUST_MANIFEST" -- "$ROUTE_FIXTURE" "$1"
-}
-
-check_java() {
-    say "== Java reference routing =="
-    need java
-    compile_java
-    java -cp "$JAVA_BUILD/classes" "$JAVA_TEST_CLASS" "$ROUTE_FIXTURE"
-    java_report dijkstra > "$JAVA_BUILD/java-dijkstra.json"
-    java_report astar > "$JAVA_BUILD/java-astar.json"
-    say "PASS Java reports written under build/java/reference-routing"
-}
-
-check_rust() {
-    say "== Rust reference routing =="
-    need cargo
-    need rustc
-    CARGO_TARGET_DIR="$BUILD_DIR/rust" cargo fmt --manifest-path "$RUST_MANIFEST" -- --check
-    CARGO_TARGET_DIR="$BUILD_DIR/rust" cargo test --manifest-path "$RUST_MANIFEST"
-    mkdir -p "$BUILD_DIR/rust/reports"
-    rust_report dijkstra > "$BUILD_DIR/rust/reports/rust-dijkstra.json"
-    rust_report astar > "$BUILD_DIR/rust/reports/rust-astar.json"
-    say "PASS Rust reports written under build/rust/reports"
-}
-
-check_contract() {
-    say "== Cross-language route report contract =="
-    need diff
-    if [ ! -d "$JAVA_BUILD/classes" ]; then compile_java; fi
-    need cargo
-    mkdir -p "$BUILD_DIR/contract"
-    for algorithm in dijkstra astar; do
-        java_report "$algorithm" > "$BUILD_DIR/contract/java-$algorithm.json"
-        rust_report "$algorithm" > "$BUILD_DIR/contract/rust-$algorithm.json"
-        diff -u "$BUILD_DIR/contract/java-$algorithm.json" "$BUILD_DIR/contract/rust-$algorithm.json"
-    done
-    say "PASS Java and Rust emitted byte-identical reports"
-}
-
-check_docs() {
-    say "== Documentation links and fences =="
-    need python3
-    python3 "$ROOT/tools/check_docs.py" "$ROOT"
-}
-
-check_architecture() {
-    say "== Shared Kotlin architecture boundaries =="
-    need python3
-    python3 "$ROOT/tools/check_architecture.py" "$ROOT"
-}
+java_report() { java -cp "$JAVA_BUILD/classes" "$JAVA_MAIN_CLASS" "$ROUTE_FIXTURE" "$1"; }
+rust_report() { CARGO_TARGET_DIR="$BUILD_DIR/rust" cargo run --quiet --manifest-path "$RUST_MANIFEST" -- "$ROUTE_FIXTURE" "$1"; }
+check_java() { say "== Java reference routing =="; need java; compile_java; java -cp "$JAVA_BUILD/classes" "$JAVA_TEST_CLASS" "$ROUTE_FIXTURE"; java_report dijkstra > "$JAVA_BUILD/java-dijkstra.json"; java_report astar > "$JAVA_BUILD/java-astar.json"; say "PASS Java reports written under build/java/reference-routing"; }
+check_rust() { say "== Rust reference routing =="; need cargo; need rustc; CARGO_TARGET_DIR="$BUILD_DIR/rust" cargo fmt --manifest-path "$RUST_MANIFEST" -- --check; CARGO_TARGET_DIR="$BUILD_DIR/rust" cargo test --manifest-path "$RUST_MANIFEST"; mkdir -p "$BUILD_DIR/rust/reports"; rust_report dijkstra > "$BUILD_DIR/rust/reports/rust-dijkstra.json"; rust_report astar > "$BUILD_DIR/rust/reports/rust-astar.json"; say "PASS Rust reports written under build/rust/reports"; }
+check_contract() { say "== Cross-language route report contract =="; need diff; if [ ! -d "$JAVA_BUILD/classes" ]; then compile_java; fi; need cargo; mkdir -p "$BUILD_DIR/contract"; for algorithm in dijkstra astar; do java_report "$algorithm" > "$BUILD_DIR/contract/java-$algorithm.json"; rust_report "$algorithm" > "$BUILD_DIR/contract/rust-$algorithm.json"; diff -u "$BUILD_DIR/contract/java-$algorithm.json" "$BUILD_DIR/contract/rust-$algorithm.json"; done; say "PASS Java and Rust emitted byte-identical reports"; }
+check_docs() { say "== Documentation links and fences =="; need python3; python3 "$ROOT/tools/check_docs.py" "$ROOT"; }
+check_architecture() { say "== Shared Kotlin architecture boundaries =="; need python3; python3 "$ROOT/tools/check_architecture.py" "$ROOT"; }
 
 check_kotlin() {
     say "== Kotlin Multiplatform contracts, fakes and navigation foundations =="
@@ -104,89 +38,51 @@ check_kotlin() {
     mkdir -p "$BUILD_DIR/kotlin"
     gradle --no-daemon --quiet :labs:routing-contracts-cli:run > "$BUILD_DIR/kotlin/routing-contracts-lab.json"
     gradle --no-daemon --quiet :labs:map-scene-cli:run > "$BUILD_DIR/kotlin/map-scene-lab.json"
-    gradle --no-daemon --quiet :labs:location-replay-cli:run --args="$LOCATION_FIXTURE" \
-        > "$BUILD_DIR/kotlin/location-replay-lab.json"
-    gradle --no-daemon --quiet :labs:location-replay-cli:run --args="--benchmark 10000 7" \
-        > "$BUILD_DIR/kotlin/location-replay-benchmark.json"
-    gradle --no-daemon --quiet :labs:route-progress-cli:run \
-        > "$BUILD_DIR/kotlin/route-progress-lab.json"
-    gradle --no-daemon --quiet :labs:route-progress-cli:run --args="--benchmark 10000 7" \
-        > "$BUILD_DIR/kotlin/route-progress-benchmark.json"
-    say "Diagnostic location-replay benchmark:"
-    cat "$BUILD_DIR/kotlin/location-replay-benchmark.json"
-    say "Diagnostic route-progress benchmark:"
-    cat "$BUILD_DIR/kotlin/route-progress-benchmark.json"
+    gradle --no-daemon --quiet :labs:location-replay-cli:run --args="$LOCATION_FIXTURE" > "$BUILD_DIR/kotlin/location-replay-lab.json"
+    gradle --no-daemon --quiet :labs:location-replay-cli:run --args="--benchmark 10000 7" > "$BUILD_DIR/kotlin/location-replay-benchmark.json"
+    gradle --no-daemon --quiet :labs:route-progress-cli:run > "$BUILD_DIR/kotlin/route-progress-lab.json"
+    gradle --no-daemon --quiet :labs:route-progress-cli:run --args="--benchmark 10000 7" > "$BUILD_DIR/kotlin/route-progress-benchmark.json"
+    gradle --no-daemon --quiet :labs:map-matching-cli:run > "$BUILD_DIR/kotlin/map-matching-lab.json"
+    gradle --no-daemon --quiet :labs:map-matching-cli:run --args="--benchmark 10000 7" > "$BUILD_DIR/kotlin/map-matching-benchmark.json"
+    say "Diagnostic location-replay benchmark:"; cat "$BUILD_DIR/kotlin/location-replay-benchmark.json"
+    say "Diagnostic route-progress benchmark:"; cat "$BUILD_DIR/kotlin/route-progress-benchmark.json"
+    say "Diagnostic map-matching pipeline benchmark:"; cat "$BUILD_DIR/kotlin/map-matching-benchmark.json"
     say "PASS Kotlin reports written under build/kotlin"
 }
 
 run_lab() {
-    scenario=${1:-}
-    algorithm=${2:-dijkstra}
+    scenario=${1:-}; algorithm=${2:-dijkstra}
     case "$scenario" in
-        reference-routing)
-            case "$algorithm" in dijkstra|astar) ;; *) say "ERROR: algorithm must be dijkstra or astar"; exit 2 ;; esac
-            compile_java
-            say "Java:"
-            java_report "$algorithm"
-            if command -v cargo >/dev/null 2>&1; then say "Rust:"; rust_report "$algorithm"; else say "Rust: skipped because cargo is not installed"; fi
-            ;;
+        reference-routing) case "$algorithm" in dijkstra|astar) ;; *) say "ERROR: algorithm must be dijkstra or astar"; exit 2 ;; esac; compile_java; say "Java:"; java_report "$algorithm"; if command -v cargo >/dev/null 2>&1; then say "Rust:"; rust_report "$algorithm"; else say "Rust: skipped because cargo is not installed"; fi ;;
         routing-contracts) need gradle; gradle --no-daemon --quiet :labs:routing-contracts-cli:run ;;
         map-scene) need gradle; gradle --no-daemon --quiet :labs:map-scene-cli:run ;;
         location-replay) need gradle; gradle --no-daemon --quiet :labs:location-replay-cli:run --args="$LOCATION_FIXTURE" ;;
         route-progress) need gradle; gradle --no-daemon --quiet :labs:route-progress-cli:run ;;
-        *)
-            say "usage: sh tools/tdna lab {reference-routing [dijkstra|astar]|routing-contracts|map-scene|location-replay|route-progress}"
-            exit 2
-            ;;
+        map-matching) need gradle; gradle --no-daemon --quiet :labs:map-matching-cli:run ;;
+        *) say "usage: sh tools/tdna lab {reference-routing [dijkstra|astar]|routing-contracts|map-scene|location-replay|route-progress|map-matching}"; exit 2 ;;
     esac
 }
 
 run_benchmark() {
-    family=${1:-}
-    samples=${2:-10000}
-    iterations=${3:-7}
+    family=${1:-}; samples=${2:-10000}; iterations=${3:-7}
     case "$family" in
-        location-replay)
-            need gradle
-            gradle --no-daemon --quiet :labs:location-replay-cli:run --args="--benchmark $samples $iterations"
-            ;;
-        route-progress)
-            need gradle
-            gradle --no-daemon --quiet :labs:route-progress-cli:run --args="--benchmark $samples $iterations"
-            ;;
-        *)
-            say "usage: sh tools/tdna bench {location-replay|route-progress} [sample-count] [odd-iterations]"
-            exit 2
-            ;;
+        location-replay) need gradle; gradle --no-daemon --quiet :labs:location-replay-cli:run --args="--benchmark $samples $iterations" ;;
+        route-progress) need gradle; gradle --no-daemon --quiet :labs:route-progress-cli:run --args="--benchmark $samples $iterations" ;;
+        map-matching) need gradle; gradle --no-daemon --quiet :labs:map-matching-cli:run --args="--benchmark $samples $iterations" ;;
+        *) say "usage: sh tools/tdna bench {location-replay|route-progress|map-matching} [sample-count] [odd-iterations]"; exit 2 ;;
     esac
 }
 
 command=${1:-help}
 case "$command" in
-    doctor)
-        say "Travel DNA foundation toolchain"
-        version_line java java -version
-        version_line javac javac -version
-        version_line python3 python3 --version
-        version_line cargo cargo --version
-        version_line rustc rustc --version
-        version_line gradle gradle --version
-        ;;
+    doctor) say "Travel DNA foundation toolchain"; version_line java java -version; version_line javac javac -version; version_line python3 python3 --version; version_line cargo cargo --version; version_line rustc rustc --version; version_line gradle gradle --version ;;
     check-java) check_java ;;
     check-rust) check_rust ;;
     check-contract) check_contract ;;
     check-docs) check_docs ;;
     check-architecture) check_architecture ;;
     check-kotlin) check_kotlin ;;
-    check)
-        check_docs
-        check_architecture
-        check_java
-        check_rust
-        check_contract
-        check_kotlin
-        say "PASS foundation checks"
-        ;;
+    check) check_docs; check_architecture; check_java; check_rust; check_contract; check_kotlin; say "PASS foundation checks" ;;
     lab) shift; run_lab "$@" ;;
     bench) shift; run_benchmark "$@" ;;
     clean) rm -rf "$BUILD_DIR"; say "Removed $BUILD_DIR" ;;
@@ -206,10 +102,12 @@ Commands:
   lab reference-routing [algorithm]   run the Java/Rust routing Lab
   lab routing-contracts               run the KMP routing-provider Lab
   lab map-scene                       run the KMP map-scene Lab
-  lab location-replay                 run the deterministic location replay Lab
-  lab route-progress                  run the matched route-progress Lab
-  bench location-replay [n] [runs]    run the location-replay microbenchmark
-  bench route-progress [n] [runs]     run the route-progress microbenchmark
+  lab location-replay                 run deterministic location replay
+  lab route-progress                  run matched route progress
+  lab map-matching                    run fake map matching into route progress
+  bench location-replay [n] [runs]    run location-replay benchmark
+  bench route-progress [n] [runs]     run route-progress benchmark
+  bench map-matching [n] [runs]       run fake matching pipeline benchmark
   clean                               remove generated build output
 HELP
         ;;

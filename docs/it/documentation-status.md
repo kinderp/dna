@@ -31,7 +31,7 @@
 | Foundation complete | `27-presenza-chat-dna.md` | Socialità e privacy. |
 | Implementation-backed | `28-stack-linguaggi-e-gui.md` | Java, Rust e KMP. |
 | Foundation complete | `29-backend-dati-sync.md` | Architettura dati v0. |
-| Implementation-backed | `30-strategia-test.md` | Contract, rendering, replay e progress. |
+| Implementation-backed | `30-strategia-test.md` | Contract, rendering, replay, progress e matching. |
 | Implementation-backed | `31-gps-replay-e-fixture.md` | Fixture replay e separazione I/O/core. |
 | Implementation-backed | `32-performance-budget.md` | Scene/delta e benchmark diagnostici. |
 | Foundation complete | `33-privacy-security-driving-safety.md` | Threat model iniziale. |
@@ -40,12 +40,13 @@
 | Foundation complete | `36-licenze-dati-supply-chain.md` | Policy iniziale. |
 | Implementation-backed | `40-mappa-codice-e-stati.md` | Percorsi reali e target. |
 | Implementation-backed | `41-tracepoint-model-v0.md` | Tracepoint dei Lab. |
-| Implementation-backed | `42-traveldna-lab-roadmap.md` | Cinque scenari eseguibili con la slice progress. |
+| Implementation-backed | `42-traveldna-lab-roadmap.md` | Sei scenari eseguibili con la porta matching. |
 | Implementation-backed | `43-reference-routing-java-rust.md` | Algoritmo Java/Rust. |
 | Implementation-backed | `44-contratti-routing-e-fake-provider.md` | Contratti KMP e fake planner. |
 | Implementation-backed | `45-map-scene-e-fake-renderer.md` | Scena, delta e fake renderer. |
 | Implementation-backed | `46-location-sample-e-replay-deterministico.md` | Sample, clock e replay. |
 | Implementation-backed | `47-posizione-matched-e-route-progress.md` | Matched position, tracker, binding e benchmark. |
+| Implementation-backed | `48-porta-map-matching-e-fake-deterministico.md` | Porta route-bound, esiti, fake, testkit e pipeline. |
 | Implementation-backed | `50-registro-milestone.md` | Milestone e slice tracciate. |
 | Foundation complete | `51-roadmap-librerie-open-source.md` | Sostituzione progressiva. |
 | Foundation complete | `52-matrice-tecnologie-decisioni.md` | Scelte e alternative. |
@@ -59,12 +60,14 @@
 | Implementation-backed | `../project/development-status.md` | Milestone e prossimi gate. |
 | Implementation-backed | `../project/daily/README.md` | Indice storico dei report. |
 | Implementation-backed | `../project/daily/2026-07-17-location-replay.md` | LocationSample, replay e benchmark. |
-| Implementation-backed | `../project/daily/2026-07-17-route-progress.md` | Route progress, finding e review plan. |
+| Implementation-backed | `../project/daily/2026-07-17-route-progress.md` | Route progress e merge PR #18. |
+| Implementation-backed | `../project/daily/2026-07-18-map-matcher-port.md` | Porta matching, finding e review plan. |
 | Implementation-backed | `lab/scenarios/reference-routing-java-rust.md` | Lab 1. |
 | Implementation-backed | `lab/scenarios/routing-contracts-fake-provider.md` | Lab 2. |
 | Implementation-backed | `lab/scenarios/map-scene-fake-renderer.md` | Lab 3. |
 | Implementation-backed | `lab/scenarios/location-replay-deterministico.md` | Lab 4. |
 | Implementation-backed | `lab/scenarios/route-progress-tracker.md` | Lab 5. |
+| Implementation-backed | `lab/scenarios/map-matching-fake-provider.md` | Lab 6. |
 
 Aggiornare questa tabella quando codice o processi rendono obsoleta una
 spiegazione.

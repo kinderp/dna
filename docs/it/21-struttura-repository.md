@@ -2,335 +2,367 @@
 
 ## Obiettivo
 
-Travel DNA usa un monorepo per mantenere vicini contratti, adapter, fixture,
-documentazione e test. Il monorepo non significa un unico modulo senza confini.
+Travel DNA usa un monorepo per mantenere vicini contratti, fake, adapter futuri,
+fixture, laboratori, documentazione e test. Monorepo non significa dipendenze
+libere: ogni modulo possiede un confine dichiarato e verificato.
 
-## Stato concreto della milestone corrente
-
-Il repository non ha ancora l'intero albero target. Il primo codice eseguibile è
-volutamente più piccolo:
+## Albero concreto corrente
 
 ```text
-java/reference-routing/            reference implementation Java 21
-crates/tdna-reference-routing/     implementation Rust indipendente
-fixtures/routes/                   grafo sintetico e metadati
-tests/contract/                    confronto osservabile Java/Rust
-tools/tdna                         entry point locale e CI
-tools/check_docs.py                controllo documentale
-.github/workflows/foundation-ci.yml
-```
-
-Questo percorso dimostra un principio importante: la struttura target guida la
-crescita, ma una directory nasce soltanto quando contiene un contratto o un
-comportamento reale. Non creiamo moduli vuoti per simulare avanzamento.
-
-Il modello Java/Rust corrente è **fixture-scoped**. Non coincide con i futuri
-`shared/contracts` Kotlin Multiplatform. La separazione impedisce che un
-laboratorio didattico diventi accidentalmente l'API mobile di produzione.
-
-## Albero target
-
-```text
-traveldna/
-├── apps/
-│   ├── android/
-│   └── ios/
-├── shared/
-│   ├── domain/
-│   ├── application/
-│   ├── contracts/
-│   ├── presentation-models/
-│   ├── plugin-sdk/
-│   └── plugin-testkit/
+tdna/
 ├── java/
-│   ├── reference-routing/
-│   └── backend/
+│   └── reference-routing/
 ├── crates/
-│   ├── tdna-geo/
-│   ├── tdna-guidance/
-│   ├── tdna-replay/
-│   └── tdna-ffi/
-├── plugins/
-│   ├── maplibre-android/
-│   ├── maplibre-ios/
-│   ├── valhalla-remote/
-│   ├── ferrostar-android/
-│   ├── ferrostar-ios/
-│   ├── external-navigation-android/
-│   └── external-navigation-ios/
-├── backend/
-│   ├── app/
-│   ├── modules/
-│   └── providers/
-├── schemas/
-│   ├── api/
-│   ├── events/
-│   └── database/
+│   └── tdna-reference-routing/
+├── shared/
+│   ├── plugin-sdk/
+│   ├── geo-contracts/
+│   ├── routing-contracts/
+│   ├── routing-testkit/
+│   ├── fake-route-planner/
+│   ├── map-contracts/
+│   ├── map-testkit/
+│   ├── fake-map-renderer/
+│   ├── route-map-projector/
+│   ├── location-contracts/
+│   ├── location-replay/
+│   ├── navigation-contracts/
+│   ├── map-matching-contracts/
+│   ├── map-matching-testkit/
+│   ├── fake-map-matcher/
+│   ├── route-progress/
+│   └── route-progress-map-projector/
+├── labs/
+│   ├── routing-contracts-cli/
+│   ├── map-scene-cli/
+│   ├── location-replay-cli/
+│   ├── route-progress-cli/
+│   └── map-matching-cli/
 ├── fixtures/
-│   ├── gps/
 │   ├── routes/
+│   ├── gps/
+│   ├── navigation/
 │   ├── journeys/
-│   ├── places/
 │   └── conversations/
 ├── tests/
-│   ├── contract/
-│   ├── integration/
-│   ├── replay/
-│   ├── performance/
-│   ├── soak/
-│   ├── security/
-│   └── field/
+│   └── contract/
 ├── tools/
 ├── docs/
 ├── .github/
+├── settings.gradle.kts
+├── build.gradle.kts
 ├── AGENTS.md
 └── README.md
 ```
 
-Questa è una struttura target. Le directory vengono create quando una milestone
-introduce un contratto reale.
+Una directory nasce quando possiede un contratto, un comportamento o una prova
+reale. Non creiamo moduli vuoti per simulare avanzamento.
 
-## `apps/android`
+## Due linee didattiche complementari
 
-Responsabilità:
-
-- entry point Android;
-- Compose UI;
-- MapLibre host;
-- lifecycle e permessi;
-- foreground/background service;
-- notifiche e TTS;
-- Android Auto;
-- composition root Android.
-
-Non contiene:
-
-- semantica del diario;
-- modelli Valhalla nel dominio;
-- algoritmo di route progress se condivisibile;
-- business rule del consenso.
-
-## `apps/ios`
-
-Responsabilità:
-
-- SwiftUI shell;
-- UIKit map host;
-- Core Location e PhotoKit;
-- ActivityKit e CarPlay;
-- TTS e notification handling;
-- composition root iOS.
-
-## `shared/domain`
-
-Moduli per bounded context. Dipendenze minime, niente SDK mobile o provider.
-
-Esempio:
+### Reference routing Java/Rust
 
 ```text
-shared/domain/journey
-shared/domain/journal
-shared/domain/navigation
-shared/domain/travel-dna
-shared/domain/presence
-shared/domain/conversation
-shared/domain/identity-consent
+fixture grafo
+-> parser indipendenti
+-> Dijkstra/A*
+-> report confrontato byte-per-byte
 ```
 
-## `shared/application`
+Serve a studiare algoritmo, strutture dati e confronto cross-language. I tipi
+sono fixture-scoped e non sono le API mobile.
 
-Use case e orchestrazione:
+### Kotlin Multiplatform provider-neutral
 
 ```text
-CreateTrip
-StartTripSession
-LaunchNavigation
-RecordJourneyEvent
-ComposeDailyPage
-PublishDnaCard
-SendRoadQuestion
+contratti
+-> testkit
+-> fake
+-> Lab
+-> benchmark
 ```
 
-Dipende da domain e ports, non da implementazioni.
+Serve a studiare architettura, sostituibilità, stato, hot path e integrazione
+futura Android/iOS.
 
-## `shared/contracts`
+## Moduli fondamentali
 
-Contratti canonici trasversali:
+### `shared/plugin-sdk`
 
-- geo;
-- routing;
-- navigation;
-- map scene;
-- media references;
-- messaging transport;
-- local storage;
-- time and IDs.
+Possiede:
 
-Un contratto non deve diventare una copia completa dell'API del provider.
+- `PluginId`;
+- `CapabilityId`;
+- `PlatformId`;
+- `PluginDescriptor`;
+- notice di licenza;
+- interfaccia `TravelDnaPlugin`.
 
-## `shared/plugin-sdk`
+Non conosce routing, mappe, GPS o piattaforme SDK.
 
-Contiene:
+### `shared/geo-contracts`
 
-- descriptor;
-- capability;
-- lifecycle;
-- health;
-- provider selection context;
-- error model comune.
+Possiede `GeoPoint` WGS84 cross-domain. Routing, location, mappe, diario e
+presence possono dipendere da questo modulo senza dipendere fra loro.
 
-## `shared/plugin-testkit`
+### `shared/routing-contracts`
 
-Contiene test di conformità riutilizzabili, fake e fixture. Ogni nuovo adapter
-deve poter eseguire lo stesso contratto.
-
-## `java/reference-routing`
-
-Prima reference implementation didattica già presente:
+Possiede:
 
 ```text
-src/main/java/org/traveldna/reference/routing/
-  GeoPoint, RoadNode, RoadEdge, RoadGraph
-  ReferenceFixtureParser, ReferenceScenario
-  DijkstraRouter, AStarRouter
-  RouteResult, RouteReport, ReferenceRoutingCli
-
-src/test/java/org/traveldna/reference/routing/
-  ReferenceRoutingTestSuite
+RouteRequest
+RoutePlan
+RouteLeg
+RouteManeuver
+RouteProvenance
+RoutePlannerPort
+RoutePlanningResult/Error
 ```
 
-Responsabilità:
+Dipende soltanto da plugin SDK e geo contracts.
 
-- caricare il grafo sintetico v0;
-- eseguire Dijkstra e A*;
-- ricostruire una route deterministica;
-- emettere il report confrontato con Rust;
-- rendere leggibili strutture dati e algoritmi agli studenti.
+### `shared/map-contracts`
 
-Non è automaticamente il router di produzione e non esporta ancora i contratti
-canonici mobile.
-
-## `crates`
-
-### `tdna-reference-routing`
-
-Prima crate già presente. Replica in modo indipendente il contratto della fixture
-Java usando solo la standard library Rust. Contiene parser, grafo, Dijkstra, A*,
-report e test. È un laboratorio, non ancora `tdna-guidance`.
-
-### `tdna-geo`
-
-Tipi geometrici e algoritmi puri, senza mobile SDK.
-
-### `tdna-guidance`
-
-Futuro core di route progress, off-route e maneuver selection.
-
-### `tdna-replay`
-
-Parser fixture, clock virtuale, runner e report.
-
-### `tdna-ffi`
-
-Binding sottili. Non deve contenere logica di dominio duplicata.
-
-## `plugins`
-
-Ogni plugin importa:
+Possiede:
 
 ```text
-contratto Travel DNA + SDK concreto
+MapScene
+MapSceneDelta
+RouteOverlay
+MapMarker
+MapRendererPort
+MapRenderResult/Error
 ```
 
-Non importa moduli di dominio non necessari. Deve contenere mapping, error
-translation, capability e test.
+Non contiene MapLibre, UIKit, Compose o codice GPU.
 
-## `backend`
+### `shared/location-contracts`
 
-Il backend può essere organizzato come monolite modulare. Ogni modulo possiede
-schema e API interne chiare. Le dipendenze tra moduli sono controllate con test o
-regole di build.
-
-## `schemas`
-
-Gli schemi pubblici vengono versionati separatamente dal codice:
+Possiede:
 
 ```text
-API schema
-sync envelope
-push payload
-public event schema
-local DB migration
+LocationSequence
+MonotonicInstant
+LocationSample
+LocationSampleGate
 ```
 
-Non serializzare direttamente le classi interne come contratto esterno senza una
-decisione esplicita.
+Gli adapter Android/iOS futuri convertiranno `Location` e `CLLocation` prima di
+entrare qui.
 
-## `fixtures`
+### `shared/navigation-contracts`
 
-Solo dati sintetici o anonimizzati. Ogni fixture ha metadati:
+Possiede modelli comuni del runtime:
+
+```text
+RouteCoordinate
+MatchedRoutePosition
+MatchConfidence
+RouteProgressSnapshot
+RouteProgressDecision
+```
+
+Non esegue matching né route progress.
+
+## Moduli di map matching
+
+### `shared/map-matching-contracts`
+
+Possiede il confine provider-neutral:
+
+```text
+MapMatcherPort
+MapMatchSession
+MapMatchResult
+MapMatchError
+MapMatchUnmatched
+MapMatchProvenance
+```
+
+Dipendenze dirette:
+
+```text
+plugin-sdk
+location-contracts
+navigation-contracts
+routing-contracts
+```
+
+La route viene legata una volta. Il loop usa soltanto `session.match(sample)`.
+
+### `shared/map-matching-testkit`
+
+Possiede il conformance probe. La sua firma pubblica usa direttamente:
+
+```text
+RoutePlan
+LocationSample
+MapMatcherPort
+```
+
+Per questo dichiara location e routing contracts come dipendenze dirette; non si
+affida a dipendenze transitive accidentali.
+
+### `shared/fake-map-matcher`
+
+Possiede:
+
+- catalogo esatto route/sample -> result;
+- validazione dei matched;
+- call window bounded;
+- counter diagnostico;
+- fixture sintetica.
+
+È single-threaded e non implementa ricerca stradale.
+
+## Moduli di route progress
+
+### `shared/route-progress`
+
+Possiede un tracker legato a una route:
+
+- ordine sequence/tempo;
+- progresso non regressivo;
+- active leg;
+- upcoming maneuver;
+- arrival;
+- ultimo snapshot accepted.
+
+Stato e preprocessing crescono con la route, non con la durata del viaggio.
+
+### `shared/route-progress-map-projector`
+
+Verifica route e overlay durante il binding e produce delta `O(1)` per accepted
+sample. Non confronta né ricopia geometria nel loop.
+
+## Testkit e fake
+
+La convenzione è:
+
+```text
+<capability>-contracts
+<capability>-testkit
+fake-<capability>
+```
+
+Il contratto definisce semantica e invarianti. Il testkit verifica ogni
+implementazione. Il fake offre risultati deterministici ai test applicativi.
+
+Un fake non deve diventare una simulazione confusa del provider reale. Deve
+rendere esplicito:
+
+```text
+dato input X -> risultato Y
+```
+
+## Laboratori
+
+| Modulo | Percorso dimostrato |
+| --- | --- |
+| `routing-contracts-cli` | request -> fake planner -> route |
+| `map-scene-cli` | route -> scene/delta -> fake renderer |
+| `location-replay-cli` | fixture -> sample gate -> virtual replay |
+| `route-progress-cli` | matched position -> progress -> map delta |
+| `map-matching-cli` | sample -> fake matcher -> progress |
+
+Le CLI JVM possono usare I/O, clock di benchmark e formattazione. I moduli common
+restano indipendenti dalla piattaforma.
+
+## Fixture
+
+- `fixtures/routes`: grafo e route ground truth;
+- `fixtures/gps`: sample raw/replay sintetici;
+- `fixtures/navigation`: scenari code-defined di progress e matching;
+- altre directory: future fixture journal, conversation e presence.
+
+Ogni fixture dichiara:
 
 ```text
 id
-purpose
 source
-privacy status
-coordinate system
-sample rate
-ground truth when known
+privacy
 license
+purpose
+ground truth
+non-goals
 ```
 
-## `tests`
+Nessuna fixture pubblica deve contenere un viaggio personale.
 
-La directory integra test cross-module. I test strettamente locali restano vicino
-al modulo quando lo strumento lo richiede.
+## Tooling
 
-## `tools`
+`tools/tdna` orchestra:
 
-Il primo wrapper è già presente e si invoca con:
+```text
+documentation checks
+architecture checks
+Java/Rust tests
+cross-language contract
+KMP tests
+Lab
+benchmark diagnostici
+```
+
+`tools/check_architecture.py` controlla import e token vietati nei moduli common.
+È un guardrail sorgente, non un sostituto del grafo Gradle o di una review.
+
+## CI
+
+`.github/workflows/foundation-ci.yml` usa lo stesso entry point del flusso locale:
 
 ```bash
-sh tools/tdna doctor
 sh tools/tdna check
-sh tools/tdna lab reference-routing astar
 ```
 
-`tools/check_docs.py` valida link Markdown locali e code fence. Generator,
-benchmark runner, licence audit e strumenti mobili verranno aggiunti soltanto
-quando esiste un caso d'uso reale.
+Gli output Lab/benchmark vengono conservati come artifact diagnostici, non come
+SLA.
 
-## `docs`
+## Albero target futuro
 
-- `it`: guida narrativa;
-- `adr`: decisioni;
-- generated: output rigenerabile;
-- commenting style/status;
-- eventuale API reference.
+```text
+apps/android
+apps/ios
+plugins/maplibre-android
+plugins/maplibre-ios
+plugins/valhalla-remote
+plugins/ferrostar-android
+plugins/ferrostar-ios
+plugins/external-navigation-android
+plugins/external-navigation-ios
+backend/app
+backend/modules
+schemas/api
+schemas/events
+schemas/database
+```
+
+Le directory vengono create soltanto quando una milestone introduce codice o
+contratti reali.
 
 ## Regole di dipendenza
 
 ```text
-domain -> standard/shared primitives only
-application -> domain + ports
-presentation -> application + presentation models
-plugin -> port + vendor SDK
-app -> presentation + plugins + composition
-backend module -> own domain + declared module APIs
+value contracts -> primitive/shared contracts
+port -> contracts + plugin SDK
+adapter/fake -> port + concrete dependency
+application -> ports, non adapter concreti
+app -> application + adapter scelti nel composition root
 ```
 
-Regole vietate:
+Vietato:
 
 ```text
-domain -> MapLibre
-journal -> Android Context
-navigation core -> SwiftUI
-conversation -> Valhalla response
-plugin A -> internals of plugin B
+routing-contracts -> Valhalla response
+map-contracts -> MapLibre class
+location-contracts -> android.location.Location
+navigation-contracts -> CLLocation
+route-progress -> renderer SDK
+map-matching-contracts -> provider road graph
+fake A -> internals of fake B
 ```
 
 ## Codice generato
 
-Codice FFI, API client e schemi generati devono vivere in directory riconoscibili
-e non essere modificati a mano. La sorgente e il comando di generazione devono
-essere documentati.
+Binding FFI, API client e schema generati devono vivere in directory
+riconoscibili, avere una sorgente e un comando di rigenerazione e non essere
+modificati manualmente.

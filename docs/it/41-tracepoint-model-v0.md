@@ -66,6 +66,37 @@ legittima logging verboso nel loop.
 | `LOCATION_REPLAY_COMPLETED` | stable-doc | Tutti i sample sono processati. |
 | `LOCATION_REPLAY_REPORT_EMITTED` | stable-doc | Summary e ground truth coincidono. |
 
+## Map matching boundary Lab
+
+| Nome | Stato | Significato |
+| --- | --- | --- |
+| `MAP_MATCH_ROUTE_BOUND` | stable-doc | Una route canonica viene legata alla sessione una volta. |
+| `MAP_MATCH_SAMPLE_RECEIVED` | stable-doc | La sessione riceve un `LocationSample`. |
+| `MAP_MATCH_POSITION_PRODUCED` | stable-doc | Il provider produce un matched candidate. |
+| `MAP_MATCH_UNMATCHED_PRODUCED` | stable-doc | Nessuna associazione affidabile; non è un failure. |
+| `MAP_MATCH_PROVIDER_FAILURE` | stable-doc | Il provider non completa l'operazione. |
+| `MAP_MATCH_RESULT_VALIDATED` | stable-doc | Route, sequence, tempo, geometria e provenance coincidono. |
+| `MAP_MATCH_RESULT_FORWARDED_TO_PROGRESS` | stable-doc | Soltanto un matched validato entra nel tracker. |
+| `MAP_MATCH_REPORT_EMITTED` | stable-doc | Lab e ground truth coincidono. |
+
+Questi tracepoint non affermano che il fake abbia cercato strade. Le prove sono
+catalogo, postcondizioni, test, report e benchmark del confine.
+
+Esempio:
+
+```text
+Tracepoint: MAP_MATCH_UNMATCHED_PRODUCED
+Status: stable-doc
+Domain: navigation
+Stage: reject/no-result
+Hot path: yes in futuro
+Data in: bound route + LocationSample
+Data out: MapMatchUnmatched(reason, bounded diagnostic code)
+Evidence: FakeMapMatcherTest and map-matching Lab
+Privacy: synthetic/local sample; no network publication
+Non-goal: does not confirm off-route or provider failure
+```
+
 ## Route progress Lab
 
 | Nome | Stato | Significato |
@@ -79,30 +110,15 @@ legittima logging verboso nel loop.
 | `MAP_ROUTE_PROGRESS_BOUND` | stable-doc | Route e overlay sono verificati durante l'installazione. |
 | `MAP_PROGRESS_DELTA_PROJECTED` | stable-doc | Binding e snapshot producono un delta compatto. |
 
-`ROUTE_PROGRESS_ACCEPTED` **non** afferma che distanza o ETA siano aggiornate:
-questa slice possiede soltanto coordinata route, leg, manovra e arrival.
-
-Esempio:
-
-```text
-Tracepoint: MATCHED_ROUTE_POSITION_REJECTED
-Status: stable-doc
-Domain: navigation
-Stage: reject
-Hot path: yes in futuro
-Data in: MatchedRoutePosition + last accepted snapshot
-Data out: rejection reason, unchanged snapshot
-Evidence: RouteProgressTrackerTest and route-progress Lab
-Privacy: synthetic/local position; no network publication
-Non-goal: does not perform map matching or off-route detection
-```
+`ROUTE_PROGRESS_ACCEPTED` non afferma che distanza o ETA siano aggiornate: la
+slice possiede soltanto coordinata route, leg, manovra e arrival.
 
 ## Navigation target
 
 | Nome | Stato | Significato |
 | --- | --- | --- |
 | `POSITION_MAP_MATCHED` | stable-doc | Un matcher produce posizione e confidenza. |
-| `ROUTE_PROGRESS_UPDATED` | stable-doc | È aggiornato il read model di progresso, senza implicare distanza. |
+| `ROUTE_PROGRESS_UPDATED` | stable-doc | È aggiornato il read model, senza implicare distanza. |
 | `MANEUVER_SELECTED` | stable-doc | È selezionata la manovra attiva/upcoming. |
 | `OFF_ROUTE_SUSPECTED` | stable-doc | Evidenza iniziale non confermata. |
 | `OFF_ROUTE_CONFIRMED` | stable-doc | La state machine conferma deviazione. |

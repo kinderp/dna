@@ -18,7 +18,7 @@ Il progetto nasce da quattro idee unite:
 La **Documentation Foundation v0** è presente e la milestone
 **Foundations and Travel DNA Lab v0** è in corso.
 
-La sequenza didattica implementation-backed comprende cinque slice:
+La sequenza didattica implementation-backed comprende sei slice:
 
 ```text
 1. grafo sintetico -> Java/Rust -> Dijkstra/A* -> report confrontato
@@ -26,6 +26,7 @@ La sequenza didattica implementation-backed comprende cinque slice:
 3. RoutePlan -> MapScene/MapSceneDelta -> FakeMapRenderer -> snapshot
 4. fixture GPS sintetica -> LocationSample -> clock/replay -> report bounded
 5. MatchedRoutePosition -> route progress -> manovra/arrival -> delta mappa
+6. LocationSample -> fake MapMatcherPort -> Matched/Unmatched/Failure -> progress
 ```
 
 Questi sono laboratori e contratti di fondazione, non un navigatore mobile di
@@ -43,7 +44,7 @@ sh tools/tdna lab reference-routing astar
 
 [Capitolo 43 — Routing Java/Rust](docs/it/43-reference-routing-java-rust.md)
 
-### 2 — contratto e provider
+### 2 — contratto e provider di routing
 
 ```bash
 sh tools/tdna check-architecture
@@ -78,8 +79,17 @@ sh tools/tdna bench route-progress 10000 7
 
 [Capitolo 47 — Posizione matched e route progress](docs/it/47-posizione-matched-e-route-progress.md)
 
-Il quinto Lab riceve posizioni già associate alla route. Non implementa map
-matching reale, GPS filtering, distanza, ETA, off-route o rerouting.
+### 6 — porta di map matching
+
+```bash
+sh tools/tdna lab map-matching
+sh tools/tdna bench map-matching 10000 7
+```
+
+[Capitolo 48 — Porta map matching e fake deterministico](docs/it/48-porta-map-matching-e-fake-deterministico.md)
+
+Il sesto Lab usa un catalogo esatto. Non esegue ricerca di strade, snapping,
+HMM/Viterbi, filtro GPS, off-route o rerouting.
 
 ## Verifica completa
 

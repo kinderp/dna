@@ -35,6 +35,7 @@ common failures, non-goals, related docs
 | [MapScene](lab/scenarios/map-scene-fake-renderer.md) | Scena, delta e renderer contract. | `sh tools/tdna lab map-scene` | [45](45-map-scene-e-fake-renderer.md) |
 | [Location replay](lab/scenarios/location-replay-deterministico.md) | Tempo monotono, gate, clock e rate. | `sh tools/tdna lab location-replay` | [46](46-location-sample-e-replay-deterministico.md) |
 | [Route progress](lab/scenarios/route-progress-tracker.md) | Matched position, leg, manovra, arrival e map binding. | `sh tools/tdna lab route-progress` | [47](47-posizione-matched-e-route-progress.md) |
+| [Map matching boundary](lab/scenarios/map-matching-fake-provider.md) | Sessione route-bound, esiti, fake e downstream progress. | `sh tools/tdna lab map-matching` | [48](48-porta-map-matching-e-fake-deterministico.md) |
 
 Progressione:
 
@@ -44,13 +45,14 @@ Progressione:
 45: installare route/scena e applicare delta
 46: normalizzare e riprodurre campioni di posizione
 47: accettare una posizione matched e produrre progresso/delta
+48: ottenere un matched validato dietro una porta sostituibile
 ```
 
 ## Scenari `stable-doc` successivi
 
 | Scenario | Cosa insegna | Dipendenza |
 | --- | --- | --- |
-| [Missed exit and reroute](lab/scenarios/navigation-missed-exit-reroute.md) | Evidenza off-route, conferma, reroute e route replacement. | Route progress e fake guidance. |
+| [Missed exit and reroute](lab/scenarios/navigation-missed-exit-reroute.md) | Evidenza off-route, conferma, reroute e route replacement. | Matching boundary e route progress. |
 | [Render canonical route](lab/scenarios/render-canonical-route.md) | Adapter MapLibre e confronto fake/reale. | Adapter grafico. |
 | [Chat with external navigation](lab/scenarios/chat-with-external-navigation.md) | Push, store e voice reply. | Conversation core. |
 | [Daily page](lab/scenarios/daily-page-photos-thoughts.md) | Eventi, media e controllo utente. | Journey store. |
@@ -64,30 +66,16 @@ Progressione:
 - **D — misurare:** benchmark, memoria, frame, batteria e FFI;
 - **E — progettare:** ADR, contratto, threat model o provider replacement.
 
-## Tracciabilità
+## Tracciabilità della slice matching
 
 ```text
-use case
--> bounded context
--> contratto/tracepoint
--> modulo/funzione
--> stato/owner
--> test
--> benchmark
--> issue/PR/report
-```
-
-### Route progress
-
-```text
-issue #17 -> PR #18
--> MatchedRoutePosition
+issue #19 -> PR #20
+-> MapMatcherPort / MapMatchSession
+-> Matched | Unmatched | Failure
+-> FakeMapMatcher / MapMatcherContractProbe
 -> RouteProgressTracker
--> RouteProgressSnapshot
--> RouteProgressMapBinding
--> MapSceneDelta.UpdateRouteProgress
 -> Lab/benchmark
--> capitolo 47
+-> capitolo 48 e report del 18 luglio
 ```
 
 ## Evoluzione strumenti
@@ -104,14 +92,14 @@ issue #17 -> PR #18
 
 ### Fase 2
 
-- fake map matcher;
 - timeline raw/filtered/matched/progress;
 - off-route state inspector;
-- missed-exit/reroute scenario.
+- missed-exit/reroute scenario;
+- primo adapter matcher controllato.
 
 ### Fase 3
 
-- adapter reali controllati;
+- adapter reali;
 - link generati al codice;
 - call graph mirati;
 - benchmark comparison e preview PR.

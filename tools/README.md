@@ -21,12 +21,14 @@ sh tools/tdna COMMAND
 | `check-kotlin` | Esegue test KMP, Lab e benchmark diagnostici. |
 | `check` | Esegue l'intera Foundation CI localmente. |
 | `lab reference-routing [dijkstra\|astar]` | Lab algoritmo. |
-| `lab routing-contracts` | Lab provider-neutral. |
+| `lab routing-contracts` | Lab provider-neutral routing. |
 | `lab map-scene` | Lab scena/renderer. |
 | `lab location-replay` | Lab sample/replay. |
 | `lab route-progress` | Lab matched route progress. |
+| `lab map-matching` | Lab porta matcher/fake/progress. |
 | `bench location-replay [n] [run-dispari]` | Benchmark replay. |
 | `bench route-progress [n] [run-dispari]` | Benchmark progress. |
+| `bench map-matching [n] [run-dispari]` | Benchmark matching fake + progress. |
 | `clean` | Rimuove `build/`. |
 
 ## Ambiente CI
@@ -54,36 +56,40 @@ build/kotlin/location-replay-lab.json
 build/kotlin/location-replay-benchmark.json
 build/kotlin/route-progress-lab.json
 build/kotlin/route-progress-benchmark.json
+build/kotlin/map-matching-lab.json
+build/kotlin/map-matching-benchmark.json
 ```
 
 La CI conserva gli output Kotlin come artifact `foundation-kotlin-observations`
 per 14 giorni. I benchmark non sono gate.
 
-## Benchmark route progress
+## Benchmark map matching boundary
 
 ```bash
-sh tools/tdna bench route-progress 10000 7
+sh tools/tdna bench map-matching 10000 7
 ```
 
 Vincoli:
 
-- 2–100.000 campioni;
+- 2–50.000 campioni;
 - 1–25 iterazioni, obbligatoriamente dispari;
 - tre warm-up;
-- fino a 100 leg e una manovra per leg più `Arrive`;
-- route, posizioni, tracker e cursori costruiti fuori dal timer;
-- reset fuori dal timer;
-- finestra misurata: `accept`, binary search, snapshot e commit.
+- route, campioni, catalogo, fake, sessione e tracker costruiti fuori dal timer;
+- un pass untimed verifica ogni matched e ogni progress accepted;
+- reset e verifica finale fuori dal timer;
+- finestra misurata: exact lookup, diagnostica bounded e `RouteProgressTracker.accept`.
 
-Non misura map matching, projector/renderer, GPS, rete, database, batteria o
-dispositivo mobile.
+Non misura ricerca geografica, indice stradale, HMM/Viterbi, GPS, rete, MapLibre,
+batteria, dispositivo mobile o accuratezza su strada.
 
 ## Architecture checker
 
 `tools/check_architecture.py` verifica gli import ammessi nei moduli shared e
 cerca token provider/piattaforma nel codice eseguibile dopo aver rimosso commenti
-e literal. È un primo guardrail e non sostituisce un futuro controllo del grafo
-Gradle.
+e literal. I testkit dichiarano direttamente i tipi presenti nella propria API;
+le dipendenze transitive accidentali non sono considerate un contratto valido.
+
+È un primo guardrail e non sostituisce un futuro controllo del grafo Gradle.
 
 ## Regole
 

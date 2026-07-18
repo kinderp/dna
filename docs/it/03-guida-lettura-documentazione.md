@@ -52,22 +52,26 @@ capire il contratto
 8. [Scenario replay](lab/scenarios/location-replay-deterministico.md)
 9. [Posizione matched e route progress](47-posizione-matched-e-route-progress.md)
 10. [Scenario route progress](lab/scenarios/route-progress-tracker.md)
-11. [OpenStreetMap e cartografia](23-openstreetmap-e-cartografia.md)
-12. [Routing e navigazione](24-routing-e-navigazione.md)
-13. [Prestazioni](32-performance-budget.md)
-14. [Tracepoint Model](41-tracepoint-model-v0.md)
-15. [Scenario missed exit](lab/scenarios/navigation-missed-exit-reroute.md)
+11. [Porta map matching e fake](48-porta-map-matching-e-fake-deterministico.md)
+12. [Scenario map matching](lab/scenarios/map-matching-fake-provider.md)
+13. [OpenStreetMap e cartografia](23-openstreetmap-e-cartografia.md)
+14. [Routing e navigazione](24-routing-e-navigazione.md)
+15. [Prestazioni](32-performance-budget.md)
+16. [Tracepoint Model](41-tracepoint-model-v0.md)
+17. [Scenario missed exit](lab/scenarios/navigation-missed-exit-reroute.md)
 
 Ordine concettuale:
 
 ```text
 grafo
 -> algoritmo
--> contratto provider-neutral
+-> contratto routing provider-neutral
 -> RoutePlan
 -> MapScene e renderer
 -> LocationSample
--> filtro e map matcher
+-> filtro futuro
+-> MapMatcherPort / MapMatchSession
+-> Matched | Unmatched | Failure
 -> MatchedRoutePosition
 -> RouteProgressSnapshot
 -> manovra e arrival
@@ -79,7 +83,7 @@ grafo
 
 1. [Stack linguaggi](28-stack-linguaggi-e-gui.md)
 2. [Plugin e provider](22-architettura-plugin-provider.md)
-3. capitoli 44–47;
+3. capitoli 44–48;
 4. aprire nell'ordine:
 
 ```text
@@ -90,11 +94,14 @@ shared/map-contracts
 shared/location-contracts
 shared/location-replay
 shared/navigation-contracts
+shared/map-matching-contracts
+shared/map-matching-testkit
+shared/fake-map-matcher
 shared/route-progress
 shared/route-progress-map-projector
 ```
 
-5. confrontare fake, testkit, runner e tracker;
+5. confrontare porta, testkit, fake, runner e tracker;
 6. eseguire:
 
 ```bash
@@ -104,6 +111,7 @@ sh tools/tdna lab routing-contracts
 sh tools/tdna lab map-scene
 sh tools/tdna lab location-replay
 sh tools/tdna lab route-progress
+sh tools/tdna lab map-matching
 ```
 
 ## Percorso 5 — posizione e tempo monotono
@@ -148,7 +156,31 @@ Domande guida:
 - perché il tracker non calcola distanza o ETA?
 - quale stato resta invariato dopo una regressione?
 
-## Percorso 7 — mappe reattive
+## Percorso 7 — porta di map matching
+
+1. [Capitolo 48](48-porta-map-matching-e-fake-deterministico.md)
+2. [Scenario map matching](lab/scenarios/map-matching-fake-provider.md)
+3. `MapMatchingContracts.kt`;
+4. `MapMatcherContractProbe.kt`;
+5. `FakeMapMatcher.kt`;
+6. `FakeMapMatchFixtures.kt`;
+7. CLI e benchmark.
+
+```bash
+sh tools/tdna lab map-matching
+sh tools/tdna bench map-matching 10000 7
+```
+
+Domande guida:
+
+- perché `bind(route)` precede `match(sample)`?
+- perché unmatched e failure sono distinti?
+- quali identità protegge `requireMatches`?
+- perché il determinismo usa una sessione fresca?
+- perché il fake non è un algoritmo di matching?
+- quale stato è bounded e quale cresce con la route?
+
+## Percorso 8 — mappe reattive
 
 1. [Capitolo 45](45-map-scene-e-fake-renderer.md)
 2. [Scenario MapScene](lab/scenarios/map-scene-fake-renderer.md)
@@ -167,10 +199,10 @@ RoutePlan
 
 La geometria si installa raramente; il progresso usa delta compatti.
 
-## Percorso 8 — Android
+## Percorso 9 — Android
 
 1. [Stack](28-stack-linguaggi-e-gui.md)
-2. capitoli 44–47;
+2. capitoli 44–48;
 3. [Navigatori esterni e auto](25-navigatori-esterni-e-automotive.md)
 4. [Privacy e sicurezza](33-privacy-security-driving-safety.md)
 5. [Debugging](34-debugging-e-strumenti.md)
@@ -187,10 +219,10 @@ shared contracts
 -> Android Auto
 ```
 
-## Percorso 9 — iOS e Swift
+## Percorso 10 — iOS e Swift
 
 1. [Stack](28-stack-linguaggi-e-gui.md)
-2. capitoli 45–47;
+2. capitoli 45–48;
 3. [Navigatori esterni](25-navigatori-esterni-e-automotive.md)
 4. [Privacy](33-privacy-security-driving-safety.md)
 
@@ -202,14 +234,14 @@ shared framework
 -> ActivityKit / CarPlay
 ```
 
-## Percorso 10 — Java e Rust
+## Percorso 11 — Java e Rust
 
 ### Java
 
 1. [Capitolo 43](43-reference-routing-java-rust.md)
 2. aprire `java/reference-routing`;
 3. eseguire `sh tools/tdna check-java`;
-4. confrontare algoritmo e porta applicativa del capitolo 44.
+4. confrontare algoritmo e porte applicative dei capitoli 44 e 48.
 
 ### Rust
 
@@ -222,7 +254,7 @@ shared framework
 tipi puri -> test -> fixture/replay -> benchmark -> API stabile -> FFI -> mobile
 ```
 
-## Percorso 11 — diario, chat e privacy
+## Percorso 12 — diario, chat e privacy
 
 ### Diario
 
@@ -238,7 +270,7 @@ tipi puri -> test -> fixture/replay -> benchmark -> API stabile -> FFI -> mobile
 3. [Privacy e guida](33-privacy-security-driving-safety.md)
 4. [Scenario chat](lab/scenarios/chat-with-external-navigation.md)
 
-## Percorso 12 — riprendere dopo una pausa
+## Percorso 13 — riprendere dopo una pausa
 
 1. `AGENTS.md`;
 2. [Regole operative](00-regole-operative.md);
@@ -259,6 +291,7 @@ sh tools/tdna lab routing-contracts
 sh tools/tdna lab map-scene
 sh tools/tdna lab location-replay
 sh tools/tdna lab route-progress
+sh tools/tdna lab map-matching
 ```
 
 La CI usa Java 21, Gradle 9.5.1, Kotlin 2.4.0 e Rust stable.
