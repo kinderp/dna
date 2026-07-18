@@ -85,7 +85,7 @@ class OffRouteTracker(
                 val suspected = OffRouteState.Suspected(
                     episodeId = nextEpisodeId(),
                     firstObservation = observation,
-                    lastObservation = observation,
+                    lastSuspiciousObservation = observation,
                     suspiciousCount = 1,
                 )
                 suspected to OffRouteTransition.SuspicionStarted
@@ -125,7 +125,7 @@ class OffRouteTracker(
             ) to OffRouteTransition.ConfirmedNow
         } else {
             current.copy(
-                lastObservation = observation,
+                lastSuspiciousObservation = observation,
                 suspiciousCount = nextCount,
             ) to OffRouteTransition.SuspicionContinued
         }
