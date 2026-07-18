@@ -29,7 +29,12 @@ RULES = {
     "shared/route-progress": ("kotlin.", "org.traveldna.navigation.contracts.", "org.traveldna.routing.contracts."),
     "shared/route-progress-map-projector": ("kotlin.", "org.traveldna.navigation.contracts.", "org.traveldna.map.contracts.", "org.traveldna.routing.contracts."),
     "shared/map-matching-contracts": ("kotlin.", "org.traveldna.plugin.sdk.", "org.traveldna.location.contracts.", "org.traveldna.navigation.contracts.", "org.traveldna.routing.contracts."),
-    "shared/map-matching-testkit": ("kotlin.", "org.traveldna.navigation.matching.contracts."),
+    "shared/map-matching-testkit": (
+        "kotlin.",
+        "org.traveldna.location.contracts.",
+        "org.traveldna.navigation.matching.contracts.",
+        "org.traveldna.routing.contracts.",
+    ),
     "shared/fake-map-matcher": ("kotlin.", "org.traveldna.plugin.sdk.", "org.traveldna.geo.contracts.", "org.traveldna.location.contracts.", "org.traveldna.navigation.contracts.", "org.traveldna.navigation.matching.contracts.", "org.traveldna.routing.contracts."),
 }
 FORBIDDEN_CODE_TOKENS = (
