@@ -2,7 +2,7 @@
 
 ## Stato del report
 
-`pre-final-review complete`
+`pre-final-review complete — finding corretti, nuovo final head richiesto`
 
 Il ledger autorevole di CI finale, review e merge è la timeline della
 [PR #22](https://github.com/kinderp/tdna/pull/22). Il report viene chiuso prima
@@ -56,13 +56,15 @@ normalized evidence
 
 ### `shared/reroute-coordinator`
 
-- `Ready` e `InFlight`;
+- `Ready` e `InFlight` con invarianti pubbliche;
 - un solo attempt;
 - request canonica dalla posizione corrente alla destinazione;
 - old-route retention;
 - stale outcome rejection;
 - cancellation cleanup;
 - exception-to-failure mapping;
+- capability `routing.plan` verificata prima della chiamata;
+- capability manovre verificata sul risultato;
 - provenance verification;
 - canonical request/route postconditions;
 - new route ID;
@@ -72,7 +74,7 @@ normalized evidence
 
 - due episodi, un recovery e un confirmation;
 - duplicate begin e stale outcome;
-- fake planner e replacement;
+- fake planner e replacement con manovre coerenti col descriptor;
 - nuovo progress tracker;
 - report JSON esatto;
 - benchmark state-machine-only.
@@ -88,27 +90,22 @@ normalized evidence
 7. La vecchia route resta autorevole durante in-flight/failure.
 8. Attempt e source route ID correlano ogni outcome.
 9. Cancellazione propaga dopo cleanup.
-10. La route nuova viene applicata soltanto dopo provenance e postcondizioni.
+10. La route nuova viene applicata soltanto dopo capability, provenance e postcondizioni.
 11. Route ID deve cambiare.
 12. Matcher/progress/map state devono essere ricreati per la route nuova.
 
 ## Finding e correzioni pre-review
 
-### 1 — stati pubblici permissivi
+### 1 — stati `Suspected` e `Confirmed` permissivi
 
-`Suspected` e `Confirmed` potevano essere costruiti manualmente con evidence non
-sospetta o durata incoerente.
+I costruttori potevano rappresentare evidence o durata incoerenti.
 
-Correzione:
-
-- evidence iniziale/finale obbligatoriamente suspicious;
-- count 1 implica prima==ultima osservazione;
-- count >1 implica sequence/time crescenti;
-- duration confirmed uguale all’elapsed monotono reale.
+Correzione: evidence sospetta, route uguale, count bounded, sequence/tempo
+crescenti e durata uguale all'elapsed monotono reale.
 
 ### 2 — catch troppo ampio
 
-L’executor catturava `Throwable`, rischiando di mascherare errori fatali.
+L'executor catturava `Throwable`.
 
 Correzione:
 
@@ -118,18 +115,57 @@ Exception ordinaria   -> Internal failure
 Error/Throwable fatale -> non mascherato
 ```
 
-### 3 — provenance non verificata dall’executor
+### 3 — provenance non verificata
 
-Una route poteva essere attribuita a un provider diverso dal planner scelto.
+La route deve essere attribuita al provider rappresentato dal descriptor del
+planner.
 
-Correzione: provider ID della route deve coincidere col descriptor del planner.
+### 4 — benchmark non valido per ogni conteggio
 
-### 4 — benchmark non valido per ogni conteggio ammesso
+Il pattern poteva terminare in `Suspected`. L'ultimo campione è ora `OnRoute` e
+sono testati i conteggi minimi 2 e 3.
 
-Il pattern poteva terminare in `Suspected` per alcuni `sampleCount`, mentre il
-post-check richiedeva sempre `OnRoute`.
+## Finding emersi nel primo audit del final head verde
 
-Correzione: ultimo campione forzato `OnRoute`; test con conteggi 2 e 3.
+### 5 — `InFlight` costruibile con identità incoerenti
+
+Il modello pubblico accettava una command per una source route diversa dalla
+route attiva o una request con destinazione diversa.
+
+Correzione: init guard su source route e destination, con test di regressione.
+
+### 6 — capability `routing.plan` non verificata
+
+Un oggetto `RoutePlannerPort` poteva essere invocato anche se il descriptor non
+dichiarava la capability.
+
+Correzione: failure non retryable prima della chiamata e test che verifica zero
+invocazioni.
+
+### 7 — capability manovre contraddetta dal risultato
+
+Un provider poteva dichiarare `routing.maneuvers` e restituire legs vuote.
+
+Correzione: provider-contract failure non retryable; il Lab produce `Depart` e
+`Arrive` coerenti col fake planner.
+
+### 8 — nome ambiguo dell'ultima osservazione
+
+`lastObservation` era in realtà l'ultima osservazione sospetta; un
+`Indeterminate` aggiorna la baseline accepted ma non quel campo.
+
+Correzione: `lastSuspiciousObservation` in contratto, tracker, test e
+spiegazione.
+
+### 9 — integrazione documentale incompleta
+
+Capitolo/scenario/report esistevano, ma mancavano entry point, indici, status,
+code map, tracepoint e milestone.
+
+Correzione: tutti i percorsi didattici e i registri sono stati allineati prima
+del nuovo final gate.
+
+Ogni finding o commit sostanziale ha azzerato il contatore delle review pulite.
 
 ## Test
 
@@ -142,6 +178,9 @@ Correzione: ultimo campione forzato `OnRoute`; test con conteggi 2 e 3.
 - rejection non mutante;
 - inspect/reset;
 - one in-flight;
+- public `InFlight` identity invariants;
+- missing `routing.plan` senza invocazione;
+- declared maneuvers con leg vuota;
 - stale outcome;
 - failure/retry;
 - invalid replacement;
@@ -172,7 +211,7 @@ sh tools/tdna bench off-route 10000 7
 ```
 
 Misura soltanto validazione e transizioni in-memory del tracker. Il risultato
-finale sarà registrato nel ledger PR dopo la CI sul substantive head.
+finale viene registrato nel ledger PR dopo la CI sul substantive head.
 
 Non misura evidence normalization, matcher, provider, rete, replacement,
 dispositivo, batteria o strada.
@@ -182,8 +221,9 @@ dispositivo, batteria o strada.
 - capitolo 49;
 - scenario promoted to executable;
 - fixture metadata;
+- root/docs/Italian/Lab indexes;
+- repository structure e reading path;
 - code/state map e tracepoint;
-- reading path;
 - feature/documentation/commenting status;
 - milestone e development status;
 - tooling;
@@ -197,7 +237,8 @@ dispositivo, batteria o strada.
 - count/duration;
 - non-mutating rejection;
 - command/outcome correlation;
-- old route retention;
+- capability e provenance;
+- old-route retention;
 - replacement postconditions;
 - cancellation/exception tests.
 
@@ -210,10 +251,12 @@ dispositivo, batteria o strada.
 - documentazione;
 - CI e scope.
 
+Servono due round consecutivi sullo stesso nuovo substantive head.
+
 ## Decisioni richieste
 
-Nessuna per questa slice. Le soglie sono esplicitamente didattiche e non vengono
-promosse a valori di prodotto.
+Nessuna per questa slice. Le soglie sono didattiche e non vengono promosse a
+valori di prodotto.
 
 ## Debito e non-obiettivi
 
@@ -227,6 +270,6 @@ promosse a valori di prodotto.
 
 ## Prossimo passo
 
-Completare indici e architettura, ottenere CI verde sul final head, due review
-pulite, expected-head merge e riallineamento `main`. Dopo il merge si valuterà
-la chiusura della milestone Foundations o il primo adapter mobile controllato.
+Fissare il nuovo SHA finale, ottenere CI verde, eseguire due review pulite,
+mergiare con expected-head e riallineare `main`. Dopo il merge la fondazione può
+chiudere il debito Gradle Wrapper e produrre il rapporto finale di milestone.
