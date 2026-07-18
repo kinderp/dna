@@ -11,6 +11,7 @@ import org.traveldna.routing.contracts.RoutePlanningError
 import org.traveldna.routing.contracts.RoutePlanningErrorCode
 import org.traveldna.routing.contracts.RoutePlanningResult
 import org.traveldna.routing.contracts.RouteRequest
+import org.traveldna.routing.contracts.RoutingCapabilities
 import org.traveldna.routing.contracts.RoutingProfile
 import org.traveldna.routing.contracts.requireMatches
 
@@ -25,7 +26,16 @@ sealed interface RerouteCoordinatorState {
     data class InFlight(
         override val activeRoute: RoutePlan,
         val command: RerouteCommand,
-    ) : RerouteCoordinatorState
+    ) : RerouteCoordinatorState {
+        init {
+            require(command.sourceRouteId == activeRoute.id) {
+                "in-flight command source route must match the active route"
+            }
+            require(command.request.destination == activeRoute.destination) {
+                "in-flight command destination must match the active route destination"
+            }
+        }
+    }
 }
 
 enum class RerouteBeginIgnoreReason {
@@ -219,19 +229,28 @@ class RerouteCoordinator(
 class RerouteExecutor(
     private val planner: RoutePlannerPort,
 ) {
-    suspend fun execute(command: RerouteCommand): RerouteOutcome = try {
-        when (val result = planner.plan(command.request)) {
-            is RoutePlanningResult.Success -> validateSuccess(command, result)
-            is RoutePlanningResult.Failure -> RerouteOutcome.Failed(
-                attemptId = command.attemptId,
-                sourceRouteId = command.sourceRouteId,
-                error = result.error,
+    suspend fun execute(command: RerouteCommand): RerouteOutcome {
+        if (RoutingCapabilities.Plan !in planner.descriptor.capabilities) {
+            return providerContractFailure(
+                command,
+                message = "route planner descriptor does not declare routing.plan",
+                diagnosticCode = "reroute.missing-plan-capability",
             )
         }
-    } catch (cancelled: CancellationException) {
-        throw cancelled
-    } catch (_: Exception) {
-        unexpectedFailure(command, "route planner threw an unexpected exception")
+        return try {
+            when (val result = planner.plan(command.request)) {
+                is RoutePlanningResult.Success -> validateSuccess(command, result)
+                is RoutePlanningResult.Failure -> RerouteOutcome.Failed(
+                    attemptId = command.attemptId,
+                    sourceRouteId = command.sourceRouteId,
+                    error = result.error,
+                )
+            }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            unexpectedFailure(command, "route planner threw an unexpected exception")
+        }
     }
 
     private fun validateSuccess(
@@ -239,11 +258,29 @@ class RerouteExecutor(
         result: RoutePlanningResult.Success,
     ): RerouteOutcome {
         if (result.routes.size > command.request.requestedAlternatives) {
-            return unexpectedFailure(command, "planner returned more alternatives than requested")
+            return providerContractFailure(
+                command,
+                message = "planner returned more alternatives than requested",
+                diagnosticCode = "reroute.too-many-alternatives",
+            )
         }
         val route = result.routes.first()
         if (route.provenance.providerId != planner.descriptor.id) {
-            return unexpectedFailure(command, "route provenance differs from the planner descriptor")
+            return providerContractFailure(
+                command,
+                message = "route provenance differs from the planner descriptor",
+                diagnosticCode = "reroute.invalid-provenance",
+            )
+        }
+        if (
+            RoutingCapabilities.Maneuvers in planner.descriptor.capabilities &&
+            route.legs.any { leg -> leg.maneuvers.isEmpty() }
+        ) {
+            return providerContractFailure(
+                command,
+                message = "planner declares routing.maneuvers but returned a leg without maneuvers",
+                diagnosticCode = "reroute.missing-maneuvers",
+            )
         }
         return RerouteOutcome.Planned(
             attemptId = command.attemptId,
@@ -251,6 +288,21 @@ class RerouteExecutor(
             route = route,
         )
     }
+
+    private fun providerContractFailure(
+        command: RerouteCommand,
+        message: String,
+        diagnosticCode: String,
+    ): RerouteOutcome.Failed = RerouteOutcome.Failed(
+        attemptId = command.attemptId,
+        sourceRouteId = command.sourceRouteId,
+        error = RoutePlanningError(
+            code = RoutePlanningErrorCode.Internal,
+            message = message,
+            retryable = false,
+            providerDiagnosticCode = diagnosticCode,
+        ),
+    )
 
     private fun unexpectedFailure(
         command: RerouteCommand,
