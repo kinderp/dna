@@ -17,15 +17,8 @@ reference-network-v0.tdna
 -> report byte-identico
 ```
 
-Stato temporaneo:
-
-```text
-frontier
-best cost
-previous
-```
-
-Nessun GPS, provider, rete o UI entra nel Lab.
+Stato temporaneo: frontier, best cost e previous. Nessun GPS, provider, rete o UI
+entra nel Lab.
 
 ## 2. Routing provider-neutral
 
@@ -37,8 +30,6 @@ RouteRequest
 -> RoutePlan
 -> RoutePlannerContractProbe
 ```
-
-Ownership:
 
 | Componente | Possiede |
 | --- | --- |
@@ -87,7 +78,7 @@ TDNA_LOCATION_REPLAY_V0
 -> report JSON
 ```
 
-Stato del runner:
+Stato bounded del runner:
 
 ```text
 next index
@@ -101,24 +92,95 @@ replay state
 
 Il runner non conserva la cronologia degli eventi e non legge il wall clock.
 
-## 5. Matched position e route progress
+## 5. Porta map matching e fake
 
 ### Percorso reale
 
 ```mermaid
 flowchart LR
-    L[LocationSample futuro] --> F[Filter futuro]
-    F --> MM[Map matcher futuro]
-    MM --> MP[MatchedRoutePosition]
-    MP --> T[RouteProgressTracker.accept]
+    S[LocationSample] --> M[MapMatchSession.match]
+    M --> R{MapMatchResult}
+    R -->|Matched| V[requireMatches]
+    R -->|Unmatched| U[normal domain outcome]
+    R -->|Failure| F[provider failure]
+    V --> P[RouteProgressTracker.accept]
+```
+
+### Function path del Lab
+
+```text
+Main.runLab
+-> MapMatcherContractProbe.verify
+-> FakeMapMatcher.bind(RoutePlan)
+-> Session.match(LocationSample)
+   -> Key(routeId, sample) lookup
+   -> bounded ArrayDeque record
+-> Matched.requireMatches
+-> RouteProgressTracker.accept
+-> report JSON
+```
+
+### Ownership
+
+| Componente | Stato posseduto | Frequenza |
+| --- | --- | --- |
+| `RoutePlan` | geometria/leg/manovre immutabili | sessione |
+| `MapMatcherPort` | descriptor e factory | composizione |
+| `MapMatchSession` | route legata e futuro stato matcher | sessione |
+| `FakeMapMatcher` | catalogo, counter e call window | vita fake |
+| `MapMatchResult` | un esito immutabile | campione |
+| testkit | nessuno oltre al report locale | test |
+
+### Esiti
+
+```text
+Matched
+  -> route/sample/provider postcondition
+  -> downstream progress
+
+Unmatched
+  -> nessun match affidabile
+  -> non muta progress
+  -> non equivale automaticamente a off-route
+
+Failure
+  -> provider non ha completato l'operazione
+  -> resta distinto da Unmatched
+```
+
+### Determinismo
+
+```text
+session A nuova + route R + sample S -> result X
+session B nuova + route R + sample S -> result X
+```
+
+Il probe non ripete lo stesso sample nella stessa sessione stateful.
+
+### Stato bounded e costo
+
+```text
+catalog <= 100.000 entry
+call window <= 10.000
+exact lookup medio O(1)
+ArrayDeque eviction ammortizzata O(1)
+nessuna route copiata per sample
+```
+
+Il fake non esegue ricerca geometrica e non misura accuratezza.
+
+## 6. Matched position e route progress
+
+### Percorso reale
+
+```mermaid
+flowchart LR
+    MP[MatchedRoutePosition] --> T[RouteProgressTracker.accept]
     T --> S[RouteProgressSnapshot]
     S --> P[RouteProgressMapProjector.project]
     P --> D[MapSceneDelta.UpdateRouteProgress]
     D --> R[Renderer]
 ```
-
-La parte eseguibile corrente inizia da `MatchedRoutePosition`; filter e map
-matcher sono ancora target.
 
 ### Function path del Lab
 
@@ -131,7 +193,7 @@ Main.runLab
    -> findActiveLegIndex (binary search)
    -> findUpcomingManeuver (binary search)
    -> RouteProgressSnapshot
--> RouteProgressMapProjector.bind   // installazione
+-> RouteProgressMapProjector.bind
 -> RouteProgressMapProjector.project
 -> report JSON
 ```
@@ -147,7 +209,7 @@ Main.runLab
 | projector update | nessuno | accepted sample |
 | renderer | geometria installata e progresso | scena |
 
-### Transizioni
+Transizioni:
 
 ```text
 nessun snapshot
@@ -159,7 +221,7 @@ nessun snapshot
 -> arrival accepted
 ```
 
-### Rifiuti
+Rifiuti:
 
 ```text
 RouteMismatch
@@ -170,30 +232,16 @@ NonIncreasingMonotonicTime
 RegressedAlongRoute
 ```
 
-Un rifiuto non cambia `lastSnapshot`.
+La geometria route-overlay viene verificata una volta nel binding. Il delta per
+campione è compatto e `O(1)`.
 
-### Binding mappa
-
-```text
-install route:
-  overlay.routeId == route.id
-  overlay.geometry == route.geometry
-  -> RouteProgressMapBinding
-
-hot update:
-  binding + snapshot
-  -> route ID / index / final fraction check
-  -> compact delta O(1)
-```
-
-La geometria non viene confrontata né copiata a ogni campione.
-
-## 6. Navigation runtime target
+## 7. Navigation runtime target
 
 ```text
 LocationSource
 -> sample validation/filter
--> map matcher
+-> MapMatcherPort session
+-> matched/unmatched/failure policy
 -> route progress
 -> confidence/off-route policy
 -> maneuver and prompt state
@@ -206,6 +254,7 @@ Stato futuro single-owner:
 ```text
 active route
 last accepted LocationSample
+map-match session
 matched position
 progress snapshot
 current/announced maneuver
@@ -214,7 +263,7 @@ reroute request/version
 confidence
 ```
 
-## 7. Chat durante la guida target
+## 8. Chat durante la guida target
 
 ```text
 server message
@@ -228,7 +277,7 @@ server message
 Server e local DB possiedono durata e ordine; la superficie possiede soltanto
 stato di presentazione.
 
-## 8. Diario target
+## 9. Diario target
 
 ```text
 JourneyEvent
@@ -243,7 +292,7 @@ JourneyEvent
 La condivisione deriva da una proiezione minimizzata, non dal diario privato
 completo.
 
-## 9. Presenza target
+## 10. Presenza target
 
 ```text
 exact local sample
@@ -255,11 +304,13 @@ exact local sample
 
 La minimizzazione precede la rete.
 
-## 10. Mappa dati
+## 11. Mappa dati
 
 | Dato | Owner | Persistenza |
 | --- | --- | --- |
 | `LocationSample` esatto | navigation/journey locale | breve/local |
+| `MapMatchSession` | matcher/runtime | sessione |
+| `MapMatchResult` | matcher/caller | transiente |
 | `MatchedRoutePosition` | matcher/runtime | transiente |
 | `RouteProgressSnapshot` | progress tracker | ultimo snapshot |
 | `RoutePlan` | navigation | cache/sessione |
@@ -275,8 +326,7 @@ La minimizzazione precede la rete.
 Ogni vertical slice aggiunge:
 
 - package e file;
-- entry point;
-- funzione path;
+- entry point e function path;
 - stato mutato e owner;
 - thread/dispatcher;
 - tracepoint;
