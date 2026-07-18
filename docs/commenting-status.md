@@ -16,6 +16,8 @@ comment change. Git and pull requests preserve history.
 | Area | Status | Notes |
 | --- | --- | --- |
 | Documentation/governance | Teaching-ready | Rules, serial PR workflow, reading paths and indexed reports. |
+| Build bootstrap/Gradle Wrapper | Teaching-ready | Reviewed files/hashes, checkers, Lab, clean-checkout workflow and chapter 37. |
+| GitHub Actions references | Contract documented | External actions allowlisted and pinned to immutable full SHAs. |
 | Java/Rust reference routing | Teaching-ready | Chapter 43, tests and byte-level contract comparison. |
 | Route fixture v0 | Contract documented | Format, provenance, invariants and ground truth. |
 | Plugin SDK and routing contracts | Teaching-ready | Capability, provider-neutral models, fake and testkit. |

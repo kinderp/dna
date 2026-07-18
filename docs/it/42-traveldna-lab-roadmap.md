@@ -4,7 +4,8 @@
 
 Travel DNA Lab trasforma architettura e test in percorsi didattici. Uno studente
 deve seguire un fatto dall'input all'output, capire ownership e stati, eseguire
-una fixture e modificare un componente senza conoscere tutto il sistema.
+una fixture, un fake o una policy e modificare un componente senza conoscere
+tutto il sistema.
 
 ## Stati
 
@@ -12,7 +13,7 @@ una fixture e modificare un componente senza conoscere tutto il sistema.
 | --- | --- |
 | `draft` | Struttura o semantica incompleta. |
 | `stable-doc` | Percorso consolidato, codice non necessariamente presente. |
-| `executable` | Comando, fixture/fake e test esistono. |
+| `executable` | Comando, fixture/fake/policy e test esistono. |
 | `public-output` | Formato macchina versionato; non ancora usato. |
 | `deprecated` | Scenario sostituito con successore. |
 
@@ -20,13 +21,19 @@ una fixture e modificare un componente senza conoscere tutto il sistema.
 
 ```text
 id, status, learning goal, prerequisites, user story, platforms
-fixture/fake, trigger, expected evidence, tracepoints
+fixture/fake/policy, trigger, expected evidence, tracepoints
 module/function path, state ownership, output
 performance, privacy/safety, existing/missing/future tests
 common failures, non-goals, related docs
 ```
 
-## Scenari eseguibili
+## Scenario di engineering
+
+| Scenario | Cosa insegna | Comando | Capitolo |
+| --- | --- | --- | --- |
+| [Gradle Wrapper](lab/scenarios/gradle-wrapper-riproducibile.md) | Bootstrap, checksum, Action pinning e trust model. | `sh tools/tdna lab build-bootstrap` | [37](37-build-riproducibile-gradle-wrapper.md) |
+
+## Scenari navigation eseguibili
 
 | Scenario | Cosa insegna | Comando | Capitolo |
 | --- | --- | --- | --- |
@@ -38,7 +45,7 @@ common failures, non-goals, related docs
 | [Map matching boundary](lab/scenarios/map-matching-fake-provider.md) | Sessione route-bound, esiti, fake e downstream progress. | `sh tools/tdna lab map-matching` | [48](48-porta-map-matching-e-fake-deterministico.md) |
 | [Missed exit and reroute](lab/scenarios/navigation-missed-exit-reroute.md) | Evidenza normalizzata, count+duration, un attempt e replacement. | `sh tools/tdna lab missed-exit` | [49](49-off-route-missed-exit-e-reroute.md) |
 
-Progressione:
+Progressione navigation:
 
 ```text
 43: calcolare una route
@@ -62,10 +69,23 @@ Progressione:
 ## Livelli didattici
 
 - **A — leggere:** diagramma, glossario, output e non-obiettivi;
-- **B — eseguire:** fixture/fake, test, report e CLI;
+- **B — eseguire:** fixture/fake/policy, test, report e CLI;
 - **C — modificare:** caso limite, policy o test;
 - **D — misurare:** benchmark, memoria, frame, batteria e FFI;
 - **E — progettare:** ADR, contratto, threat model o provider replacement.
+
+## Tracciabilità del build-bootstrap
+
+```text
+issue #23 -> PR #24
+-> wrapper files
+-> reviewed policy/checksums
+-> wrapper/action checkers
+-> clean checkout smoke
+-> build-bootstrap Lab
+-> chapter 37
+-> Foundations v0 closure report
+```
 
 ## Tracciabilità della slice missed exit
 
@@ -83,14 +103,15 @@ issue #21 -> PR #22
 
 ## Evoluzione strumenti
 
-### Fase 1 — corrente
+### Fase 1 — completata dalla fondazione
 
 - Markdown/Mermaid;
-- fixture e fake;
+- fixture, fake e policy;
 - Java, Rust e Kotlin CLI;
 - report JSON ristretti;
 - test common/JVM/Linux;
-- architecture checks;
+- architecture e bootstrap checks;
+- Gradle Wrapper committato;
 - benchmark diagnostici senza threshold.
 
 ### Fase 2

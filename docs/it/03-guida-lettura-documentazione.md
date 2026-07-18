@@ -1,7 +1,7 @@
 # Guida alla lettura della documentazione
 
-La documentazione ha pubblici diversi. Questo capitolo evita di confondere
-visione futura, contratti correnti, Lab eseguibili e capacità di prodotto.
+La documentazione ha pubblici diversi. Questa guida evita di confondere visione
+futura, contratti correnti, Lab eseguibili e capacità di prodotto.
 
 ## Percorso 1 — capire Travel DNA
 
@@ -40,7 +40,35 @@ capire il contratto
 -> riallineamento di main
 ```
 
-## Percorso 3 — come nasce un navigatore
+## Percorso 3 — build riproducibile
+
+1. [Capitolo 37 — Gradle Wrapper](37-build-riproducibile-gradle-wrapper.md)
+2. [Scenario build-bootstrap](lab/scenarios/gradle-wrapper-riproducibile.md)
+3. `gradle/wrapper/tdna-wrapper-policy.json`;
+4. `tools/check_gradle_wrapper.py`;
+5. `tools/check_ci_actions.py`;
+6. `.github/workflows/foundation-ci.yml`;
+7. [Supply chain](36-licenze-dati-supply-chain.md);
+8. [Rapporto di chiusura Foundations v0](../project/foundation-v0-closure.md).
+
+Comandi:
+
+```bash
+sh tools/tdna check-gradle-wrapper
+sh tools/tdna check-ci-actions
+sh tools/tdna lab build-bootstrap
+./gradlew --version
+```
+
+Domande guida:
+
+- perché il Wrapper JAR viene committato?
+- che differenza c'è fra checksum, firma e root of trust?
+- perché una GitHub Action viene bloccata a SHA completo?
+- perché `gradle` globale è opzionale ma Java è obbligatorio?
+- che cosa rimane non ermetico nel build?
+
+## Percorso 4 — come nasce un navigatore
 
 1. [Routing Java/Rust](43-reference-routing-java-rust.md)
 2. [Scenario reference routing](lab/scenarios/reference-routing-java-rust.md)
@@ -82,7 +110,7 @@ grafo
 -> delta mappa / HUD / voce
 ```
 
-## Percorso 4 — Kotlin Multiplatform
+## Percorso 5 — Kotlin Multiplatform
 
 1. [Stack linguaggi](28-stack-linguaggi-e-gui.md)
 2. [Plugin e provider](22-architettura-plugin-provider.md)
@@ -107,8 +135,7 @@ shared/off-route-state-machine
 shared/reroute-coordinator
 ```
 
-5. confrontare contratti, testkit, fake, runner, tracker e coordinator;
-6. eseguire:
+Eseguire:
 
 ```bash
 sh tools/tdna check-architecture
@@ -121,87 +148,30 @@ sh tools/tdna lab map-matching
 sh tools/tdna lab missed-exit
 ```
 
-## Percorso 5 — posizione e tempo monotono
+## Percorso 6 — posizione, matching e reroute
 
-1. [Capitolo 46](46-location-sample-e-replay-deterministico.md)
-2. [Scenario replay](lab/scenarios/location-replay-deterministico.md)
-3. `GeoPoint.kt`;
-4. `LocationModels.kt`;
-5. `LocationSampleGate`;
-6. `VirtualReplayClock`;
-7. `DeterministicReplayRunner`;
-8. fixture, Lab e benchmark.
+Ordine consigliato:
 
-Domande guida:
+```text
+46: LocationSample, sequence, tempo monotono e replay
+47: posizione matched, leg, manovra, arrival e delta
+48: porta route-bound, esiti, fake e postcondizioni
+49: evidenza off-route, conferma, correlazione e replacement
+```
 
-- perché non usare l'ora del calendario nel loop?
-- perché sequence e tempo devono crescere entrambi?
-- quale stato cambia dopo un rifiuto?
-- perché il primo timestamp produce delay zero?
-
-## Percorso 6 — matched position e route progress
-
-1. [Capitolo 47](47-posizione-matched-e-route-progress.md)
-2. [Scenario route progress](lab/scenarios/route-progress-tracker.md)
-3. `NavigationProgressModels.kt`;
-4. `RouteProgressTracker.kt`;
-5. `RouteProgressMapProjector.kt`;
-6. test del confine fra leg e del tie-break `Arrive`;
-7. Lab e benchmark.
+Comandi:
 
 ```bash
-sh tools/tdna lab route-progress
+sh tools/tdna bench location-replay 10000 7
 sh tools/tdna bench route-progress 10000 7
-```
-
-## Percorso 7 — porta di map matching
-
-1. [Capitolo 48](48-porta-map-matching-e-fake-deterministico.md)
-2. [Scenario map matching](lab/scenarios/map-matching-fake-provider.md)
-3. `MapMatchingContracts.kt`;
-4. `MapMatcherContractProbe.kt`;
-5. `FakeMapMatcher.kt`;
-6. `FakeMapMatchFixtures.kt`;
-7. CLI e benchmark.
-
-```bash
-sh tools/tdna lab map-matching
 sh tools/tdna bench map-matching 10000 7
-```
-
-Domande guida:
-
-- perché `bind(route)` precede `match(sample)`?
-- perché unmatched, failure e cancellation sono distinti?
-- quali identità protegge `requireMatches`?
-- perché il determinismo usa una sessione fresca?
-
-## Percorso 8 — off-route e reroute
-
-1. [Capitolo 49](49-off-route-missed-exit-e-reroute.md)
-2. [Scenario missed exit](lab/scenarios/navigation-missed-exit-reroute.md)
-3. `OffRouteContracts.kt`;
-4. `OffRouteTracker.kt`;
-5. `RerouteCoordinator.kt`;
-6. test di recovery, indeterminate, stale outcome e cancellation;
-7. Lab e benchmark.
-
-```bash
-sh tools/tdna lab missed-exit
 sh tools/tdna bench off-route 10000 7
 ```
 
-Domande guida:
+I benchmark sono diagnostici JVM CI. Non misurano dispositivo, batteria, GPS,
+rete o affidabilità su strada.
 
-- perché evidenza e conferma sono moduli diversi?
-- perché count e durata devono essere entrambi soddisfatti?
-- che cosa fa `Indeterminate`?
-- perché la vecchia route resta attiva durante il reroute?
-- quali identità rendono un outcome applicabile?
-- perché capability e provenance sono postcondizioni del provider?
-- quali componenti devono essere ricreati dopo il replacement?
-
-## Percorso 9 — mappe reattive
+## Percorso 7 — mappe reattive
 
 1. [Capitolo 45](45-map-scene-e-fake-renderer.md)
 2. [Scenario MapScene](lab/scenarios/map-scene-fake-renderer.md)
@@ -220,27 +190,40 @@ RoutePlan
 
 La geometria si installa raramente; il progresso usa delta compatti.
 
-## Percorso 10 — Android
+## Percorso 8 — Android-first
+
+La prima piattaforma mobile scelta dal maintainer è **Android**.
 
 1. [Stack](28-stack-linguaggi-e-gui.md)
-2. capitoli 44–49;
+2. capitoli 37 e 44–49;
 3. [Navigatori esterni e auto](25-navigatori-esterni-e-automotive.md)
 4. [Privacy e sicurezza](33-privacy-security-driving-safety.md)
 5. [Debugging](34-debugging-e-strumenti.md)
+6. [Stato sviluppo](../project/development-status.md)
 
-Ordine futuro:
+Ordine previsto:
 
 ```text
-shared contracts
--> Android location/map adapters
--> fake navigation runtime
+shell Android e composition root
+-> design system e navigazione Compose
+-> fake runtime/replay integrato
+-> adapter navigatori esterni
+-> location permission/lifecycle
+-> recorder locale bounded
 -> MapLibre MapHost
 -> active-trip presentation
--> foreground/background lifecycle
--> Android Auto
+-> foreground/background service
+-> pilot controllato
+-> Android Auto dopo core mobile stabile
 ```
 
-## Percorso 11 — iOS e Swift
+La prima shell non è un navigatore di produzione. Deve dimostrare build,
+installazione, stato locale, uso dei contratti condivisi e percorsi di test.
+
+## Percorso 9 — iOS e Swift
+
+La piattaforma iOS resta nel disegno, ma non viene sviluppata in parallelo alla
+prima shell Android.
 
 1. [Stack](28-stack-linguaggi-e-gui.md)
 2. capitoli 45–49;
@@ -255,7 +238,7 @@ shared framework
 -> ActivityKit / CarPlay
 ```
 
-## Percorso 12 — Java e Rust
+## Percorso 10 — Java e Rust
 
 ### Java
 
@@ -275,7 +258,7 @@ shared framework
 tipi puri -> test -> fixture/replay -> benchmark -> API stabile -> FFI -> mobile
 ```
 
-## Percorso 13 — diario, chat e privacy
+## Percorso 11 — diario, chat e privacy
 
 ### Diario
 
@@ -291,7 +274,7 @@ tipi puri -> test -> fixture/replay -> benchmark -> API stabile -> FFI -> mobile
 3. [Privacy e guida](33-privacy-security-driving-safety.md)
 4. [Scenario chat](lab/scenarios/chat-with-external-navigation.md)
 
-## Percorso 14 — riprendere dopo una pausa
+## Percorso 12 — riprendere dopo una pausa
 
 1. `AGENTS.md`;
 2. [Regole operative](00-regole-operative.md);
@@ -307,6 +290,7 @@ tipi puri -> test -> fixture/replay -> benchmark -> API stabile -> FFI -> mobile
 ```bash
 sh tools/tdna doctor
 sh tools/tdna check
+sh tools/tdna lab build-bootstrap
 sh tools/tdna lab reference-routing astar
 sh tools/tdna lab routing-contracts
 sh tools/tdna lab map-scene
@@ -315,8 +299,6 @@ sh tools/tdna lab route-progress
 sh tools/tdna lab map-matching
 sh tools/tdna lab missed-exit
 ```
-
-La CI usa Java 21, Gradle 9.5.1, Kotlin 2.4.0 e Rust stable.
 
 ## Futuro studio LoRa
 

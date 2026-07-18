@@ -25,7 +25,6 @@ known vulnerabilities
 replacement adapter
 ```
 
-
 ## Licenza di Travel DNA
 
 La licenza del progetto non è ancora decisa. Pubblicare il repository non equivale
@@ -125,6 +124,114 @@ Una nuova dipendenza deve giustificare:
 - no auto-merge di SDK sensibili;
 - emergency update path.
 
+Per il build bootstrap valgono regole aggiuntive:
+
+```text
+versione esplicita
+checksum da fonte revisionata
+file generati riconoscibili
+policy committata
+clean-checkout smoke
+CI e due review sullo stesso SHA
+```
+
+## Gradle Wrapper
+
+TDNA committa:
+
+```text
+gradlew
+gradlew.bat
+gradle-wrapper.jar
+gradle-wrapper.properties
+```
+
+Il Wrapper è una dipendenza di build eseguibile. Non viene escluso dalla review
+solo perché è generato o binario.
+
+La policy:
+
+```text
+gradle/wrapper/tdna-wrapper-policy.json
+```
+
+registra versione, URL, checksum distribuzione, checksum JAR e hash dei launcher.
+`tools/check_gradle_wrapper.py` verifica il drift prima del build.
+
+Il checksum della distribuzione protegge il file scaricato rispetto al valore
+revisionato. Il checksum del JAR protegge il bootstrap committato. Nessuno dei due
+è descritto come firma dell'editore o root of trust esterna.
+
+Approfondimento:
+[Build riproducibile e Gradle Wrapper](37-build-riproducibile-gradle-wrapper.md).
+
+## GitHub Actions
+
+I workflow eseguono codice esterno con privilegi della CI. Un riferimento come:
+
+```yaml
+uses: owner/action@v4
+```
+
+può essere spostato dal proprietario del repository dell'action.
+
+TDNA richiede:
+
+```yaml
+uses: owner/action@COMMIT_SHA_COMPLETO # versione leggibile
+```
+
+`tools/check_ci_actions.py` applica una allowlist con SHA revisionati. Una nuova
+action non entra semplicemente perché “nota” o popolare: richiede aggiornamento
+della policy e review.
+
+Il workflow normale usa permessi minimi:
+
+```yaml
+permissions:
+  contents: read
+```
+
+Permessi di scrittura temporanei usati per un bootstrap devono essere rimossi
+prima del final head.
+
+## Livelli di fiducia
+
+Separare:
+
+### Integrità
+
+```text
+byte scaricati == checksum atteso
+```
+
+### Drift repository
+
+```text
+file corrente == file revisionato
+```
+
+### Provenance/autenticità
+
+```text
+chi ha prodotto l'artifact e come lo dimostriamo esternamente?
+```
+
+### Riproducibilità
+
+```text
+stesso input/versione -> risultato equivalente osservabile
+```
+
+### Ermeticità
+
+```text
+tutti gli input sono dichiarati e nessun accesso esterno non controllato serve
+```
+
+Foundations v0 migliora integrità, drift e riproducibilità del bootstrap. Non
+dichiara ancora build ermetico o provenance firmata end-to-end.
+
 ## Secrets
 
 - nessuna chiave nel repo;
@@ -168,11 +275,27 @@ eseguire review legale specialistica.
 
 ## Supply-chain security
 
-- provenance build;
-- signed artifacts;
-- protected branches;
+Baseline corrente:
+
+- protected review process;
+- una sola PR;
+- due round puliti;
+- expected-head merge;
+- Wrapper committato e verificato;
+- checksum distribuzione;
+- Action SHA allowlist;
 - least-privilege CI;
+- fixture sintetiche;
+- plugin/provider boundaries.
+
+Lavoro futuro:
+
+- dependency verification Gradle/Maven;
+- dependency locking completo;
+- SBOM;
+- provenance build;
+- signed artifacts e attestazioni;
 - dependency scanning;
-- reproducibility progressiva;
-- plugin allowlist;
-- checksum offline packages.
+- mirror controllato quando giustificato;
+- checksum/firme offline packages;
+- verifica periodica degli SHA allowlisted.

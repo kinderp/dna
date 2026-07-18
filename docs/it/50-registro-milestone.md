@@ -5,9 +5,9 @@
 | Ordine | Milestone | Stato | Deliverable principali | Non-obiettivi |
 | --- | --- | --- | --- | --- |
 | 0 | Documentation Foundation v0 | done | Regole, architettura, ADR, Lab e roadmap. | Codice mobile/backend. |
-| 1 | Foundations and Travel DNA Lab v0 | in-progress | Build multi-language, contratti, fake, replay, matching, progress e reroute. | GPS/provider reali. |
+| 1 | Foundations and Travel DNA Lab v0 | done on merge of PR #24 | Build multi-language, Wrapper, contratti, fake, replay, matching, progress e reroute. | GPS/provider reali. |
 | 2 | Canonical Route and Map Slice | planned | Adapter MapLibre seed e benchmark dispositivo. | Turn-by-turn completo. |
-| 3 | Navigation Runtime Replay v0 | in-progress | Matching boundary, off-route, missed exit e reroute. | Traffico live. |
+| 3 | Navigation Runtime Replay v0 | partial/done foundation scope | Matching boundary, off-route, missed exit e reroute deterministici. | Traffico live e soglie reali. |
 | 4 | External Navigation Companion v0 | planned | Handoff, shadow route e recorder. | Automotive completo. |
 | 5 | Journey Journal v0 | planned | Event store, soste, media e DailyPage. | Cloud media pubblico. |
 | 6 | Conversation Core v0 | planned | Outbox, fake server e driver policy. | Discovery live. |
@@ -33,34 +33,31 @@
 | LocationSample/replay | #11 / #16 | `020f8495f7fbbae81f1463b098b0ddd2a079c873` |
 | Matched position/route progress | #17 / #18 | `9921fbcc1da1000e6434bdae49646122cae8f0e0` |
 | Map-matching boundary | #19 / #20 | `95cf2f0d900b039efb86ba0a570e3ca3f8d8cef5` |
+| Missed exit/reroute | #21 / #22 | `8570eb466b43384756f2678da2303929295e087a` |
 
-## Slice I — missed exit e reroute deterministico
+## Slice J — Gradle Wrapper e chiusura Foundations v0
 
-- issue [#21](https://github.com/kinderp/tdna/issues/21);
-- PR [#22](https://github.com/kinderp/tdna/pull/22);
-- branch `agent/missed-exit-reroute`;
-- base `95cf2f0d900b039efb86ba0a570e3ca3f8d8cef5`;
+- issue [#23](https://github.com/kinderp/tdna/issues/23);
+- PR [#24](https://github.com/kinderp/tdna/pull/24);
+- branch `agent/gradle-wrapper-foundation-closure`;
+- base `8570eb466b43384756f2678da2303929295e087a`;
 - rischio `R2`;
-- stato **finding corretti; nuovo final gate richiesto**.
+- stato **substantive work/documentation in progress; final gate richiesto**.
 
 Deliverable:
 
-- [x] evidenza `OnRoute`, `Suspicious`, `Indeterminate`;
-- [x] policy bounded count+duration;
-- [x] state machine con falso allarme, hold e conferma sticky;
-- [x] rifiuti route/sequence/time non mutanti;
-- [x] episode e attempt ID;
-- [x] un solo reroute in flight;
-- [x] command/outcome correlation e stale rejection;
-- [x] old-route retention durante in-flight/failure;
-- [x] cancellation cleanup e ordinary-exception mapping;
-- [x] capability `routing.plan` verificata prima della chiamata;
-- [x] capability manovre verificata sui risultati;
-- [x] public `InFlight` state invariants;
-- [x] provenance e canonical replacement postconditions;
-- [x] nuovo route ID e replacement atomico;
-- [x] Lab, benchmark, capitolo 49, scenario e report indicizzato;
-- [ ] CI verde sul nuovo final substantive head;
+- [x] `gradlew`, `gradlew.bat`, JAR e properties Gradle 9.5.1;
+- [x] checksum distribuzione configurato;
+- [x] policy revisionata per JAR, launcher e properties;
+- [x] checker Wrapper fail-closed;
+- [x] GitHub Actions allowlisted e pin a SHA completo;
+- [x] workflow finale `contents: read`;
+- [x] build Kotlin tramite `./gradlew`, Gradle globale non richiesto;
+- [x] build-bootstrap Lab;
+- [x] capitolo 37 e scenario;
+- [x] rapporto di chiusura Foundations v0;
+- [x] report giornaliero e indici;
+- [ ] CI verde sul final substantive head;
 - [ ] clean review round 1;
 - [ ] clean review round 2 sullo stesso SHA;
 - [ ] expected-head merge e verifica `main`.
@@ -75,10 +72,15 @@ Deliverable:
 - [x] LocationSample, clock e replay;
 - [x] matched position/route progress;
 - [x] map-matching boundary su `main`;
-- [ ] missed-exit scenario su `main`;
+- [x] missed-exit scenario su `main`;
 - [x] benchmark seed diagnostici;
-- [ ] Gradle Wrapper;
-- [ ] rapporto finale di chiusura milestone.
+- [x] Gradle Wrapper committato e verificato nella PR #24;
+- [x] rapporto finale di chiusura milestone;
+- [ ] PR #24: CI e due review pulite sul final head;
+- [ ] PR #24: merge e verifica post-merge.
+
+Il rapporto consolidato è
+[`docs/project/foundation-v0-closure.md`](../project/foundation-v0-closure.md).
 
 ## Regole
 

@@ -34,10 +34,11 @@ codebase. I commenti nel codice restano in inglese e più sintetici.
 | [34 - Debugging](34-debugging-e-strumenti.md) | Strumenti JVM, Rust, mobile e rete. | Studenti. | Quando qualcosa non funziona. |
 | [35 - Qualità](35-qualita-prodotto-software.md) | Correttezza, robustezza, energia e maturità. | Tutti. | Per valutare una feature. |
 | [36 - Licenze](36-licenze-dati-supply-chain.md) | ODbL, SBOM e supply chain. | Maintainer. | Prima delle dipendenze. |
+| [37 - Build riproducibile](37-build-riproducibile-gradle-wrapper.md) | Wrapper, checksum, Action SHA, trust model e upgrade. | Tutti i tecnici. | Prima del primo build. |
 | [40 - Mappa codice](40-mappa-codice-e-stati.md) | Percorsi reali, ownership e stati. | Studenti/reviewer. | Per orientarsi. |
 | [41 - Tracepoint](41-tracepoint-model-v0.md) | Nomi logici stabili per gli stage. | Lab e test. | Prima degli scenari. |
 | [42 - Lab roadmap](42-traveldna-lab-roadmap.md) | Scenari didattici riproducibili. | Docenti/studenti. | Per i laboratori. |
-| [43 - Routing Java/Rust](43-reference-routing-java-rust.md) | Grafo, Dijkstra, A* e confronto. | Studenti Java/Rust. | Primo Lab. |
+| [43 - Routing Java/Rust](43-reference-routing-java-rust.md) | Grafo, Dijkstra, A* e confronto. | Studenti Java/Rust. | Primo Lab navigation. |
 | [44 - Contratti routing](44-contratti-routing-e-fake-provider.md) | KMP, porta, invarianti e fake provider. | Kotlin/architettura. | Dopo 43. |
 | [45 - MapScene](45-map-scene-e-fake-renderer.md) | Scena, delta, projector e fake renderer. | Kotlin/mappe. | Dopo 44. |
 | [46 - LocationSample](46-location-sample-e-replay-deterministico.md) | Tempo monotono, gate, replay e benchmark. | Navigation runtime. | Dopo 45. |
@@ -58,7 +59,9 @@ benchmark, errori comuni, esercizi e non-obiettivi.
 
 ## Stato
 
-Il percorso implementation-backed comprende sette Lab, dai capitoli 43 a 49.
-Per lo stato vivo consultare [documentation-status.md](documentation-status.md),
-[development-status.md](../project/development-status.md) e l'indice dei
+Il percorso implementation-backed comprende il Lab di engineering del capitolo
+37 e sette Lab navigation dai capitoli 43 a 49. Per lo stato vivo consultare
+[documentation-status.md](documentation-status.md),
+[development-status.md](../project/development-status.md), il
+[rapporto Foundations v0](../project/foundation-v0-closure.md) e l'indice dei
 [report giornalieri](../project/daily/README.md).
