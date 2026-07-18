@@ -25,8 +25,10 @@ import org.traveldna.navigation.reroute.RerouteBeginDecision
 import org.traveldna.navigation.reroute.RerouteBeginIgnoreReason
 import org.traveldna.navigation.reroute.RerouteCoordinator
 import org.traveldna.plugin.sdk.PluginId
+import org.traveldna.routing.contracts.ManeuverType
 import org.traveldna.routing.contracts.RouteId
 import org.traveldna.routing.contracts.RouteLeg
+import org.traveldna.routing.contracts.RouteManeuver
 import org.traveldna.routing.contracts.RoutePlan
 import org.traveldna.routing.contracts.RoutePlanningError
 import org.traveldna.routing.contracts.RoutePlanningErrorCode
@@ -240,7 +242,20 @@ private fun replacementRoute(request: RouteRequest): RoutePlan {
     return RoutePlan(
         id = RouteId("reference-rerouted-route-v0"),
         geometry = listOf(request.origin, middle, request.destination),
-        legs = listOf(RouteLeg(0, 2, request.origin, request.destination, 1_500L, 90L, emptyList())),
+        legs = listOf(
+            RouteLeg(
+                geometryStartIndex = 0,
+                geometryEndIndex = 2,
+                origin = request.origin,
+                destination = request.destination,
+                distanceMeters = 1_500L,
+                durationSeconds = 90L,
+                maneuvers = listOf(
+                    RouteManeuver(0, ManeuverType.Depart, request.origin, "Depart on rerouted journey"),
+                    RouteManeuver(2, ManeuverType.Arrive, request.destination, "Arrive at destination"),
+                ),
+            ),
+        ),
         distanceMeters = 1_500L,
         durationSeconds = 90L,
         provenance = RouteProvenance(FakeRoutePlanner.Id),
