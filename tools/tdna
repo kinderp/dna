@@ -59,7 +59,7 @@ run_lab() {
     scenario=${1:-}; algorithm=${2:-dijkstra}
     case "$scenario" in
         reference-routing) case "$algorithm" in dijkstra|astar) ;; *) say "ERROR: algorithm must be dijkstra or astar"; exit 2 ;; esac; compile_java; say "Java:"; java_report "$algorithm"; if command -v cargo >/dev/null 2>&1; then say "Rust:"; rust_report "$algorithm"; else say "Rust: skipped because cargo is not installed"; fi ;;
-        build-bootstrap) check_gradle_wrapper; check_ci_actions; python3 "$ROOT/tools/gradle_wrapper_report.py" "$ROOT" ;;
+        build-bootstrap) check_gradle_wrapper >/dev/null; check_ci_actions >/dev/null; python3 "$ROOT/tools/gradle_wrapper_report.py" "$ROOT" ;;
         routing-contracts) gradlew --no-daemon --quiet :labs:routing-contracts-cli:run ;;
         map-scene) gradlew --no-daemon --quiet :labs:map-scene-cli:run ;;
         location-replay) gradlew --no-daemon --quiet :labs:location-replay-cli:run --args="$LOCATION_FIXTURE" ;;
