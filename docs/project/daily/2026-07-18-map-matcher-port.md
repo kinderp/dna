@@ -41,14 +41,17 @@ LocationSample
 - `MapMatchResult.Failure` con error model bounded;
 - provenance provider-neutral;
 - postcondizioni per route, sequence, tempo, geometry index, final fraction e
-  provider identity.
+  provider identity;
+- cancellazione coroutine definita come segnale del caller da propagare, non
+  come `Failure` del provider.
 
 ### `shared/map-matching-testkit`
 
 - conformance probe riutilizzabile;
 - determinismo confrontato su sessioni fresche;
 - prova separata di matched, unmatched e provider failure;
-- report con snapshot difensivo dei check.
+- report con snapshot difensivo;
+- provider/check identifiers bounded, non vuoti e unici.
 
 ### `shared/fake-map-matcher`
 
@@ -162,11 +165,38 @@ Correzione:
 - warm-up e run misurati restano privi di assert per campione;
 - verifica finale resta fuori dal timer.
 
+### 7 — semantica di cancellazione non dichiarata
+
+La porta è sospendibile, ma la documentazione del contratto non specificava se
+una cancellazione coroutine dovesse diventare un `Failure`.
+
+Correzione:
+
+```text
+cancellation del caller/runtime
+-> propaga normalmente
+-> non viene tradotta in MapMatchResult.Failure
+```
+
+Un adapter reale dovrà distinguere controllo del lifecycle da errore provider.
+
+### 8 — report pubblico del testkit non bounded
+
+Lo snapshot era immutabile, ma un chiamante poteva ancora costruire un report con
+liste vuote, duplicate o molto grandi.
+
+Correzione:
+
+- provider ID non vuoto e massimo 128 caratteri;
+- da 1 a 32 check;
+- check unici, non vuoti e massimo 128 caratteri;
+- test per empty, duplicate e valori fuori limite.
+
 ## Test e verifiche
 
 Copertura:
 
-- bounds di errori, diagnostics e provenance;
+- bounds di errori, diagnostics, provenance e report;
 - route ID, sequence, monotonic time e geometry index;
 - final fraction;
 - provider identity;
@@ -175,7 +205,7 @@ Copertura:
 - catalog miss;
 - chiavi duplicate e route ID riusato;
 - call window bounded/resettable;
-- report immutabile;
+- report immutabile e bounded;
 - Lab pipeline verso route progress;
 - benchmark bounds;
 - common/JVM/Linux x64;
@@ -217,6 +247,7 @@ accuratezza.
 - capitolo 48;
 - scenario Lab eseguibile;
 - metadata fixture;
+- struttura repository aggiornata;
 - code/state map e tracepoint;
 - reading path;
 - feature/documentation/commenting status;
@@ -243,6 +274,7 @@ Focus:
 
 - dependency direction;
 - hot-path shape;
+- cancellation;
 - privacy/provenance;
 - benchmark claims;
 - documentazione e percorsi studenti;
@@ -261,7 +293,7 @@ milestone Navigation Runtime Replay v0.
 - nessun road graph o OSM;
 - nessun HMM/Viterbi;
 - nessun adapter mobile;
-- nessuna cancellation concorrente reale;
+- nessun test di cancellazione su adapter realmente sospendibile;
 - nessun off-route/reroute;
 - nessuna misura mobile/stradale;
 - Gradle Wrapper ancora assente.
