@@ -34,6 +34,33 @@ jobs:
           cache-provider: basic
           add-job-summary: on-failure
 
+      - name: Generate reviewed Gradle Wrapper bootstrap
+        shell: bash
+        run: |
+          set -euo pipefail
+          gradle wrapper \
+            --gradle-version 9.5.1 \
+            --distribution-type bin \
+            --gradle-distribution-sha256-sum bafc141b619ad6350fd975fc903156dd5c151998cc8b058e8c1044ab5f7b031f
+          actual=$(sha256sum gradle/wrapper/gradle-wrapper.jar | awk '{print $1}')
+          expected=497c8c2a7e5031f6aa847f88104aa80a93532ec32ee17bdb8d1d2f67a194a9c7
+          test "$actual" = "$expected"
+          grep -F 'distributionSha256Sum=bafc141b619ad6350fd975fc903156dd5c151998cc8b058e8c1044ab5f7b031f' \
+            gradle/wrapper/gradle-wrapper.properties
+
+      - name: Upload reviewed Gradle Wrapper bootstrap
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-wrapper-bootstrap
+          if-no-files-found: error
+          retention-days: 1
+          path: |
+            gradlew
+            gradlew.bat
+            gradle/wrapper/gradle-wrapper.jar
+            gradle/wrapper/gradle-wrapper.properties
+
       - name: Install stable Rust toolchain
         run: |
           rustup toolchain install stable --profile minimal --component rustfmt
