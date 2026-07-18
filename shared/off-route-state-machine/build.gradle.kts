@@ -11,6 +11,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 api(project(":shared:off-route-contracts"))
+                api(project(":shared:routing-contracts"))
             }
         }
         val commonTest by getting {

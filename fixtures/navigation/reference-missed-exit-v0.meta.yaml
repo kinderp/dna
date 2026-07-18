@@ -1,0 +1,35 @@
+id: reference-missed-exit-v0
+kind: synthetic-code-fixture
+coordinate_reference: WGS84
+source: project-generated
+privacy: public-synthetic
+license: project-internal-pending-ADR-0009
+implementation:
+  lab: labs/missed-exit-cli/src/main/kotlin/org/traveldna/lab/reroute/Main.kt
+purpose: >-
+  Teach false-alarm recovery, persistent off-route confirmation, one correlated
+  reroute attempt, stale-outcome rejection, old-route retention and atomic route
+  replacement without production thresholds or real road matching.
+policy:
+  required_consecutive_suspicious: 3
+  minimum_suspicious_duration_ms: 2000
+expected:
+  episodes: 2
+  recoveries: 1
+  indeterminate: 1
+  confirmations: 1
+  attempts: 1
+  duplicate_begin: AlreadyInFlight
+  stale_outcome_ignored: true
+  old_route_held: true
+  replaced: true
+  new_route_id: reference-rerouted-route-v0
+  new_tracker_empty: true
+non_goals:
+  - production off-route thresholds
+  - GPS filtering
+  - real road matching
+  - traffic
+  - Android or iOS lifecycle
+  - voice guidance
+  - production latency or battery claims

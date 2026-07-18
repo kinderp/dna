@@ -55,6 +55,13 @@ class OffRouteTracker(
         return decision
     }
 
+    /** Starts a new evidence stream for the same installed route. */
+    fun reset() {
+        state = OffRouteState.OnRoute
+        lastAcceptedObservation = null
+        episodeCounter = 0L
+    }
+
     private fun rejection(observation: OffRouteObservation): OffRouteRejectionReason? {
         if (observation.routeId != routeId) return OffRouteRejectionReason.WrongRoute
         val previous = lastAcceptedObservation ?: return null
