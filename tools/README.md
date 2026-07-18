@@ -26,9 +26,11 @@ sh tools/tdna COMMAND
 | `lab location-replay` | Lab sample/replay. |
 | `lab route-progress` | Lab matched route progress. |
 | `lab map-matching` | Lab porta matcher/fake/progress. |
+| `lab missed-exit` | Lab evidenza off-route e reroute correlato. |
 | `bench location-replay [n] [run-dispari]` | Benchmark replay. |
 | `bench route-progress [n] [run-dispari]` | Benchmark progress. |
 | `bench map-matching [n] [run-dispari]` | Benchmark matching fake + progress. |
+| `bench off-route [n] [run-dispari]` | Benchmark state machine off-route. |
 | `clean` | Rimuove `build/`. |
 
 ## Ambiente CI
@@ -58,10 +60,31 @@ build/kotlin/route-progress-lab.json
 build/kotlin/route-progress-benchmark.json
 build/kotlin/map-matching-lab.json
 build/kotlin/map-matching-benchmark.json
+build/kotlin/missed-exit-lab.json
+build/kotlin/off-route-benchmark.json
 ```
 
 La CI conserva gli output Kotlin come artifact `foundation-kotlin-observations`
 per 14 giorni. I benchmark non sono gate.
+
+## Benchmark off-route
+
+```bash
+sh tools/tdna bench off-route 10000 7
+```
+
+Vincoli:
+
+- 2–100.000 osservazioni;
+- 1–25 iterazioni, obbligatoriamente dispari;
+- tre warm-up;
+- input e tracker costruiti fuori dal timer;
+- ultimo campione forzato `OnRoute` per un post-stato deterministico;
+- correctness pass e verifica finale fuori dal timer;
+- finestra misurata: validazione, transizione e commit in-memory del tracker.
+
+Non misura normalizzazione dell'evidenza, map matching, provider, rete, route
+replacement, dispositivo mobile, batteria o accuratezza su strada.
 
 ## Benchmark map matching boundary
 
@@ -72,22 +95,18 @@ sh tools/tdna bench map-matching 10000 7
 Vincoli:
 
 - 2–50.000 campioni;
-- 1–25 iterazioni, obbligatoriamente dispari;
+- 1–25 iterazioni dispari;
 - tre warm-up;
-- route, campioni, catalogo, fake, sessione e tracker costruiti fuori dal timer;
-- un pass untimed verifica ogni matched e ogni progress accepted;
-- reset e verifica finale fuori dal timer;
-- finestra misurata: exact lookup, diagnostica bounded e `RouteProgressTracker.accept`.
-
-Non misura ricerca geografica, indice stradale, HMM/Viterbi, GPS, rete, MapLibre,
-batteria, dispositivo mobile o accuratezza su strada.
+- route, campioni, catalogo, fake, sessione e tracker fuori dal timer;
+- pass untimed che verifica ogni matched e progress accepted;
+- finestra misurata: exact lookup, diagnostica bounded e progress accept.
 
 ## Architecture checker
 
 `tools/check_architecture.py` verifica gli import ammessi nei moduli shared e
 cerca token provider/piattaforma nel codice eseguibile dopo aver rimosso commenti
-e literal. I testkit dichiarano direttamente i tipi presenti nella propria API;
-le dipendenze transitive accidentali non sono considerate un contratto valido.
+e literal. Le dipendenze dirette usate nelle API pubbliche devono essere
+dichiarate; le transitive accidentali non sono un contratto valido.
 
 È un primo guardrail e non sostituisce un futuro controllo del grafo Gradle.
 
