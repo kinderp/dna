@@ -23,6 +23,7 @@ tracepoint logici, test, prestazioni e proprietà di sicurezza.
 | [Location replay](scenarios/location-replay-deterministico.md) | Tempo monotono, ordering gate, clock e rate. | `sh tools/tdna lab location-replay` |
 | [Route progress](scenarios/route-progress-tracker.md) | Matched position, leg, manovra, arrival e map binding. | `sh tools/tdna lab route-progress` |
 | [Map matching boundary](scenarios/map-matching-fake-provider.md) | Sessione route-bound, Matched/Unmatched/Failure, fake e progress. | `sh tools/tdna lab map-matching` |
+| [Missed exit e reroute](scenarios/navigation-missed-exit-reroute.md) | Evidenza, falso allarme, conferma, correlazione e route replacement. | `sh tools/tdna lab missed-exit` |
 
 Benchmark diagnostici:
 
@@ -30,6 +31,7 @@ Benchmark diagnostici:
 sh tools/tdna bench location-replay 10000 7
 sh tools/tdna bench route-progress 10000 7
 sh tools/tdna bench map-matching 10000 7
+sh tools/tdna bench off-route 10000 7
 ```
 
 ## Scenari pianificati
@@ -37,7 +39,6 @@ sh tools/tdna bench map-matching 10000 7
 | Scenario | Stato | Cosa insegna |
 | --- | --- | --- |
 | [Route canonica](scenarios/render-canonical-route.md) | stable-doc | Adapter grafico reale e verifica fake/reale. |
-| [Uscita mancata](scenarios/navigation-missed-exit-reroute.md) | stable-doc | Off-route, reroute e route replacement. |
 | [Chat con navigatore esterno](scenarios/chat-with-external-navigation.md) | stable-doc | Background, push e superficie sicura. |
 | [Pagina del giorno](scenarios/daily-page-photos-thoughts.md) | stable-doc | Eventi, media, pensieri e privacy. |
 | [Scambio DNA](scenarios/dna-exchange-privacy.md) | stable-doc | Consenso, minimizzazione e revoca. |

@@ -36,6 +36,7 @@ common failures, non-goals, related docs
 | [Location replay](lab/scenarios/location-replay-deterministico.md) | Tempo monotono, gate, clock e rate. | `sh tools/tdna lab location-replay` | [46](46-location-sample-e-replay-deterministico.md) |
 | [Route progress](lab/scenarios/route-progress-tracker.md) | Matched position, leg, manovra, arrival e map binding. | `sh tools/tdna lab route-progress` | [47](47-posizione-matched-e-route-progress.md) |
 | [Map matching boundary](lab/scenarios/map-matching-fake-provider.md) | Sessione route-bound, esiti, fake e downstream progress. | `sh tools/tdna lab map-matching` | [48](48-porta-map-matching-e-fake-deterministico.md) |
+| [Missed exit and reroute](lab/scenarios/navigation-missed-exit-reroute.md) | Evidenza normalizzata, count+duration, un attempt e replacement. | `sh tools/tdna lab missed-exit` | [49](49-off-route-missed-exit-e-reroute.md) |
 
 Progressione:
 
@@ -46,13 +47,13 @@ Progressione:
 46: normalizzare e riprodurre campioni di posizione
 47: accettare una posizione matched e produrre progresso/delta
 48: ottenere un matched validato dietro una porta sostituibile
+49: confermare una deviazione e sostituire la route in modo correlato
 ```
 
 ## Scenari `stable-doc` successivi
 
 | Scenario | Cosa insegna | Dipendenza |
 | --- | --- | --- |
-| [Missed exit and reroute](lab/scenarios/navigation-missed-exit-reroute.md) | Evidenza off-route, conferma, reroute e route replacement. | Matching boundary e route progress. |
 | [Render canonical route](lab/scenarios/render-canonical-route.md) | Adapter MapLibre e confronto fake/reale. | Adapter grafico. |
 | [Chat with external navigation](lab/scenarios/chat-with-external-navigation.md) | Push, store e voice reply. | Conversation core. |
 | [Daily page](lab/scenarios/daily-page-photos-thoughts.md) | Eventi, media e controllo utente. | Journey store. |
@@ -66,16 +67,18 @@ Progressione:
 - **D — misurare:** benchmark, memoria, frame, batteria e FFI;
 - **E — progettare:** ADR, contratto, threat model o provider replacement.
 
-## Tracciabilità della slice matching
+## Tracciabilità della slice missed exit
 
 ```text
-issue #19 -> PR #20
--> MapMatcherPort / MapMatchSession
--> Matched | Unmatched | Failure
--> FakeMapMatcher / MapMatcherContractProbe
--> RouteProgressTracker
+issue #21 -> PR #22
+-> OffRouteObservation / OffRoutePolicy
+-> OffRouteTracker
+-> RerouteCommand / RerouteOutcome
+-> RerouteCoordinator / RerouteExecutor
+-> RoutePlannerPort
+-> route replacement
 -> Lab/benchmark
--> capitolo 48 e report del 18 luglio
+-> capitolo 49 e report del 18 luglio
 ```
 
 ## Evoluzione strumenti
@@ -92,10 +95,10 @@ issue #19 -> PR #20
 
 ### Fase 2
 
-- timeline raw/filtered/matched/progress;
-- off-route state inspector;
-- missed-exit/reroute scenario;
-- primo adapter matcher controllato.
+- timeline raw/filtered/matched/progress/off-route;
+- state inspector;
+- primo adapter matcher controllato;
+- fake runtime che ricrea matcher/progress/map binding dopo replacement.
 
 ### Fase 3
 

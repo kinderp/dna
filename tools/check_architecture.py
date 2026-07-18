@@ -29,13 +29,11 @@ RULES = {
     "shared/route-progress": ("kotlin.", "org.traveldna.navigation.contracts.", "org.traveldna.routing.contracts."),
     "shared/route-progress-map-projector": ("kotlin.", "org.traveldna.navigation.contracts.", "org.traveldna.map.contracts.", "org.traveldna.routing.contracts."),
     "shared/map-matching-contracts": ("kotlin.", "org.traveldna.plugin.sdk.", "org.traveldna.location.contracts.", "org.traveldna.navigation.contracts.", "org.traveldna.routing.contracts."),
-    "shared/map-matching-testkit": (
-        "kotlin.",
-        "org.traveldna.location.contracts.",
-        "org.traveldna.navigation.matching.contracts.",
-        "org.traveldna.routing.contracts.",
-    ),
+    "shared/map-matching-testkit": ("kotlin.", "org.traveldna.location.contracts.", "org.traveldna.navigation.matching.contracts.", "org.traveldna.routing.contracts."),
     "shared/fake-map-matcher": ("kotlin.", "org.traveldna.plugin.sdk.", "org.traveldna.geo.contracts.", "org.traveldna.location.contracts.", "org.traveldna.navigation.contracts.", "org.traveldna.navigation.matching.contracts.", "org.traveldna.routing.contracts."),
+    "shared/off-route-contracts": ("kotlin.", "org.traveldna.location.contracts.", "org.traveldna.routing.contracts."),
+    "shared/off-route-state-machine": ("kotlin.", "org.traveldna.navigation.offroute.contracts.", "org.traveldna.routing.contracts."),
+    "shared/reroute-coordinator": ("kotlin.", "org.traveldna.navigation.offroute.contracts.", "org.traveldna.routing.contracts."),
 }
 FORBIDDEN_CODE_TOKENS = (
     "maplibre", "valhalla", "ferrostar", "google.maps", "waze", "sygic",

@@ -29,11 +29,13 @@ prodotto. Lo stato vivo di CI e merge è in
 | Route-progress map binding | executable lab | Geometria verificata all'installazione e update `O(1)`. |
 | `MapMatcherPort` e sessione route-bound | executable lab | Confine provider-neutral fra sample e matched position. |
 | Fake map matcher/testkit | executable lab | Matched, Unmatched, Failure, fresh-session determinism e diagnostica bounded. |
-| Benchmark replay/progress/matching | executable lab | JVM CI diagnostica, nessuna soglia o pretesa mobile. |
+| Evidenza e conferma off-route | executable lab | OnRoute/Suspicious/Indeterminate, count+duration e recovery. |
+| Coordinamento reroute | executable lab | Un tentativo correlato, vecchia route preservata e replacement validato. |
+| Benchmark replay/progress/matching/off-route | executable lab | JVM CI diagnostica, nessuna soglia o pretesa mobile. |
 | Tooling foundation | executable lab | Documentazione, architettura, Java, Rust e KMP. |
 | Gradle/KMP bootstrap | executable lab | JVM/Linux CI; wrapper locale ancora mancante. |
 | Map matching stradale reale | prototype planned | Candidate search, scoring, topology, heading e isteresi. |
-| Off-route e rerouting | prototype planned | Scenario missed-exit deterministico. |
+| Soglie off-route di produzione | prototype planned | Richiedono replay realistici, field audit e tuning per contesto. |
 | MapLibre adapter | prototype planned | Dopo contratti e benchmark dispositivo. |
 | Valhalla/Ferrostar adapter | prototype planned | Dietro porte Travel DNA. |
 | Navigatore esterno e percorso ombra | prototype planned | Handoff e confidence esplicita. |
@@ -54,10 +56,12 @@ RoutePlan -> MapScene -> fake renderer
 Location fixture -> gate -> virtual clock -> replay summary
 MatchedRoutePosition -> progress snapshot -> map binding/delta
 LocationSample -> fake matcher -> Matched/Unmatched/Failure -> progress
+evidenza normalizzata -> false alarm/conferma -> reroute correlato -> replacement
 ```
 
 Non sono dimostrati GPS o strade reali, map matching geometrico, distanza/ETA,
-off-route, rerouting, MapLibre, adapter mobile, batteria o affidabilità su strada.
+soglie off-route di produzione, traffico, MapLibre, adapter mobile, batteria o
+affidabilità su strada.
 
 ## Regola di comunicazione
 

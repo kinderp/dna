@@ -52,16 +52,8 @@ RoutePlan
 -> snapshot semantico
 ```
 
-```text
-MapScene installata raramente:
-  camera, route, marker, selezione
-
-MapSceneDelta frequente:
-  camera, progress, marker changes, selection
-```
-
-Il renderer possiede gli handle concreti; i contratti condivisi possiedono ID e
-modelli dichiarativi.
+La scena statica viene installata raramente; camera, progress, marker e selezione
+usano delta compatti.
 
 ## 4. LocationSample e replay
 
@@ -78,23 +70,10 @@ TDNA_LOCATION_REPLAY_V0
 -> report JSON
 ```
 
-Stato bounded del runner:
-
-```text
-next index
-accepted/rejected counters
-last accepted sample
-virtual clock
-rate remainder
-rejection counts
-replay state
-```
-
-Il runner non conserva la cronologia degli eventi e non legge il wall clock.
+Stato bounded: next index, contatori, last accepted, clock virtuale, rate
+remainder, rejection counts e replay state. Nessuna cronologia illimitata.
 
 ## 5. Porta map matching e fake
-
-### Percorso reale
 
 ```mermaid
 flowchart LR
@@ -106,164 +85,137 @@ flowchart LR
     V --> P[RouteProgressTracker.accept]
 ```
 
-### Function path del Lab
+Function path:
 
 ```text
-Main.runLab
--> MapMatcherContractProbe.verify
--> FakeMapMatcher.bind(RoutePlan)
--> Session.match(LocationSample)
-   -> Key(routeId, sample) lookup
-   -> bounded ArrayDeque record
+MapMatcherPort.bind(RoutePlan)
+-> MapMatchSession.match(LocationSample)
+-> exact fake key lookup / real adapter future
 -> Matched.requireMatches
 -> RouteProgressTracker.accept
--> report JSON
 ```
-
-### Ownership
 
 | Componente | Stato posseduto | Frequenza |
 | --- | --- | --- |
 | `RoutePlan` | geometria/leg/manovre immutabili | sessione |
-| `MapMatcherPort` | descriptor e factory | composizione |
 | `MapMatchSession` | route legata e futuro stato matcher | sessione |
 | `FakeMapMatcher` | catalogo, counter e call window | vita fake |
 | `MapMatchResult` | un esito immutabile | campione |
-| testkit | nessuno oltre al report locale | test |
 
-### Esiti
-
-```text
-Matched
-  -> route/sample/provider postcondition
-  -> downstream progress
-
-Unmatched
-  -> nessun match affidabile
-  -> non muta progress
-  -> non equivale automaticamente a off-route
-
-Failure
-  -> provider non ha completato l'operazione
-  -> resta distinto da Unmatched
-```
-
-### Determinismo
-
-```text
-session A nuova + route R + sample S -> result X
-session B nuova + route R + sample S -> result X
-```
-
-Il probe non ripete lo stesso sample nella stessa sessione stateful.
-
-### Stato bounded e costo
-
-```text
-catalog <= 100.000 entry
-call window <= 10.000
-exact lookup medio O(1)
-ArrayDeque eviction ammortizzata O(1)
-nessuna route copiata per sample
-```
-
-Il fake non esegue ricerca geometrica e non misura accuratezza.
+`Unmatched`, provider `Failure` e cancellazione restano distinti.
 
 ## 6. Matched position e route progress
 
-### Percorso reale
+```text
+MatchedRoutePosition
+-> RouteProgressTracker.accept
+-> RouteProgressSnapshot
+-> RouteProgressMapProjector.project
+-> MapSceneDelta.UpdateRouteProgress
+-> renderer
+```
+
+Il tracker possiede cursori precomputati e l'ultimo snapshot accepted. Usa binary
+search per leg/manovra; una regressione non muta lo stato. Route e overlay vengono
+verificati una volta nel binding e il delta frequente resta `O(1)`.
+
+## 7. Evidenza off-route e state machine
 
 ```mermaid
 flowchart LR
-    MP[MatchedRoutePosition] --> T[RouteProgressTracker.accept]
-    T --> S[RouteProgressSnapshot]
-    S --> P[RouteProgressMapProjector.project]
-    P --> D[MapSceneDelta.UpdateRouteProgress]
-    D --> R[Renderer]
+    N[normalized evidence] --> T[OffRouteTracker.accept]
+    T -->|OnRoute| O[OnRoute]
+    T -->|Suspicious| S[Suspected]
+    S -->|OnRoute| O
+    S -->|Indeterminate| S
+    S -->|count + duration| C[Confirmed]
 ```
 
-### Function path del Lab
+Function path:
 
 ```text
-Main.runLab
--> referenceRoute
--> MatchedRoutePosition candidates
--> RouteProgressTracker.accept
-   -> rejection precedence
-   -> findActiveLegIndex (binary search)
-   -> findUpcomingManeuver (binary search)
-   -> RouteProgressSnapshot
--> RouteProgressMapProjector.bind
--> RouteProgressMapProjector.project
--> report JSON
+OffRouteTracker.accept
+-> route / sequence / monotonic-time validation
+-> nextState
+-> SuspicionStarted / Continued / Held / Recovered / ConfirmedNow
+-> commit only for Accepted
 ```
 
-### Ownership
-
-| Componente | Stato posseduto | Frequenza |
+| Componente | Stato posseduto | Crescita |
 | --- | --- | --- |
-| `RoutePlan` | geometria, leg e manovre immutabili | installazione |
-| `MatchedRoutePosition` | una ipotesi del matcher | campione |
-| `RouteProgressTracker` | cursori precomputati e ultimo snapshot | sessione |
-| `RouteProgressMapBinding` | scene/overlay/route ID e point count | installazione |
-| projector update | nessuno | accepted sample |
-| renderer | geometria installata e progresso | scena |
+| `OffRoutePolicy` | count e durata bounded | costante |
+| `OffRouteTracker` | state, accepted baseline, episode counter | costante |
+| `OffRouteState.Suspected` | prima e ultima evidenza sospetta, count | costante |
+| `OffRouteState.Confirmed` | prima evidenza, conferma, count e durata | costante |
 
-Transizioni:
+`Indeterminate` aggiorna la baseline accepted ma non il last suspicious sample,
+non incrementa il count e non causa recovery.
 
-```text
-nessun snapshot
--> prima posizione valida accepted
--> stationary accepted
--> advance accepted
--> leg boundary accepted
--> regression rejected, stato invariato
--> arrival accepted
+## 8. Reroute correlato e route replacement
+
+```mermaid
+flowchart LR
+    C[Confirmed] --> B[RerouteCoordinator.begin]
+    B --> CMD[RerouteCommand]
+    CMD --> E[RerouteExecutor]
+    E --> P[RoutePlannerPort]
+    P --> OUT[RerouteOutcome]
+    OUT --> A[RerouteCoordinator.apply]
+    A -->|valid| R[Replaced route]
+    A -->|failure/stale| OLD[Old route retained]
 ```
 
-Rifiuti:
+Stati:
 
 ```text
-RouteMismatch
-GeometryIndexOutOfBounds
-FinalPointHasFraction
-NonIncreasingSequence
-NonIncreasingMonotonicTime
-RegressedAlongRoute
+Ready(activeRoute, optional lastFailure)
+-> InFlight(activeRoute, command)
+-> Ready(oldRoute, failure)
+oppure
+-> Ready(newRoute)
 ```
 
-La geometria route-overlay viene verificata una volta nel binding. Il delta per
-campione è compatto e `O(1)`.
+Invarianti principali:
 
-## 7. Navigation runtime target
+- `command.sourceRouteId == activeRoute.id`;
+- request destination uguale alla destinazione della route attiva;
+- massimo un attempt in flight;
+- attempt ID e source route ID devono coincidere nell'outcome;
+- il planner deve dichiarare `routing.plan`;
+- capability manovre dichiarata implica manovre presenti nelle legs;
+- provenance della route uguale al provider selezionato;
+- replacement conforme alla request e con nuovo `RouteId`;
+- cancellation cleanup prima del rethrow;
+- la vecchia route resta autorevole fino al commit della nuova.
+
+Dopo replacement il runtime ricrea almeno:
+
+```text
+MapMatchSession
+RouteProgressTracker
+OffRouteTracker
+RouteProgressMapBinding
+stato voice/guidance legato alla route
+```
+
+## 9. Navigation runtime target
 
 ```text
 LocationSource
 -> sample validation/filter
 -> MapMatcherPort session
--> matched/unmatched/failure policy
+-> matched/unmatched/failure normalization
 -> route progress
--> confidence/off-route policy
--> maneuver and prompt state
+-> off-route evidence/state machine
+-> reroute coordinator/executor
 -> NavigationSnapshot
 -> HUD / map delta / voice
 ```
 
-Stato futuro single-owner:
+Il runtime futuro deve avere un owner singolo per route attiva, matcher, progress,
+evidenza off-route, tentativo reroute e prompt annunciati.
 
-```text
-active route
-last accepted LocationSample
-map-match session
-matched position
-progress snapshot
-current/announced maneuver
-off-route evidence
-reroute request/version
-confidence
-```
-
-## 8. Chat durante la guida target
+## 10. Chat durante la guida target
 
 ```text
 server message
@@ -274,10 +226,7 @@ server message
 -> outbox
 ```
 
-Server e local DB possiedono durata e ordine; la superficie possiede soltanto
-stato di presentazione.
-
-## 9. Diario target
+## 11. Diario target
 
 ```text
 JourneyEvent
@@ -289,10 +238,7 @@ JourneyEvent
 -> optional DNA card sanitization
 ```
 
-La condivisione deriva da una proiezione minimizzata, non dal diario privato
-completo.
-
-## 10. Presenza target
+## 12. Presenza target
 
 ```text
 exact local sample
@@ -304,7 +250,7 @@ exact local sample
 
 La minimizzazione precede la rete.
 
-## 11. Mappa dati
+## 13. Mappa dati
 
 | Dato | Owner | Persistenza |
 | --- | --- | --- |
@@ -313,6 +259,8 @@ La minimizzazione precede la rete.
 | `MapMatchResult` | matcher/caller | transiente |
 | `MatchedRoutePosition` | matcher/runtime | transiente |
 | `RouteProgressSnapshot` | progress tracker | ultimo snapshot |
+| `OffRouteState` | off-route tracker | stato corrente |
+| `RerouteCommand` | coordinator/executor | un attempt |
 | `RoutePlan` | navigation | cache/sessione |
 | `MapScene` | presentation/renderer | scena |
 | `MapSceneDelta` | presentation | transiente |
@@ -323,15 +271,6 @@ La minimizzazione precede la rete.
 
 ## Regola di aggiornamento
 
-Ogni vertical slice aggiunge:
-
-- package e file;
-- entry point e function path;
-- stato mutato e owner;
-- thread/dispatcher;
-- tracepoint;
-- test;
-- benchmark e limiti;
-- issue, PR e report.
-
+Ogni vertical slice aggiunge package/file, entry point, function path, stato e
+owner, thread/dispatcher, tracepoint, test, benchmark, issue, PR e report.
 Evitare call graph globali illeggibili: generare viste mirate al comportamento.

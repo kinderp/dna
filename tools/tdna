@@ -16,13 +16,7 @@ say() { printf '%s\n' "$*"; }
 need() { if ! command -v "$1" >/dev/null 2>&1; then say "ERROR: required command '$1' is not available."; return 1; fi; }
 version_line() { name=$1; shift; if command -v "$name" >/dev/null 2>&1; then version=$($@ 2>&1 | sed -n '1p'); printf '%-10s %s\n' "$name" "$version"; else printf '%-10s %s\n' "$name" "MISSING"; fi; }
 
-compile_java() {
-    need javac
-    rm -rf "$JAVA_BUILD"
-    mkdir -p "$JAVA_BUILD/classes"
-    find "$JAVA_MAIN" "$JAVA_TEST" -type f -name '*.java' | sort > "$JAVA_BUILD/sources.txt"
-    javac --release 21 -Xlint:all -Werror -d "$JAVA_BUILD/classes" @"$JAVA_BUILD/sources.txt"
-}
+compile_java() { need javac; rm -rf "$JAVA_BUILD"; mkdir -p "$JAVA_BUILD/classes"; find "$JAVA_MAIN" "$JAVA_TEST" -type f -name '*.java' | sort > "$JAVA_BUILD/sources.txt"; javac --release 21 -Xlint:all -Werror -d "$JAVA_BUILD/classes" @"$JAVA_BUILD/sources.txt"; }
 java_report() { java -cp "$JAVA_BUILD/classes" "$JAVA_MAIN_CLASS" "$ROUTE_FIXTURE" "$1"; }
 rust_report() { CARGO_TARGET_DIR="$BUILD_DIR/rust" cargo run --quiet --manifest-path "$RUST_MANIFEST" -- "$ROUTE_FIXTURE" "$1"; }
 check_java() { say "== Java reference routing =="; need java; compile_java; java -cp "$JAVA_BUILD/classes" "$JAVA_TEST_CLASS" "$ROUTE_FIXTURE"; java_report dijkstra > "$JAVA_BUILD/java-dijkstra.json"; java_report astar > "$JAVA_BUILD/java-astar.json"; say "PASS Java reports written under build/java/reference-routing"; }
@@ -44,9 +38,12 @@ check_kotlin() {
     gradle --no-daemon --quiet :labs:route-progress-cli:run --args="--benchmark 10000 7" > "$BUILD_DIR/kotlin/route-progress-benchmark.json"
     gradle --no-daemon --quiet :labs:map-matching-cli:run > "$BUILD_DIR/kotlin/map-matching-lab.json"
     gradle --no-daemon --quiet :labs:map-matching-cli:run --args="--benchmark 10000 7" > "$BUILD_DIR/kotlin/map-matching-benchmark.json"
+    gradle --no-daemon --quiet :labs:missed-exit-cli:run > "$BUILD_DIR/kotlin/missed-exit-lab.json"
+    gradle --no-daemon --quiet :labs:missed-exit-cli:run --args="--benchmark 10000 7" > "$BUILD_DIR/kotlin/off-route-benchmark.json"
     say "Diagnostic location-replay benchmark:"; cat "$BUILD_DIR/kotlin/location-replay-benchmark.json"
     say "Diagnostic route-progress benchmark:"; cat "$BUILD_DIR/kotlin/route-progress-benchmark.json"
     say "Diagnostic map-matching pipeline benchmark:"; cat "$BUILD_DIR/kotlin/map-matching-benchmark.json"
+    say "Diagnostic off-route state benchmark:"; cat "$BUILD_DIR/kotlin/off-route-benchmark.json"
     say "PASS Kotlin reports written under build/kotlin"
 }
 
@@ -59,7 +56,8 @@ run_lab() {
         location-replay) need gradle; gradle --no-daemon --quiet :labs:location-replay-cli:run --args="$LOCATION_FIXTURE" ;;
         route-progress) need gradle; gradle --no-daemon --quiet :labs:route-progress-cli:run ;;
         map-matching) need gradle; gradle --no-daemon --quiet :labs:map-matching-cli:run ;;
-        *) say "usage: sh tools/tdna lab {reference-routing [dijkstra|astar]|routing-contracts|map-scene|location-replay|route-progress|map-matching}"; exit 2 ;;
+        missed-exit) need gradle; gradle --no-daemon --quiet :labs:missed-exit-cli:run ;;
+        *) say "usage: sh tools/tdna lab {reference-routing [dijkstra|astar]|routing-contracts|map-scene|location-replay|route-progress|map-matching|missed-exit}"; exit 2 ;;
     esac
 }
 
@@ -69,7 +67,8 @@ run_benchmark() {
         location-replay) need gradle; gradle --no-daemon --quiet :labs:location-replay-cli:run --args="--benchmark $samples $iterations" ;;
         route-progress) need gradle; gradle --no-daemon --quiet :labs:route-progress-cli:run --args="--benchmark $samples $iterations" ;;
         map-matching) need gradle; gradle --no-daemon --quiet :labs:map-matching-cli:run --args="--benchmark $samples $iterations" ;;
-        *) say "usage: sh tools/tdna bench {location-replay|route-progress|map-matching} [sample-count] [odd-iterations]"; exit 2 ;;
+        off-route) need gradle; gradle --no-daemon --quiet :labs:missed-exit-cli:run --args="--benchmark $samples $iterations" ;;
+        *) say "usage: sh tools/tdna bench {location-replay|route-progress|map-matching|off-route} [sample-count] [odd-iterations]"; exit 2 ;;
     esac
 }
 
@@ -105,9 +104,11 @@ Commands:
   lab location-replay                 run deterministic location replay
   lab route-progress                  run matched route progress
   lab map-matching                    run fake map matching into route progress
+  lab missed-exit                     run off-route confirmation and reroute Lab
   bench location-replay [n] [runs]    run location-replay benchmark
   bench route-progress [n] [runs]     run route-progress benchmark
   bench map-matching [n] [runs]       run fake matching pipeline benchmark
+  bench off-route [n] [runs]          run off-route state benchmark
   clean                               remove generated build output
 HELP
         ;;

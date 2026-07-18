@@ -5,9 +5,9 @@
 | Ordine | Milestone | Stato | Deliverable principali | Non-obiettivi |
 | --- | --- | --- | --- | --- |
 | 0 | Documentation Foundation v0 | done | Regole, architettura, ADR, Lab e roadmap. | Codice mobile/backend. |
-| 1 | Foundations and Travel DNA Lab v0 | in-progress | Build multi-language, contratti, fake, replay, matching e progress. | GPS/provider reali. |
+| 1 | Foundations and Travel DNA Lab v0 | in-progress | Build multi-language, contratti, fake, replay, matching, progress e reroute. | GPS/provider reali. |
 | 2 | Canonical Route and Map Slice | planned | Adapter MapLibre seed e benchmark dispositivo. | Turn-by-turn completo. |
-| 3 | Navigation Runtime Replay v0 | planned | Off-route, missed exit e reroute. | Traffico live. |
+| 3 | Navigation Runtime Replay v0 | in-progress | Matching boundary, off-route, missed exit e reroute. | Traffico live. |
 | 4 | External Navigation Companion v0 | planned | Handoff, shadow route e recorder. | Automotive completo. |
 | 5 | Journey Journal v0 | planned | Event store, soste, media e DailyPage. | Cloud media pubblico. |
 | 6 | Conversation Core v0 | planned | Outbox, fake server e driver policy. | Discovery live. |
@@ -21,7 +21,7 @@
 | 14 | Travel DNA Guidance Core | future | Rust shadow core se misurato. | Renderer riscritto. |
 | 15 | LoRa Communication Spike | future/open | Esperimento e ADR. | Produzione senza prove. |
 
-## Milestone 1 — slice completate
+## Slice completate e mergiate
 
 | Slice | Issue / PR | Merge |
 | --- | --- | --- |
@@ -32,33 +32,40 @@
 | Serial PR governance | #14 / #15 | `76680433089842db5805d28eb50416a23c7d0a88` |
 | LocationSample/replay | #11 / #16 | `020f8495f7fbbae81f1463b098b0ddd2a079c873` |
 | Matched position/route progress | #17 / #18 | `9921fbcc1da1000e6434bdae49646122cae8f0e0` |
+| Map-matching boundary | #19 / #20 | `95cf2f0d900b039efb86ba0a570e3ca3f8d8cef5` |
 
-## Slice H — porta map matching e fake deterministico
+## Slice I — missed exit e reroute deterministico
 
-- issue [#19](https://github.com/kinderp/tdna/issues/19);
-- PR [#20](https://github.com/kinderp/tdna/pull/20);
-- branch `agent/map-matcher-port`;
-- base `9921fbcc1da1000e6434bdae49646122cae8f0e0`;
-- stato **substantive work and documentation complete; final gate pending**.
+- issue [#21](https://github.com/kinderp/tdna/issues/21);
+- PR [#22](https://github.com/kinderp/tdna/pull/22);
+- branch `agent/missed-exit-reroute`;
+- base `95cf2f0d900b039efb86ba0a570e3ca3f8d8cef5`;
+- rischio `R2`;
+- stato **finding corretti; nuovo final gate richiesto**.
 
 Deliverable:
 
-- [x] `MapMatcherPort` e `MapMatchSession` route-bound;
-- [x] capability e descriptor;
-- [x] `Matched`, `Unmatched` e `Failure` distinti;
-- [x] postcondizioni di route/sample/provider;
-- [x] fake a catalogo esatto e stato bounded;
-- [x] fresh-session determinism;
-- [x] conformance testkit;
-- [x] pipeline verso route progress;
-- [x] Lab, benchmark e metadata sintetici;
-- [x] chapter 48, scenario, code map/tracepoint e report;
-- [ ] CI verde sul final substantive head;
+- [x] evidenza `OnRoute`, `Suspicious`, `Indeterminate`;
+- [x] policy bounded count+duration;
+- [x] state machine con falso allarme, hold e conferma sticky;
+- [x] rifiuti route/sequence/time non mutanti;
+- [x] episode e attempt ID;
+- [x] un solo reroute in flight;
+- [x] command/outcome correlation e stale rejection;
+- [x] old-route retention durante in-flight/failure;
+- [x] cancellation cleanup e ordinary-exception mapping;
+- [x] capability `routing.plan` verificata prima della chiamata;
+- [x] capability manovre verificata sui risultati;
+- [x] public `InFlight` state invariants;
+- [x] provenance e canonical replacement postconditions;
+- [x] nuovo route ID e replacement atomico;
+- [x] Lab, benchmark, capitolo 49, scenario e report indicizzato;
+- [ ] CI verde sul nuovo final substantive head;
 - [ ] clean review round 1;
 - [ ] clean review round 2 sullo stesso SHA;
 - [ ] expected-head merge e verifica `main`.
 
-## Criteri di chiusura milestone 1
+## Criteri di chiusura Foundations v0
 
 - [x] repository e CI multi-language;
 - [x] reference routing Java/Rust;
@@ -67,11 +74,11 @@ Deliverable:
 - [x] MapScene e fake renderer;
 - [x] LocationSample, clock e replay;
 - [x] matched position/route progress;
-- [ ] map-matching boundary su `main`;
-- [ ] missed-exit scenario;
+- [x] map-matching boundary su `main`;
+- [ ] missed-exit scenario su `main`;
 - [x] benchmark seed diagnostici;
 - [ ] Gradle Wrapper;
-- [ ] documentazione finale milestone.
+- [ ] rapporto finale di chiusura milestone.
 
 ## Regole
 

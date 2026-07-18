@@ -38,6 +38,8 @@ teaching documentation for Travel DNA.
    already-matched positions, route progress, maneuver/arrival policy and map delta.
 6. [`48-porta-map-matching-e-fake-deterministico.md`](it/48-porta-map-matching-e-fake-deterministico.md):
    route-bound matching port, explicit outcomes, deterministic fake and progress pipeline.
+7. [`49-off-route-missed-exit-e-reroute.md`](it/49-off-route-missed-exit-e-reroute.md):
+   normalized evidence, bounded confirmation, correlated reroute and atomic route replacement.
 
 Run all foundation checks:
 
@@ -54,6 +56,7 @@ sh tools/tdna lab map-scene
 sh tools/tdna lab location-replay
 sh tools/tdna lab route-progress
 sh tools/tdna lab map-matching
+sh tools/tdna lab missed-exit
 ```
 
 Hand-written documentation remains the primary explanation. Generated reports,

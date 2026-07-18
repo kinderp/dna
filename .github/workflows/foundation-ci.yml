@@ -90,6 +90,8 @@ jobs:
             build/kotlin/route-progress-benchmark.json
             build/kotlin/map-matching-lab.json
             build/kotlin/map-matching-benchmark.json
+            build/kotlin/missed-exit-lab.json
+            build/kotlin/off-route-benchmark.json
 
       - name: Upload diagnostic output on failure
         if: failure()
