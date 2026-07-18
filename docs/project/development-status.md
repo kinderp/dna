@@ -2,9 +2,10 @@
 
 Last updated: 2026-07-18
 
-## Current milestone
+## Current milestones
 
-**Foundations and Travel DNA Lab v0 — in progress**
+- **Foundations and Travel DNA Lab v0 — in progress**
+- **Navigation Runtime Replay v0 — in progress**
 
 ## Completed slices
 
@@ -17,65 +18,74 @@ Last updated: 2026-07-18
 | Serial PR governance | #14 / #15 | `76680433089842db5805d28eb50416a23c7d0a88` |
 | LocationSample and deterministic replay | #11 / #16 | `020f8495f7fbbae81f1463b098b0ddd2a079c873` |
 | Matched position and route progress | #17 / #18 | `9921fbcc1da1000e6434bdae49646122cae8f0e0` |
+| Map-matching port and fake | #19 / #20 | `95cf2f0d900b039efb86ba0a570e3ca3f8d8cef5` |
 
 ## Active slice
 
-**Provider-neutral map-matcher port and deterministic fake — documentation/review gate in progress**
+**Deterministic off-route evidence, missed exit and reroute — final candidate rebuilding after review findings**
 
-- issue [#19](https://github.com/kinderp/tdna/issues/19);
-- PR [#20](https://github.com/kinderp/tdna/pull/20);
-- branch `agent/map-matcher-port`;
-- base `9921fbcc1da1000e6434bdae49646122cae8f0e0`;
+- issue [#21](https://github.com/kinderp/tdna/issues/21);
+- PR [#22](https://github.com/kinderp/tdna/pull/22);
+- branch `agent/missed-exit-reroute`;
+- base `95cf2f0d900b039efb86ba0a570e3ca3f8d8cef5`;
 - risk `R2`;
-- chapter `docs/it/48-porta-map-matching-e-fake-deterministico.md`;
-- scenario `docs/it/lab/scenarios/map-matching-fake-provider.md`;
-- report `docs/project/daily/2026-07-18-map-matcher-port.md`.
+- chapter `docs/it/49-off-route-missed-exit-e-reroute.md`;
+- scenario `docs/it/lab/scenarios/navigation-missed-exit-reroute.md`;
+- report `docs/project/daily/2026-07-18-missed-exit-reroute.md`.
 
 ## Implemented
 
-- route-bound `MapMatcherPort` / `MapMatchSession`;
-- capability IDs;
-- `Matched`, `Unmatched` and `Failure` outcomes;
-- bounded error/provenance metadata;
-- strict result postconditions;
-- exact-catalog `FakeMapMatcher`;
-- amortized `O(1)` bounded call window;
-- fresh-session determinism semantics;
-- reusable contract probe;
-- matched/unmatched/failure fixture;
-- downstream route-progress Lab;
-- diagnostic pipeline benchmark;
-- common/JVM/Linux tests;
-- architecture boundaries;
-- chapter, scenario, metadata and indexed report.
+- normalized `OnRoute`, `Suspicious` and `Indeterminate` evidence;
+- bounded count-plus-duration policy;
+- false-alarm recovery and indeterminate hold;
+- sticky confirmation with explicit episode ID;
+- route/sequence/time rejection without mutation;
+- correlated reroute command and outcome;
+- one in-flight attempt;
+- stale outcome rejection;
+- old-route retention during in-flight and failure;
+- cancellation cleanup and ordinary-exception mapping;
+- canonical route request from the confirmation position;
+- provider `routing.plan` capability check before invocation;
+- maneuver-capability postcondition;
+- public `InFlight` state invariants;
+- provider provenance and route-request postconditions;
+- new route ID and atomic replacement;
+- new progress tracker boundary after replacement;
+- synthetic Lab, tests and diagnostic benchmark;
+- chapter, scenario, code map, tracepoints and indexed report.
 
-## Findings resolved
+## Review findings resolved after the first green head
 
-1. testkit location/routing dependencies were implicit;
-2. deterministic repeat used the same potentially stateful session;
-3. fake call-window eviction used linear list removal;
-4. provider failure was not demonstrated by fixture/probe/Lab;
-5. contract report retained a potentially mutable checks list;
-6. benchmark could validate only the final snapshot rather than every untimed pipeline decision.
+1. public `InFlight` state admitted a command for a different source route;
+2. public `InFlight` state admitted a destination different from the active route;
+3. a planner without `routing.plan` could still be invoked;
+4. a planner declaring `routing.maneuvers` could return empty maneuver legs;
+5. `lastObservation` obscured that the state retains the last suspicious observation;
+6. repository and Lab indexes/status records did not yet include the slice.
 
-Each substantive fix resets the clean-review counter.
+All fixes are substantive. Earlier CI remains historical evidence only and the
+clean-review counter is reset.
 
-## Gate status
+## Final gate
 
 - sole open PR: yes;
 - code, tests, chapter, scenario, indexes and report: complete in branch;
-- CI on current code hardening head: running/green evidence must be superseded by final SHA;
+- candidate final SHA: determined after the final documentation integration;
+- CI on that exact SHA: pending;
 - unresolved review threads: must be zero;
 - clean review rounds: `0 / 2`;
 - merge: only after ready state and expected-head guard.
 
-## Milestone still missing after this slice
+## Foundations still missing after PR #22
 
-- off-route/missed-exit/reroute state machine;
-- Gradle Wrapper;
+- committed Gradle Wrapper and supply-chain verification;
+- final closure report and milestone status update;
 - Android/iOS targets;
-- real MapLibre/routing/map-matching provider adapter.
+- real MapLibre/routing/map-matching provider adapters.
 
 ## Maintainer decisions
 
-None. Standing authorization permits autonomous merge only after all gates.
+None for PR #22. Standing authorization permits autonomous merge only after all
+gates. The first mobile platform remains a product/architecture decision for the
+milestone following Foundations v0.
