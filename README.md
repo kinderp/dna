@@ -15,10 +15,13 @@ Il progetto nasce da quattro idee unite:
 
 ## Stato
 
-La **Documentation Foundation v0** è presente e la milestone
-**Foundations and Travel DNA Lab v0** è in corso.
+La milestone **Foundations and Travel DNA Lab v0** è chiusa dalla PR che contiene
+questo documento. Il ledger finale di CI, review e merge resta nella relativa
+pull request; il rapporto consolidato è
+[docs/project/foundation-v0-closure.md](docs/project/foundation-v0-closure.md).
 
-La sequenza didattica implementation-backed comprende sette slice:
+La fondazione contiene sette slice navigation implementation-backed più un Lab di
+engineering del build:
 
 ```text
 1. grafo sintetico -> Java/Rust -> Dijkstra/A* -> report confrontato
@@ -28,18 +31,38 @@ La sequenza didattica implementation-backed comprende sette slice:
 5. MatchedRoutePosition -> route progress -> manovra/arrival -> delta mappa
 6. LocationSample -> fake MapMatcherPort -> Matched/Unmatched/Failure -> progress
 7. evidence off-route -> conferma -> reroute correlato -> route replacement
+8. Java -> Gradle Wrapper verificato -> build locale/CI comune
 ```
 
 Questi sono laboratori e contratti di fondazione, non un navigatore mobile di
-produzione. Lo stato vivo di pubblicazione, CI e review è registrato in
-[development-status.md](docs/project/development-status.md) e nelle pull request.
+produzione. Non esistono ancora app Android/iOS, GPS reale, MapLibre, Valhalla,
+chat o diario funzionante.
 
-## Laboratori
+## Bootstrap del build
+
+Prerequisito supportato:
+
+```text
+Java 21
+```
+
+Non è richiesta una installazione globale di Gradle. Il repository committa e
+verifica Gradle Wrapper 9.5.1:
+
+```bash
+sh tools/tdna check-gradle-wrapper
+sh tools/tdna check-ci-actions
+./gradlew --no-daemon --version
+sh tools/tdna check
+```
+
+[Capitolo 37 — Build riproducibile e Gradle Wrapper](docs/it/37-build-riproducibile-gradle-wrapper.md)
+
+## Laboratori navigation
 
 ### 1 — algoritmo di routing
 
 ```bash
-sh tools/tdna check-java
 sh tools/tdna lab reference-routing astar
 ```
 
@@ -48,7 +71,6 @@ sh tools/tdna lab reference-routing astar
 ### 2 — contratto e provider di routing
 
 ```bash
-sh tools/tdna check-architecture
 sh tools/tdna lab routing-contracts
 ```
 
@@ -89,9 +111,6 @@ sh tools/tdna bench map-matching 10000 7
 
 [Capitolo 48 — Porta map matching e fake deterministico](docs/it/48-porta-map-matching-e-fake-deterministico.md)
 
-Il sesto Lab usa un catalogo esatto. Non esegue ricerca di strade, snapping,
-HMM/Viterbi o filtro GPS.
-
 ### 7 — missed exit e reroute
 
 ```bash
@@ -101,9 +120,13 @@ sh tools/tdna bench off-route 10000 7
 
 [Capitolo 49 — Off-route, missed exit e reroute](docs/it/49-off-route-missed-exit-e-reroute.md)
 
-Il settimo Lab usa evidenza normalizzata e soglie sintetiche. Non stabilisce
-threshold di produzione, non usa traffico live e non misura affidabilità su
-strada.
+## Lab di engineering
+
+```bash
+sh tools/tdna lab build-bootstrap
+```
+
+[Scenario — Gradle Wrapper riproducibile](docs/it/lab/scenarios/gradle-wrapper-riproducibile.md)
 
 ## Verifica completa
 
@@ -112,8 +135,8 @@ sh tools/tdna doctor
 sh tools/tdna check
 ```
 
-Il comando controlla documentazione, confini architetturali, Java, Rust,
-contratto cross-language, Kotlin Multiplatform JVM/Linux, tutti i Lab e i
+Il comando controlla documentazione, confini architetturali, Wrapper e Actions,
+Java, Rust, contratto cross-language, Kotlin Multiplatform JVM/Linux, Lab e
 benchmark diagnostici senza threshold.
 
 ## Da dove iniziare
