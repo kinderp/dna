@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "gradleVersion": "9.5.1",
+  "distributionUrl": "https://services.gradle.org/distributions/gradle-9.5.1-bin.zip",
+  "distributionSha256": "bafc141b619ad6350fd975fc903156dd5c151998cc8b058e8c1044ab5f7b031f",
+  "wrapperJarSha256": "497c8c2a7e5031f6aa847f88104aa80a93532ec32ee17bdb8d1d2f67a194a9c7",
+  "gradlewSha256": "ab5c0cad16305af2e619c159c1f58dd68d07fab9c11e36701e109c0277407f7a",
+  "gradlewBatSha256": "475c4f08cd57cf2faa819e7f36d72aa93f0ad646ea23a8f7fa3ef54dee1cbc52",
+  "propertiesSha256": "9caeb142fade370957e5e9cd95a83441bbe41f73a1863398dd5467695853332e",
+  "sourceRepository": "gradle/gradle",
+  "sourceTag": "v9.5.1",
+  "reviewedOn": "2026-07-18",
+  "notes": "Checksums detect repository drift and distribution corruption; they are not an independent publisher-identity proof."
+}
