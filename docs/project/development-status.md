@@ -2,12 +2,15 @@
 
 Last updated: 2026-07-18
 
-## Current milestones
+## Current milestone
 
-- **Foundations and Travel DNA Lab v0 — in progress**
-- **Navigation Runtime Replay v0 — in progress**
+**Foundations and Travel DNA Lab v0 — closure candidate in PR #24**
 
-## Completed slices
+The implementation scope of Navigation Runtime Replay v0 that belongs to the
+foundation is complete: matching boundary, route progress, off-route evidence and
+reroute coordination are already on `main`.
+
+## Completed and merged slices
 
 | Slice | Issue / PR | Merge |
 | --- | --- | --- |
@@ -19,73 +22,82 @@ Last updated: 2026-07-18
 | LocationSample and deterministic replay | #11 / #16 | `020f8495f7fbbae81f1463b098b0ddd2a079c873` |
 | Matched position and route progress | #17 / #18 | `9921fbcc1da1000e6434bdae49646122cae8f0e0` |
 | Map-matching port and fake | #19 / #20 | `95cf2f0d900b039efb86ba0a570e3ca3f8d8cef5` |
+| Missed exit and reroute | #21 / #22 | `8570eb466b43384756f2678da2303929295e087a` |
 
 ## Active slice
 
-**Deterministic off-route evidence, missed exit and reroute — final candidate rebuilding after review findings**
+**Reproducible Gradle Wrapper and Foundations v0 closure**
 
-- issue [#21](https://github.com/kinderp/tdna/issues/21);
-- PR [#22](https://github.com/kinderp/tdna/pull/22);
-- branch `agent/missed-exit-reroute`;
-- base `95cf2f0d900b039efb86ba0a570e3ca3f8d8cef5`;
+- issue [#23](https://github.com/kinderp/tdna/issues/23);
+- PR [#24](https://github.com/kinderp/tdna/pull/24);
+- branch `agent/gradle-wrapper-foundation-closure`;
+- verified base `8570eb466b43384756f2678da2303929295e087a`;
 - risk `R2`;
-- chapter `docs/it/49-off-route-missed-exit-e-reroute.md`;
-- scenario `docs/it/lab/scenarios/navigation-missed-exit-reroute.md`;
-- report `docs/project/daily/2026-07-18-missed-exit-reroute.md`.
+- closure report `docs/project/foundation-v0-closure.md`;
+- daily report `docs/project/daily/2026-07-18-gradle-wrapper-foundation-closure.md`.
 
-## Implemented
+## Implemented in PR #24
 
-- normalized `OnRoute`, `Suspicious` and `Indeterminate` evidence;
-- bounded count-plus-duration policy;
-- false-alarm recovery and indeterminate hold;
-- sticky confirmation with explicit episode ID;
-- route/sequence/time rejection without mutation;
-- correlated reroute command and outcome;
-- one in-flight attempt;
-- stale outcome rejection;
-- old-route retention during in-flight and failure;
-- cancellation cleanup and ordinary-exception mapping;
-- canonical route request from the confirmation position;
-- provider `routing.plan` capability check before invocation;
-- maneuver-capability postcondition;
-- public `InFlight` state invariants;
-- provider provenance and route-request postconditions;
-- new route ID and atomic replacement;
-- new progress tracker boundary after replacement;
-- synthetic Lab, tests and diagnostic benchmark;
-- chapter, scenario, code map, tracepoints and indexed report.
+- committed Gradle 9.5.1 Wrapper for POSIX and Windows;
+- distribution checksum and reviewed Wrapper-JAR digest;
+- repository policy for wrapper files and hashes;
+- fail-closed Wrapper drift checker;
+- immutable allowlisted GitHub Actions references;
+- Kotlin build and Lab commands through `./gradlew`;
+- global Gradle made optional;
+- build-bootstrap Lab with canonical JSON output;
+- chapter 37, executable scenario and supply-chain explanation;
+- Foundation v0 closure report;
+- clean-checkout-oriented CI bootstrap and diagnostic artifacts.
 
-## Review findings resolved after the first green head
-
-1. public `InFlight` state admitted a command for a different source route;
-2. public `InFlight` state admitted a destination different from the active route;
-3. a planner without `routing.plan` could still be invoked;
-4. a planner declaring `routing.maneuvers` could return empty maneuver legs;
-5. `lastObservation` obscured that the state retains the last suspicious observation;
-6. repository and Lab indexes/status records did not yet include the slice.
-
-All fixes are substantive. Earlier CI remains historical evidence only and the
-clean-review counter is reset.
-
-## Final gate
+## Final gate for PR #24
 
 - sole open PR: yes;
-- code, tests, chapter, scenario, indexes and report: complete in branch;
-- candidate final SHA: determined after the final documentation integration;
-- CI on that exact SHA: pending;
+- wrapper, checks, code and teaching documentation: present;
+- project records and indexes: being finalized on the same branch;
+- final substantive SHA: set after the last record alignment;
+- CI: required on that exact SHA;
 - unresolved review threads: must be zero;
-- clean review rounds: `0 / 2`;
+- clean review rounds: `0 / 2` until the final SHA is fixed;
 - merge: only after ready state and expected-head guard.
 
-## Foundations still missing after PR #22
+## Product direction after Foundations v0
 
-- committed Gradle Wrapper and supply-chain verification;
-- final closure report and milestone status update;
-- Android/iOS targets;
-- real MapLibre/routing/map-matching provider adapters.
+The maintainer selected **Android-first** on 2026-07-18.
+
+The next milestone will start only after PR #24 is merged and `main` is verified.
+Its first goal is an installable Android internal-pilot shell that consumes the
+existing shared contracts without introducing a production navigator prematurely.
+
+Initial pilot scope candidate:
+
+```text
+Android app shell
+-> Compose navigation and design tokens
+-> create/select a synthetic or local trip
+-> show canonical route/map state through a platform adapter or controlled placeholder
+-> launch an external navigator through an adapter
+-> keep a bounded local trip session
+-> replay synthetic location data for demos
+-> expose diagnostics and teaching screens
+```
+
+GPS field recording, MapLibre integration and external-navigation intents will be
+added in subsequent gated slices rather than hidden inside the shell bootstrap.
+
+## Still absent after Foundations v0
+
+- production Android or iOS app;
+- real GPS lifecycle and permissions;
+- MapLibre adapter;
+- Valhalla/Ferrostar adapter;
+- real map matching and production off-route thresholds;
+- backend, account, chat and journal;
+- Android Auto and CarPlay;
+- road-tested reliability, battery and accessibility evidence.
 
 ## Maintainer decisions
 
-None for PR #22. Standing authorization permits autonomous merge only after all
-gates. The first mobile platform remains a product/architecture decision for the
-milestone following Foundations v0.
+Android-first is decided. No further product decision blocks closure of PR #24.
+The exact pilot release channel and tester group can be chosen when the first APK
+or App Bundle is reproducible in CI.
