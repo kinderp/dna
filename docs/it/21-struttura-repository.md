@@ -53,6 +53,14 @@ tdna/
 ├── tools/
 ├── docs/
 ├── .github/
+├── gradle/
+│   ├── libs.versions.toml
+│   └── wrapper/
+│       ├── gradle-wrapper.jar
+│       ├── gradle-wrapper.properties
+│       └── tdna-wrapper-policy.json
+├── gradlew
+├── gradlew.bat
 ├── settings.gradle.kts
 ├── build.gradle.kts
 ├── AGENTS.md
@@ -62,7 +70,7 @@ tdna/
 Una directory nasce quando possiede un contratto, un comportamento o una prova
 reale. Non creiamo moduli vuoti per simulare avanzamento.
 
-## Due linee didattiche complementari
+## Tre linee didattiche complementari
 
 ### Reference routing Java/Rust
 
@@ -89,6 +97,20 @@ contratti
 
 Serve a studiare architettura, sostituibilità, stato bounded, hot path e futura
 integrazione Android/iOS.
+
+### Bootstrap riproducibile
+
+```text
+Java 21
+-> gradlew / gradlew.bat
+-> Wrapper JAR e properties
+-> policy checksum revisionata
+-> stessi comandi in locale e CI
+```
+
+Il Wrapper è parte del codice di build. La sua presenza non rende il build
+completamente ermetico, ma elimina la dipendenza da un'installazione Gradle
+globale non dichiarata.
 
 ## Contratti fondamentali
 
@@ -121,107 +143,44 @@ contiene MapLibre, UIKit, Compose o codice GPU.
 ### `shared/location-contracts`
 
 Possiede sequence, tempo monotono, `LocationSample` e ordering gate. Gli adapter
-mobili futuri convertono `Location` e `CLLocation` prima di entrare qui.
+mobili futuri convertono `android.location.Location` o `CLLocation` prima di
+entrare nel core condiviso.
 
 ### `shared/navigation-contracts`
 
 Possiede `RouteCoordinate`, `MatchedRoutePosition`, confidence,
 `RouteProgressSnapshot` e decisioni. Non esegue matching né progress.
 
-## Map matching
+## Matching, progress e reroute
 
-### `shared/map-matching-contracts`
+### Map matching
 
-```text
-MapMatcherPort
-MapMatchSession
-Matched / Unmatched / Failure
-MapMatchError / Provenance
-```
+`shared/map-matching-contracts` definisce porta, sessione route-bound ed esiti
+`Matched`, `Unmatched` e `Failure`. Il testkit usa direttamente route e sample; il
+fake usa un catalogo esatto e non finge un algoritmo stradale.
 
-La route viene legata una volta; il loop usa `session.match(sample)`.
+### Route progress
 
-### `shared/map-matching-testkit`
+`shared/route-progress` controlla sequence, tempo e progresso non regressivo,
+seleziona leg/manovra/arrival e conserva soltanto l'ultimo snapshot accepted.
+`shared/route-progress-map-projector` produce delta compatti dopo un binding che
+verifica route e geometria.
 
-Il probe usa direttamente `RoutePlan`, `LocationSample` e `MapMatcherPort`, perciò
-li dichiara come dipendenze API dirette.
-
-### `shared/fake-map-matcher`
-
-Catalogo esatto route/sample → outcome, validazione dei matched, call window
-bounded e fixture sintetica. Non è un algoritmo di matching.
-
-## Route progress
-
-### `shared/route-progress`
-
-Tracker legato a una route con ordine sequence/tempo, progresso non regressivo,
-active leg, upcoming maneuver, arrival e ultimo snapshot accepted.
-
-### `shared/route-progress-map-projector`
-
-Verifica route e overlay al binding e produce delta compatti per campione.
-
-## Off-route e reroute
-
-### `shared/off-route-contracts`
-
-Possiede:
+### Off-route e reroute
 
 ```text
-OffRouteEvidence / Reason
 OffRouteObservation
-OffRoutePolicy
-OffRouteState / Decision / Transition
-OffRouteEpisodeId
-RerouteAttemptId
-RerouteCommand / RerouteOutcome
-```
-
-Dipendenze dirette: location e routing contracts. Non conosce matcher concreti o
-provider.
-
-### `shared/off-route-state-machine`
-
-Possiede `OffRouteTracker`:
-
-- `inspect` non mutante;
-- `accept` con commit soltanto accepted;
-- false-alarm recovery;
-- indeterminate hold;
-- conferma count+durata;
-- stato sticky e bounded;
-- nessun I/O.
-
-### `shared/reroute-coordinator`
-
-Possiede coordinator ed executor:
-
-```text
-Confirmed
+-> OffRouteTracker
+-> Confirmed
 -> RerouteCommand
 -> RoutePlannerPort
 -> correlated outcome
--> failure/stale oppure validated replacement
+-> validated replacement
 ```
 
-Il coordinator conserva la vecchia route, impedisce attempt paralleli e applica
-la nuova route soltanto dopo identità, capability, provenance e canonical
-postconditions. L'executor è l'unico punto sospendibile della slice.
-
-## Testkit e fake
-
-Convenzione:
-
-```text
-<capability>-contracts
-<capability>-testkit
-fake-<capability>
-```
-
-Il contratto definisce semantica e invarianti. Il testkit verifica implementazioni.
-Il fake offre risultati deterministici ai test applicativi senza fingere un
-provider reale.
+`shared/off-route-state-machine` non esegue I/O. `shared/reroute-coordinator`
+isola il punto sospendibile, conserva la vecchia route e applica una sostituzione
+soltanto dopo identità, capability, provenance e postcondizioni canoniche.
 
 ## Laboratori
 
@@ -233,6 +192,7 @@ provider reale.
 | `route-progress-cli` | matched position → progress → map delta |
 | `map-matching-cli` | sample → fake matcher → progress |
 | `missed-exit-cli` | evidence → confirmation → reroute → replacement |
+| `tools/tdna lab build-bootstrap` | Wrapper policy → canonical build report |
 
 Le CLI JVM possono usare I/O, clock di benchmark e formattazione. I moduli common
 restano indipendenti dalla piattaforma.
@@ -247,30 +207,47 @@ restano indipendenti dalla piattaforma.
 Ogni fixture dichiara ID, fonte, privacy, licenza, scopo, ground truth e
 non-obiettivi. Nessuna fixture pubblica deve contenere un viaggio personale.
 
-## Tooling e CI
+## Tooling, Wrapper e CI
 
-`tools/tdna` orchestra documentazione, confini architetturali, Java/Rust, KMP,
-Lab e benchmark. `.github/workflows/foundation-ci.yml` usa lo stesso entry point.
+`tools/tdna` orchestra documentazione, confini architetturali, Wrapper, Java/Rust,
+KMP, Lab e benchmark. `.github/workflows/foundation-ci.yml` usa lo stesso entry
+point.
+
+Comandi di bootstrap:
+
+```bash
+sh tools/tdna check-gradle-wrapper
+sh tools/tdna check-ci-actions
+sh tools/tdna lab build-bootstrap
+./gradlew --version
+```
+
+La policy verifica versione, URL, checksum della distribuzione, digest del JAR e
+dei launcher. Le GitHub Actions usate dal workflow sono allowlisted e bloccate a
+SHA completi. Questi controlli rilevano drift; non costituiscono da soli una
+firma dell'editore o una root of trust esterna.
+
 Gli output Lab/benchmark sono artifact diagnostici, non SLA.
 
-## Albero target futuro
+## Albero target successivo
+
+La prima piattaforma scelta è Android.
 
 ```text
 apps/android
-apps/ios
-plugins/maplibre-android
-plugins/maplibre-ios
-plugins/valhalla-remote
-plugins/ferrostar-android
-plugins/ferrostar-ios
+plugins/location-android
 plugins/external-navigation-android
-plugins/external-navigation-ios
+plugins/maplibre-android
+plugins/valhalla-remote
 backend/app
 backend/modules
 schemas/api
 schemas/events
 schemas/database
 ```
+
+`apps/ios` e gli adapter iOS restano nel disegno target, ma non vengono sviluppati
+in parallelo alla prima shell Android.
 
 ## Regole di dipendenza
 
