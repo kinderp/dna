@@ -7,7 +7,7 @@ prodotto. Lo stato vivo di CI e merge è in
 ## Legenda
 
 - `documented`: comportamento descritto, nessun codice;
-- `executable lab`: codice, test/dati e comando eseguibili nel ramo che contiene il documento;
+- `executable lab`: codice, test/dati/policy e comando eseguibili nel ramo che contiene il documento;
 - `prototype planned`: previsto nella milestone tecnica;
 - `future`: direzione approvata ma non pianificata ora;
 - `open`: richiede discussione o spike;
@@ -33,7 +33,7 @@ prodotto. Lo stato vivo di CI e merge è in
 | Coordinamento reroute | executable lab | Un tentativo correlato, vecchia route preservata e replacement validato. |
 | Benchmark replay/progress/matching/off-route | executable lab | JVM CI diagnostica, nessuna soglia o pretesa mobile. |
 | Tooling foundation | executable lab | Documentazione, architettura, Java, Rust e KMP. |
-| Gradle/KMP bootstrap | executable lab | JVM/Linux CI; wrapper locale ancora mancante. |
+| Gradle Wrapper bootstrap | executable lab | Wrapper 9.5.1 committato, checksum e Action SHA verificati; Gradle globale non richiesto. |
 | Map matching stradale reale | prototype planned | Candidate search, scoring, topology, heading e isteresi. |
 | Soglie off-route di produzione | prototype planned | Richiedono replay realistici, field audit e tuning per contesto. |
 | MapLibre adapter | prototype planned | Dopo contratti e benchmark dispositivo. |
@@ -50,6 +50,7 @@ prodotto. Lo stato vivo di CI e merge è in
 ## Cosa è dimostrato
 
 ```text
+Java 21 -> Wrapper verificato -> Gradle 9.5.1 -> build locale/CI
 grafo -> Dijkstra/A* -> report Java/Rust
 RouteRequest -> fake planner -> RoutePlan
 RoutePlan -> MapScene -> fake renderer
@@ -61,7 +62,8 @@ evidenza normalizzata -> false alarm/conferma -> reroute correlato -> replacemen
 
 Non sono dimostrati GPS o strade reali, map matching geometrico, distanza/ETA,
 soglie off-route di produzione, traffico, MapLibre, adapter mobile, batteria o
-affidabilità su strada.
+affidabilità su strada. Il bootstrap verificato non equivale a build ermetico o
+provenance crittografica completa.
 
 ## Regola di comunicazione
 
