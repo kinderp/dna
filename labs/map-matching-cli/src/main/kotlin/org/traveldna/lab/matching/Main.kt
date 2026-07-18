@@ -12,6 +12,8 @@ import org.traveldna.location.contracts.MonotonicInstant
 import org.traveldna.navigation.contracts.MatchConfidence
 import org.traveldna.navigation.contracts.MatchedRoutePosition
 import org.traveldna.navigation.contracts.RouteCoordinate
+import org.traveldna.navigation.contracts.RouteProgressDecision
+import org.traveldna.navigation.matching.contracts.MapMatchErrorCode
 import org.traveldna.navigation.matching.contracts.MapMatchProvenance
 import org.traveldna.navigation.matching.contracts.MapMatchResult
 import org.traveldna.navigation.matching.contracts.MapMatchSession
@@ -44,10 +46,12 @@ fun main(args: Array<String>) {
 private fun runLab() {
     val probe = runImmediate {
         MapMatcherContractProbe.verify(
-            FakeMapMatchFixtures.matcher(),
-            FakeMapMatchFixtures.Route,
-            FakeMapMatchFixtures.MatchedSample,
-            FakeMapMatchFixtures.UnmatchedSample,
+            matcher = FakeMapMatchFixtures.matcher(),
+            route = FakeMapMatchFixtures.Route,
+            matchedSample = FakeMapMatchFixtures.MatchedSample,
+            unmatchedSample = FakeMapMatchFixtures.UnmatchedSample,
+            failureSample = FakeMapMatchFixtures.FailureSample,
+            expectedFailureCode = MapMatchErrorCode.ProviderUnavailable,
         )
     }
     val matcher = FakeMapMatchFixtures.matcher()
@@ -55,8 +59,10 @@ private fun runLab() {
     val tracker = RouteProgressTracker(FakeMapMatchFixtures.Route)
     var matched = 0
     var unmatched = 0
+    var failed = 0
     var progressAccepted = 0
     var unmatchedReason = "none"
+    var failureCode = "none"
 
     runImmediate {
         FakeMapMatchFixtures.Samples.forEach { sample ->
@@ -64,7 +70,7 @@ private fun runLab() {
                 is MapMatchResult.Matched -> {
                     result.requireMatches(session.route, sample, matcher.descriptor.id)
                     matched += 1
-                    if (tracker.accept(result.position) is org.traveldna.navigation.contracts.RouteProgressDecision.Accepted) {
+                    if (tracker.accept(result.position) is RouteProgressDecision.Accepted) {
                         progressAccepted += 1
                     }
                 }
@@ -72,7 +78,10 @@ private fun runLab() {
                     unmatched += 1
                     unmatchedReason = result.unmatched.reason.name
                 }
-                is MapMatchResult.Failure -> error("fixture matcher failed: ${result.error}")
+                is MapMatchResult.Failure -> {
+                    failed += 1
+                    failureCode = result.error.code.name
+                }
             }
         }
     }
@@ -81,7 +90,10 @@ private fun runLab() {
     check(probe.checks.size == ExpectedContractChecks)
     check(matched == ExpectedMatched)
     check(unmatched == ExpectedUnmatched)
+    check(failed == ExpectedFailed)
     check(progressAccepted == ExpectedMatched)
+    check(unmatchedReason == "NoCandidate")
+    check(failureCode == MapMatchErrorCode.ProviderUnavailable.name)
     check(finalSnapshot.arrived)
     check(finalSnapshot.position.coordinate == RouteCoordinate(3, 0.0))
     check(matcher.totalMatchCount == FakeMapMatchFixtures.Samples.size.toLong())
@@ -92,7 +104,9 @@ private fun runLab() {
             "\"contract_checks\":${probe.checks.size}," +
             "\"matched\":$matched," +
             "\"unmatched\":$unmatched," +
+            "\"failed\":$failed," +
             "\"unmatched_reason\":\"$unmatchedReason\"," +
+            "\"failure_code\":\"$failureCode\"," +
             "\"progress_accepted\":$progressAccepted," +
             "\"final_index\":${finalSnapshot.position.coordinate.completedGeometryIndex}," +
             "\"arrived\":${finalSnapshot.arrived}," +
@@ -130,6 +144,12 @@ private fun runBenchmark(sampleCount: Int, iterations: Int) {
     val session = matcher.bind(route)
     val tracker = RouteProgressTracker(route)
 
+    // One untimed pass proves every matcher and progress decision before the
+    // benchmark removes per-sample assertions from the measured interval.
+    matcher.resetRecordedCalls()
+    tracker.reset()
+    verifyPipeline(session, tracker, samples)
+
     repeat(BenchmarkWarmups) {
         matcher.resetRecordedCalls()
         tracker.reset()
@@ -157,6 +177,21 @@ private fun runBenchmark(sampleCount: Int, iterations: Int) {
             "\"max_elapsed_ns\":${elapsed.last()}," +
             "\"median_ns_per_sample\":${"%.2f".format(Locale.ROOT, median.toDouble() / sampleCount)}}",
     )
+}
+
+private fun verifyPipeline(
+    session: MapMatchSession,
+    tracker: RouteProgressTracker,
+    samples: List<LocationSample>,
+) {
+    runImmediate {
+        samples.forEach { sample ->
+            val result = session.match(sample)
+            check(result is MapMatchResult.Matched)
+            check(tracker.accept(result.position) is RouteProgressDecision.Accepted)
+        }
+    }
+    verifyBenchmarkOutcome(tracker, samples.size)
 }
 
 private fun runPipeline(
@@ -203,14 +238,17 @@ private fun <T> runImmediate(block: suspend () -> T): T {
     var outcome: Result<T>? = null
     block.startCoroutine(object : Continuation<T> {
         override val context = EmptyCoroutineContext
-        override fun resumeWith(result: Result<T>) { outcome = result }
+        override fun resumeWith(result: Result<T>) {
+            outcome = result
+        }
     })
     return checkNotNull(outcome) { "deterministic fake unexpectedly suspended" }.getOrThrow()
 }
 
-private const val ExpectedContractChecks: Int = 5
+private const val ExpectedContractChecks: Int = 6
 private const val ExpectedMatched: Int = 4
 private const val ExpectedUnmatched: Int = 1
+private const val ExpectedFailed: Int = 1
 private const val BenchmarkWarmups: Int = 3
 private const val DefaultBenchmarkIterations: Int = 7
 private const val MaxBenchmarkIterations: Int = 25

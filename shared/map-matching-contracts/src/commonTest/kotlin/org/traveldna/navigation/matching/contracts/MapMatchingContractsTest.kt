@@ -1,7 +1,9 @@
 package org.traveldna.navigation.matching.contracts
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 import org.traveldna.geo.contracts.GeoPoint
 import org.traveldna.location.contracts.LocationSample
 import org.traveldna.location.contracts.LocationSampleOrigin
@@ -29,6 +31,9 @@ class MapMatchingContractsTest {
         }
         assertFailsWith<IllegalArgumentException> {
             matched(route, sample, sequence = 2L).requireMatches(route, sample, ProviderId)
+        }
+        assertFailsWith<IllegalArgumentException> {
+            matched(route, sample, time = 2_000L).requireMatches(route, sample, ProviderId)
         }
         assertFailsWith<IllegalArgumentException> {
             matched(route, sample, index = 99).requireMatches(route, sample, ProviderId)
@@ -62,6 +67,19 @@ class MapMatchingContractsTest {
         }
     }
 
+    @Test
+    fun providerFailureRemainsDistinctFromUnmatched() {
+        val failure = MapMatchResult.Failure(
+            MapMatchError(
+                code = MapMatchErrorCode.ProviderUnavailable,
+                message = "provider unavailable",
+                retryable = true,
+            ),
+        )
+        assertIs<MapMatchResult.Failure>(failure)
+        assertEquals(true, failure.error.retryable)
+    }
+
     private fun route(): RoutePlan {
         val a = GeoPoint(0.0, 0.0)
         val b = GeoPoint(0.0, 0.01)
@@ -88,6 +106,7 @@ class MapMatchingContractsTest {
         sample: LocationSample,
         routeId: RouteId = route.id,
         sequence: Long = sample.sequence.value,
+        time: Long = sample.monotonicTime.milliseconds,
         index: Int = 0,
         fraction: Double = 0.0,
         providerId: PluginId = ProviderId,
@@ -95,7 +114,7 @@ class MapMatchingContractsTest {
         position = MatchedRoutePosition(
             routeId = routeId,
             sampleSequence = LocationSequence(sequence),
-            monotonicTime = sample.monotonicTime,
+            monotonicTime = MonotonicInstant(time),
             coordinate = RouteCoordinate(index, fraction),
             lateralDistanceMeters = 1.0,
             confidence = MatchConfidence.High,

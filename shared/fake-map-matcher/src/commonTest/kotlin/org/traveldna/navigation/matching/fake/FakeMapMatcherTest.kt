@@ -12,6 +12,7 @@ import org.traveldna.location.contracts.LocationSequence
 import org.traveldna.navigation.contracts.MatchConfidence
 import org.traveldna.navigation.contracts.MatchedRoutePosition
 import org.traveldna.navigation.contracts.RouteCoordinate
+import org.traveldna.navigation.matching.contracts.MapMatchErrorCode
 import org.traveldna.navigation.matching.contracts.MapMatchProvenance
 import org.traveldna.navigation.matching.contracts.MapMatchResult
 import org.traveldna.navigation.matching.testkit.MapMatcherContractProbe
@@ -25,14 +26,16 @@ class FakeMapMatcherTest {
         val matcher = FakeMapMatchFixtures.matcher()
         val report = runImmediate {
             MapMatcherContractProbe.verify(
-                matcher,
-                FakeMapMatchFixtures.Route,
-                FakeMapMatchFixtures.MatchedSample,
-                FakeMapMatchFixtures.UnmatchedSample,
+                matcher = matcher,
+                route = FakeMapMatchFixtures.Route,
+                matchedSample = FakeMapMatchFixtures.MatchedSample,
+                unmatchedSample = FakeMapMatchFixtures.UnmatchedSample,
+                failureSample = FakeMapMatchFixtures.FailureSample,
+                expectedFailureCode = MapMatchErrorCode.ProviderUnavailable,
             )
         }
         assertEquals(FakeMapMatcher.Id.value, report.providerId)
-        assertEquals(5, report.checks.size)
+        assertEquals(6, report.checks.size)
     }
 
     @Test
@@ -42,6 +45,16 @@ class FakeMapMatcherTest {
         val result = runImmediate { session.match(FakeMapMatchFixtures.MatchedSample) }
         val unmatched = assertIs<MapMatchResult.Unmatched>(result)
         assertEquals("fake.catalog-miss", unmatched.unmatched.providerDiagnosticCode)
+    }
+
+    @Test
+    fun catalogFailureRemainsDistinctFromUnmatched() {
+        val matcher = FakeMapMatchFixtures.matcher()
+        val session = matcher.bind(FakeMapMatchFixtures.Route)
+        val result = runImmediate { session.match(FakeMapMatchFixtures.FailureSample) }
+        val failure = assertIs<MapMatchResult.Failure>(result)
+        assertEquals(MapMatchErrorCode.ProviderUnavailable, failure.error.code)
+        assertEquals(true, failure.error.retryable)
     }
 
     @Test
@@ -118,7 +131,9 @@ private fun <T> runImmediate(block: suspend () -> T): T {
     var outcome: Result<T>? = null
     block.startCoroutine(object : Continuation<T> {
         override val context = EmptyCoroutineContext
-        override fun resumeWith(result: Result<T>) { outcome = result }
+        override fun resumeWith(result: Result<T>) {
+            outcome = result
+        }
     })
     return checkNotNull(outcome) { "deterministic fake unexpectedly suspended" }.getOrThrow()
 }

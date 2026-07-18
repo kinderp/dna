@@ -1,16 +1,28 @@
 package org.traveldna.navigation.matching.testkit
 
 import org.traveldna.location.contracts.LocationSample
+import org.traveldna.navigation.matching.contracts.MapMatchErrorCode
 import org.traveldna.navigation.matching.contracts.MapMatchResult
 import org.traveldna.navigation.matching.contracts.MapMatcherPort
 import org.traveldna.navigation.matching.contracts.MapMatchingCapabilities
 import org.traveldna.navigation.matching.contracts.requireMatches
 import org.traveldna.routing.contracts.RoutePlan
 
-data class MapMatcherContractReport(
+/** Immutable report emitted by the reusable map-matcher conformance probe. */
+class MapMatcherContractReport(
     val providerId: String,
-    val checks: List<String>,
-)
+    checks: List<String>,
+) {
+    val checks: List<String> = checks.toList()
+
+    override fun equals(other: Any?): Boolean =
+        other is MapMatcherContractReport && providerId == other.providerId && checks == other.checks
+
+    override fun hashCode(): Int = 31 * providerId.hashCode() + checks.hashCode()
+
+    override fun toString(): String =
+        "MapMatcherContractReport(providerId=$providerId, checks=$checks)"
+}
 
 /** Reusable conformance probe for deterministic route-constrained matchers. */
 object MapMatcherContractProbe {
@@ -19,6 +31,8 @@ object MapMatcherContractProbe {
         route: RoutePlan,
         matchedSample: LocationSample,
         unmatchedSample: LocationSample,
+        failureSample: LocationSample,
+        expectedFailureCode: MapMatchErrorCode,
     ): MapMatcherContractReport {
         val checks = mutableListOf<String>()
         require(MapMatchingCapabilities.MatchRoute in matcher.descriptor.capabilities) {
@@ -36,9 +50,15 @@ object MapMatcherContractProbe {
         checks += "returns-canonical-match"
 
         if (MapMatchingCapabilities.Deterministic in matcher.descriptor.capabilities) {
-            val second = session.match(matchedSample)
-            require(first == second) { "deterministic matcher changed result for identical input" }
-            checks += "deterministic-repeat"
+            // A matching session may legitimately maintain stream history. Determinism
+            // therefore compares the same input from a fresh, equivalently bound session
+            // instead of requiring duplicate samples to be idempotent in one session.
+            val repeatSession = matcher.bind(route)
+            val second = repeatSession.match(matchedSample)
+            require(first == second) {
+                "deterministic matcher changed result for identical input on a fresh session"
+            }
+            checks += "deterministic-fresh-session-repeat"
         }
 
         val unmatched = session.match(unmatchedSample)
@@ -47,9 +67,18 @@ object MapMatcherContractProbe {
         }
         checks += "explicit-unmatched"
 
+        val failure = session.match(failureSample)
+        require(failure is MapMatchResult.Failure) {
+            "fixture-defined provider failure must remain distinct from Unmatched"
+        }
+        require(failure.error.code == expectedFailureCode) {
+            "provider failure code differs from fixture expectation"
+        }
+        checks += "explicit-provider-failure"
+
         return MapMatcherContractReport(
             providerId = matcher.descriptor.id.value,
-            checks = checks.toList(),
+            checks = checks,
         )
     }
 }

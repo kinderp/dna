@@ -25,7 +25,10 @@ data class FakeMapMatchCall(
     val sample: LocationSample,
 )
 
-/** Deterministic exact-catalog matcher; it performs no search or snapping. */
+/**
+ * Single-threaded deterministic exact-catalog matcher; it performs no search or
+ * snapping. Catalog lookup and bounded diagnostic recording are O(1) amortized.
+ */
 class FakeMapMatcher(
     entries: List<FakeMapMatchEntry>,
     override val descriptor: PluginDescriptor = defaultDescriptor,
@@ -35,7 +38,7 @@ class FakeMapMatcher(
 
     private val routesById: Map<RouteId, RoutePlan>
     private val outcomesByKey: Map<Key, MapMatchResult>
-    private val recentCalls = mutableListOf<FakeMapMatchCall>()
+    private val recentCalls = ArrayDeque<FakeMapMatchCall>()
     private var matchCount: Long = 0L
 
     val recordedCalls: List<FakeMapMatchCall> get() = recentCalls.toList()
@@ -106,9 +109,9 @@ class FakeMapMatcher(
         check(matchCount < Long.MAX_VALUE) { "fake map-matcher call counter overflow" }
         matchCount += 1L
         if (recentCalls.size == maxRecordedCalls) {
-            recentCalls.removeAt(0)
+            recentCalls.removeFirst()
         }
-        recentCalls += FakeMapMatchCall(routeId, sample)
+        recentCalls.addLast(FakeMapMatchCall(routeId, sample))
     }
 
     companion object {
