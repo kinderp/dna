@@ -21,6 +21,7 @@ import org.traveldna.navigation.offroute.contracts.OffRouteObservation
 import org.traveldna.navigation.offroute.contracts.OffRouteState
 import org.traveldna.navigation.offroute.contracts.RerouteAttemptId
 import org.traveldna.navigation.offroute.contracts.RerouteOutcome
+import org.traveldna.plugin.sdk.CapabilityId
 import org.traveldna.plugin.sdk.KnownPlatforms
 import org.traveldna.plugin.sdk.PluginDescriptor
 import org.traveldna.plugin.sdk.PluginId
@@ -49,6 +50,32 @@ class RerouteCoordinatorTest {
         val duplicate = assertIs<RerouteBeginDecision.Ignored>(coordinator.begin(confirmation(old)))
         assertEquals(RerouteBeginIgnoreReason.AlreadyInFlight, duplicate.reason)
         assertEquals(started.command, coordinator.pendingCommand)
+    }
+
+    @Test
+    fun publicInFlightStateRejectsIncoherentCommandIdentity() {
+        val old = oldRoute()
+        val command = assertIs<RerouteBeginDecision.Started>(
+            RerouteCoordinator(old).begin(confirmation(old)),
+        ).command
+
+        assertFailsWith<IllegalArgumentException> {
+            RerouteCoordinatorState.InFlight(
+                old,
+                command.copy(sourceRouteId = RouteId("other-source-route-v0")),
+            )
+        }
+        assertFailsWith<IllegalArgumentException> {
+            RerouteCoordinatorState.InFlight(
+                old,
+                command.copy(
+                    request = RouteRequest(
+                        origin = command.request.origin,
+                        destination = GeoPoint(1.0, 1.0),
+                    ),
+                ),
+            )
+        }
     }
 
     @Test
@@ -97,6 +124,46 @@ class RerouteCoordinatorTest {
         assertEquals(old, replaced.previousRoute)
         assertEquals(replacement, replaced.activeRoute)
         assertEquals(replacement, coordinator.activeRoute)
+        assertNull(coordinator.pendingCommand)
+    }
+
+    @Test
+    fun plannerMustDeclarePlanCapabilityBeforeItIsInvoked() {
+        val old = oldRoute()
+        val coordinator = RerouteCoordinator(old)
+        coordinator.begin(confirmation(old))
+        val planner = TestPlanner(capabilities = setOf(RoutingCapabilities.Offline)) {
+            error("planner without routing.plan must not be invoked")
+        }
+
+        val failed = assertIs<RerouteApplyDecision.Failed>(
+            runImmediate { coordinator.executePending(planner) },
+        )
+        assertEquals(0, planner.callCount)
+        assertEquals("reroute.missing-plan-capability", failed.error.providerDiagnosticCode)
+        assertEquals(false, failed.error.retryable)
+        assertEquals(old, coordinator.activeRoute)
+        assertNull(coordinator.pendingCommand)
+    }
+
+    @Test
+    fun declaredManeuverCapabilityRequiresEveryLegToContainManeuvers() {
+        val old = oldRoute()
+        val coordinator = RerouteCoordinator(old)
+        val command = assertIs<RerouteBeginDecision.Started>(coordinator.begin(confirmation(old))).command
+        val planner = TestPlanner(
+            capabilities = setOf(RoutingCapabilities.Plan, RoutingCapabilities.Maneuvers),
+        ) {
+            RoutePlanningResult.Success(listOf(replacementRoute(command.request, PlannerId)))
+        }
+
+        val failed = assertIs<RerouteApplyDecision.Failed>(
+            runImmediate { coordinator.executePending(planner) },
+        )
+        assertEquals(1, planner.callCount)
+        assertEquals("reroute.missing-maneuvers", failed.error.providerDiagnosticCode)
+        assertEquals(false, failed.error.retryable)
+        assertEquals(old, coordinator.activeRoute)
         assertNull(coordinator.pendingCommand)
     }
 
@@ -150,17 +217,24 @@ class RerouteCoordinatorTest {
 }
 
 private class TestPlanner(
+    capabilities: Set<CapabilityId> = setOf(RoutingCapabilities.Plan),
     private val action: suspend (RouteRequest) -> RoutePlanningResult,
 ) : RoutePlannerPort {
+    var callCount: Int = 0
+        private set
+
     override val descriptor: PluginDescriptor = PluginDescriptor(
         id = PlannerId,
         implementationVersion = "0.1.0",
         contractVersion = 1,
-        capabilities = setOf(RoutingCapabilities.Plan),
+        capabilities = capabilities,
         supportedPlatforms = setOf(KnownPlatforms.Jvm),
     )
 
-    override suspend fun plan(request: RouteRequest): RoutePlanningResult = action(request)
+    override suspend fun plan(request: RouteRequest): RoutePlanningResult {
+        callCount += 1
+        return action(request)
+    }
 }
 
 private fun oldRoute(): RoutePlan {
