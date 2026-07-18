@@ -40,13 +40,14 @@ Al termine dovresti saper spiegare:
 5. la differenza fra `Matched`, `Unmatched` e `Failure`;
 6. quali identità devono essere conservate da un risultato matched;
 7. perché `Unmatched` non è un'eccezione;
-8. perché la provenance del provider resta esplicita;
-9. come funziona un fake a catalogo esatto;
-10. perché il test di determinismo usa una sessione fresca;
-11. come si mantengono bounded le diagnostiche del fake;
-12. quali controlli appartengono al testkit riutilizzabile;
-13. come un risultato validato entra nel `RouteProgressTracker`;
-14. cosa misura il benchmark e cosa lascia intenzionalmente fuori.
+8. perché una cancellazione coroutine non è un errore provider;
+9. perché la provenance del provider resta esplicita;
+10. come funziona un fake a catalogo esatto;
+11. perché il test di determinismo usa una sessione fresca;
+12. come si mantengono bounded le diagnostiche e i report del testkit;
+13. quali controlli appartengono al testkit riutilizzabile;
+14. come un risultato validato entra nel `RouteProgressTracker`;
+15. cosa misura il benchmark e cosa lascia intenzionalmente fuori.
 
 ## Prerequisiti
 
@@ -104,7 +105,7 @@ plausibili su una rete o su una route. Può considerare:
 - accuratezza dichiarata;
 - velocità;
 - continuità con le osservazioni precedenti;
-- topology e restrizioni stradali;
+- topologia e restrizioni stradali;
 - probabilità o score specifici del motore.
 
 Questa slice non implementa nessuno di questi algoritmi. Definisce soltanto come
@@ -175,6 +176,30 @@ session.match(sample)
 
 La route non viene serializzata, copiata o cercata nel registry per ogni update.
 
+## Cancellazione e lifecycle
+
+`match` è una funzione sospendibile. Una cancellazione coroutine può significare:
+
+- viaggio terminato;
+- route sostituita;
+- schermata o servizio distrutto;
+- nuovo tentativo che rende inutile quello precedente;
+- shutdown del runtime.
+
+Questa cancellazione è un segnale del caller, non un errore restituito dal
+provider. Un adapter deve quindi lasciare propagare la cancellazione e non
+convertirla in:
+
+```kotlin
+MapMatchResult.Failure(
+    MapMatchError(MapMatchErrorCode.Internal, ...)
+)
+```
+
+Confondere i due casi provocherebbe retry indesiderati, metriche false e cleanup
+incompleto. Timeout e indisponibilità del provider restano invece errori
+canonici quando sono realmente esiti del provider o della policy applicativa.
+
 ## Capability
 
 Il provider dichiara capability provider-neutral:
@@ -241,7 +266,7 @@ MapMatchResult.Failure(
         code = ProviderUnavailable,
         message = "...",
         retryable = true,
-    ),
+    )
 )
 ```
 
@@ -264,6 +289,7 @@ La distinzione fondamentale è:
 ```text
 Unmatched = operazione eseguita, nessuna associazione affidabile
 Failure   = operazione non completata correttamente
+Cancelled = caller/runtime interrompe il lavoro; la cancellazione propaga
 ```
 
 ## Postcondizioni di un risultato matched
@@ -409,8 +435,16 @@ restituisce Unmatched per la fixture prevista
 restituisce Failure con il codice previsto per la fixture prevista
 ```
 
-Il report crea una copia difensiva della lista dei check. Un chiamante non può
-mutare retroattivamente un report già validato.
+Il report crea una copia difensiva della lista dei check e applica bounds:
+
+```text
+providerId: non vuoto, massimo 128 caratteri
+checks: da 1 a 32
+ogni check: non vuoto, unico, massimo 128 caratteri
+```
+
+Un chiamante non può mutare retroattivamente un report già validato né usarlo per
+accumulare diagnostica illimitata.
 
 Il testkit non misura accuratezza geografica. Un provider può superare il
 contratto e restare un pessimo matcher: correttezza dell'interfaccia e qualità
@@ -596,6 +630,11 @@ del provider.
 Scartata: `Unmatched` è un esito normale e frequente in presenza di rumore,
 tunnel o route lontana.
 
+### Convertire la cancellazione in `Failure`
+
+Scartata: nasconde il lifecycle del caller, può causare retry errati e rende
+inaffidabili metriche e cleanup.
+
 ### Testare determinismo con due chiamate identiche nella stessa sessione
 
 Scartata: imporrebbe idempotenza a provider stateful e confonderebbe determinismo
@@ -604,12 +643,13 @@ di una nuova sessione con gestione dei duplicati nello stream.
 ### Implementare subito un matcher geometrico semplificato
 
 Scartata: un algoritmo giocattolo rischierebbe di sembrare una base produttiva
-senza gestire topology, heading, accuratezza, transizioni e strade reali.
+senza gestire topologia, heading, accuratezza, transizioni e strade reali.
 
 ## Errori comuni
 
 - chiamare il fake “map matcher reale”;
 - trasformare `Unmatched` in `Failure`;
+- trasformare una cancellazione in `Failure`;
 - trasformare ogni unmatched in off-route;
 - perdere sequence o monotonic time;
 - usare un risultato della route precedente;
@@ -617,6 +657,7 @@ senza gestire topology, heading, accuratezza, transizioni e strade reali.
 - attribuire il risultato al provider sbagliato;
 - conservare tutta la cronologia delle chiamate;
 - usare `removeAt(0)` in una finestra diagnostica calda;
+- lasciare report diagnostici non bounded;
 - interpretare confidence come probabilità universale;
 - presentare il benchmark fake come accuratezza o prestazione stradale.
 
