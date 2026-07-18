@@ -1,47 +1,41 @@
 # Navigation fixtures
 
 This directory documents synthetic navigation-runtime fixtures that are not raw
-GPS traces and are not imported from a routing provider.
+personal GPS traces and are not imported from a routing provider.
 
-## Reference route-progress fixture
+## Route progress
 
-`reference-route-progress-v0.meta.yaml` describes the code-defined fixture used
-by `labs/route-progress-cli` and the common route-progress tests.
+`reference-route-progress-v0.meta.yaml` describes a code-defined two-leg route,
+shared maneuver boundary, monotonic progress, one deliberate regression and a
+compact map delta.
 
-It contains:
+## Map matching boundary
 
-- one canonical route with four geometry points;
-- two contiguous legs sharing geometry index `2`;
-- a previous-leg and next-leg maneuver at the shared boundary;
-- six ordered matched positions;
-- five accepted decisions;
-- one deliberate backwards route coordinate;
-- an arrival at the final geometry point;
-- one projected `MapSceneDelta.UpdateRouteProgress`.
+`reference-map-matching-v0.meta.yaml` describes six canonical samples producing
+four exact fake matches, one normal unmatched result and one provider failure.
+The fake performs no spatial search or snapping.
 
-## Reference map-matching boundary fixture
+## Missed exit and reroute
 
-`reference-map-matching-v0.meta.yaml` describes the code-defined fixture used by
-`labs/map-matching-cli`, the fake matcher and the reusable conformance probe.
+`reference-missed-exit-v0.meta.yaml` describes:
 
-It contains:
+- a first suspicious episode followed by recovery;
+- a second episode with two suspicious observations, one indeterminate gap and
+  a final suspicious confirmation;
+- policy count `3` and duration `2000 ms`;
+- one in-flight reroute attempt;
+- one duplicate begin and one stale outcome;
+- old-route retention;
+- a canonical replacement route with a new ID;
+- creation of a new empty progress tracker.
 
-- the same scale of four-point, two-leg synthetic route;
-- six canonical `LocationSample` observations;
-- four exact catalog matches;
-- one normal `Unmatched(NoCandidate)` outcome;
-- one distinct `Failure(ProviderUnavailable)` outcome;
-- a downstream route-progress arrival;
-- bounded call diagnostics.
-
-The fake performs no spatial search or snapping. The fixture teaches the
-provider boundary and result semantics, not map-matching accuracy.
+The fixture teaches state, correlation and atomic replacement. Its thresholds
+are not production recommendations.
 
 ## Serialization policy
 
-Both fixtures are constructed in readable Kotlin rather than parsed from a new
-file format. This keeps each slice focused on runtime semantics. A versioned
-matched-position or map-match serialization format will be introduced only when
-a real replay/import use case requires it.
+These fixtures are constructed in readable Kotlin rather than parsed from a new
+file format. A versioned matched/off-route serialization format will be added
+only when a real replay/import use case requires it.
 
-No file in this directory contains personal coordinates or a real trip.
+No file in this directory contains a personal route or real trip.
