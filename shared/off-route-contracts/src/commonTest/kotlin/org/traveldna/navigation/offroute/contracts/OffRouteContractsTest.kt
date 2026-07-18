@@ -32,7 +32,7 @@ class OffRouteContractsTest {
             OffRouteState.Suspected(
                 episodeId = OffRouteEpisodeId(1L),
                 firstObservation = first,
-                lastObservation = observation(2L, 3_000L, OffRouteEvidence.OnRoute),
+                lastSuspiciousObservation = observation(2L, 3_000L, OffRouteEvidence.OnRoute),
                 suspiciousCount = 2,
             )
         }
@@ -40,7 +40,7 @@ class OffRouteContractsTest {
             OffRouteState.Suspected(
                 episodeId = OffRouteEpisodeId(1L),
                 firstObservation = first,
-                lastObservation = second,
+                lastSuspiciousObservation = second,
                 suspiciousCount = 1,
             )
         }
