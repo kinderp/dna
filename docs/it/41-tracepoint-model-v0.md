@@ -32,6 +32,7 @@ Un nome descrive un fatto Travel DNA, non un vendor:
 ```text
 POSITION_MAP_MATCHED        corretto
 ROUTE_PROGRESS_ACCEPTED     corretto
+OFF_ROUTE_CONFIRMED         corretto
 MAPLIBRE_UPDATED            debole e provider-specifico
 ```
 
@@ -49,69 +50,77 @@ legittima logging verboso nel loop.
 | `REFERENCE_FRONTIER_NODE_SELECTED` | stable-doc | Priority queue seleziona il candidato. |
 | `REFERENCE_EDGE_RELAXED` | stable-doc | È registrato un costo migliore. |
 | `REFERENCE_ROUTE_RECONSTRUCTED` | stable-doc | Predecessori trasformati in route. |
-| `REFERENCE_REPORT_EMITTED` | stable-doc | Una implementazione emette il report. |
 | `REFERENCE_REPORTS_MATCHED` | stable-doc | Java e Rust coincidono. |
 
 ## Location replay Lab
 
 | Nome | Stato | Significato |
 | --- | --- | --- |
-| `LOCATION_REPLAY_FIXTURE_PARSED` | stable-doc | Parser JVM valida fixture e ground truth. |
-| `LOCATION_SAMPLE_RECEIVED` | stable-doc | Runner osserva il prossimo sample dichiarato. |
+| `LOCATION_REPLAY_FIXTURE_PARSED` | stable-doc | Parser valida fixture e ground truth. |
+| `LOCATION_SAMPLE_RECEIVED` | stable-doc | Runner osserva il prossimo sample. |
 | `LOCATION_SAMPLE_ACCEPTED` | stable-doc | Sequence e tempo superano il gate. |
 | `LOCATION_SAMPLE_REJECTED` | stable-doc | Sample rifiutato senza mutare baseline/clock. |
-| `REPLAY_CLOCK_BASELINE_ESTABLISHED` | stable-doc | Primo accepted, delta zero. |
 | `REPLAY_CLOCK_ADVANCED` | stable-doc | Accepted successivo, delta positivo. |
-| `REPLAY_STATE_CHANGED` | stable-doc | Start/pause/resume/step/cancel. |
 | `LOCATION_REPLAY_COMPLETED` | stable-doc | Tutti i sample sono processati. |
-| `LOCATION_REPLAY_REPORT_EMITTED` | stable-doc | Summary e ground truth coincidono. |
 
 ## Map matching boundary Lab
 
 | Nome | Stato | Significato |
 | --- | --- | --- |
-| `MAP_MATCH_ROUTE_BOUND` | stable-doc | Una route canonica viene legata alla sessione una volta. |
+| `MAP_MATCH_ROUTE_BOUND` | stable-doc | Route canonica legata alla sessione. |
 | `MAP_MATCH_SAMPLE_RECEIVED` | stable-doc | La sessione riceve un `LocationSample`. |
 | `MAP_MATCH_POSITION_PRODUCED` | stable-doc | Il provider produce un matched candidate. |
 | `MAP_MATCH_UNMATCHED_PRODUCED` | stable-doc | Nessuna associazione affidabile; non è un failure. |
 | `MAP_MATCH_PROVIDER_FAILURE` | stable-doc | Il provider non completa l'operazione. |
-| `MAP_MATCH_RESULT_VALIDATED` | stable-doc | Route, sequence, tempo, geometria e provenance coincidono. |
-| `MAP_MATCH_RESULT_FORWARDED_TO_PROGRESS` | stable-doc | Soltanto un matched validato entra nel tracker. |
-| `MAP_MATCH_REPORT_EMITTED` | stable-doc | Lab e ground truth coincidono. |
-
-Questi tracepoint non affermano che il fake abbia cercato strade. Le prove sono
-catalogo, postcondizioni, test, report e benchmark del confine.
-
-Esempio:
-
-```text
-Tracepoint: MAP_MATCH_UNMATCHED_PRODUCED
-Status: stable-doc
-Domain: navigation
-Stage: reject/no-result
-Hot path: yes in futuro
-Data in: bound route + LocationSample
-Data out: MapMatchUnmatched(reason, bounded diagnostic code)
-Evidence: FakeMapMatcherTest and map-matching Lab
-Privacy: synthetic/local sample; no network publication
-Non-goal: does not confirm off-route or provider failure
-```
+| `MAP_MATCH_RESULT_VALIDATED` | stable-doc | Route, sample, geometria e provenance coincidono. |
+| `MAP_MATCH_RESULT_FORWARDED_TO_PROGRESS` | stable-doc | Solo un matched validato entra nel tracker. |
 
 ## Route progress Lab
 
 | Nome | Stato | Significato |
 | --- | --- | --- |
-| `MATCHED_ROUTE_POSITION_RECEIVED` | stable-doc | Il tracker riceve una posizione già associata alla route. |
+| `MATCHED_ROUTE_POSITION_RECEIVED` | stable-doc | Il tracker riceve una posizione associata alla route. |
 | `MATCHED_ROUTE_POSITION_REJECTED` | stable-doc | Identità, ordine o progresso non validi; snapshot invariato. |
-| `ROUTE_PROGRESS_ACCEPTED` | stable-doc | Coordinata, leg, manovra e arrival sono pubblicati. |
+| `ROUTE_PROGRESS_ACCEPTED` | stable-doc | Coordinata, leg, manovra e arrival pubblicati. |
 | `ROUTE_ACTIVE_LEG_CHANGED` | stable-doc | Il confine condiviso attiva una nuova leg. |
-| `ROUTE_UPCOMING_MANEUVER_CHANGED` | stable-doc | Cambia il cursore della prossima manovra. |
 | `ROUTE_ARRIVAL_REACHED` | stable-doc | Raggiunto il punto geometrico finale canonico. |
-| `MAP_ROUTE_PROGRESS_BOUND` | stable-doc | Route e overlay sono verificati durante l'installazione. |
 | `MAP_PROGRESS_DELTA_PROJECTED` | stable-doc | Binding e snapshot producono un delta compatto. |
 
-`ROUTE_PROGRESS_ACCEPTED` non afferma che distanza o ETA siano aggiornate: la
-slice possiede soltanto coordinata route, leg, manovra e arrival.
+## Missed-exit e reroute Lab
+
+| Nome | Stato | Significato |
+| --- | --- | --- |
+| `OFF_ROUTE_OBSERVATION_RECEIVED` | stable-doc | Il tracker riceve evidenza già normalizzata. |
+| `OFF_ROUTE_OBSERVATION_REJECTED` | stable-doc | Route, sequence o tempo non validi; stato invariato. |
+| `OFF_ROUTE_SUSPICION_STARTED` | stable-doc | Prima evidenza sospetta apre un episodio. |
+| `OFF_ROUTE_SUSPICION_CONTINUED` | stable-doc | Count/durata avanzano senza conferma. |
+| `OFF_ROUTE_INDETERMINATE_HELD` | stable-doc | Gap informativo: episodio preservato, count invariato. |
+| `OFF_ROUTE_RECOVERED` | stable-doc | Evidenza OnRoute chiude un falso allarme. |
+| `OFF_ROUTE_CONFIRMED` | stable-doc | Count e durata minimi sono entrambi soddisfatti. |
+| `REROUTE_ATTEMPT_STARTED` | stable-doc | Creato un solo comando correlato all'episodio. |
+| `REROUTE_ATTEMPT_DUPLICATE_IGNORED` | stable-doc | Un secondo begin non crea lavoro parallelo. |
+| `REROUTE_OUTCOME_STALE_IGNORED` | stable-doc | Attempt/source route non coincidono; route invariata. |
+| `REROUTE_PROVIDER_CAPABILITY_REJECTED` | stable-doc | Descriptor privo della capability richiesta. |
+| `REROUTE_ATTEMPT_FAILED` | stable-doc | Failure correlato; vecchia route preservata. |
+| `REROUTE_ATTEMPT_CANCELLED` | stable-doc | Cleanup completato prima della propagazione cancellation. |
+| `ROUTE_REPLACEMENT_VALIDATED` | stable-doc | Provenance, request, ID e capability postconditions valide. |
+| `ROUTE_REPLACED` | stable-doc | Nuova route committata atomicamente. |
+| `MISSED_EXIT_REPORT_EMITTED` | stable-doc | Lab e ground truth coincidono. |
+
+Esempio:
+
+```text
+Tracepoint: OFF_ROUTE_CONFIRMED
+Status: stable-doc
+Domain: navigation
+Stage: accept
+Hot path: yes in futuro
+Data in: Suspected + suspicious OffRouteObservation
+Data out: Confirmed(episode, count, monotonic duration)
+Evidence: OffRouteTrackerTest and missed-exit Lab
+Privacy: exact synthetic/local sample; no network publication
+Non-goal: does not prove production-safe thresholds
+```
 
 ## Navigation target
 
