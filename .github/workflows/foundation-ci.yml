@@ -9,7 +9,7 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   foundation:
@@ -47,6 +47,25 @@ jobs:
           test "$actual" = "$expected"
           grep -F 'distributionSha256Sum=bafc141b619ad6350fd975fc903156dd5c151998cc8b058e8c1044ab5f7b031f' \
             gradle/wrapper/gradle-wrapper.properties
+
+      - name: Commit verified wrapper to this internal PR branch
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        shell: bash
+        env:
+          PR_HEAD_REF: ${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add gradlew gradlew.bat gradle/wrapper/gradle-wrapper.jar gradle/wrapper/gradle-wrapper.properties
+          if git diff --cached --quiet; then
+            echo "Verified wrapper is already committed."
+            exit 0
+          fi
+          git commit -m "build: commit verified Gradle 9.5.1 Wrapper"
+          git push origin "HEAD:${PR_HEAD_REF}"
 
       - name: Upload reviewed Gradle Wrapper bootstrap
         if: always()
