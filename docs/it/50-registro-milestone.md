@@ -5,9 +5,9 @@
 | Ordine | Milestone | Stato | Deliverable principali | Non-obiettivi |
 | --- | --- | --- | --- | --- |
 | 0 | Documentation Foundation v0 | done | Regole, architettura, ADR, Lab e roadmap. | Codice mobile/backend. |
-| 1 | Foundations and Travel DNA Lab v0 | in-progress | Build multi-language, contratti, fake, replay e progress. | GPS/provider reali. |
+| 1 | Foundations and Travel DNA Lab v0 | in-progress | Build multi-language, contratti, fake, replay, matching e progress. | GPS/provider reali. |
 | 2 | Canonical Route and Map Slice | planned | Adapter MapLibre seed e benchmark dispositivo. | Turn-by-turn completo. |
-| 3 | Navigation Runtime Replay v0 | planned | Map matching, off-route e reroute. | Traffico live. |
+| 3 | Navigation Runtime Replay v0 | planned | Off-route, missed exit e reroute. | Traffico live. |
 | 4 | External Navigation Companion v0 | planned | Handoff, shadow route e recorder. | Automotive completo. |
 | 5 | Journey Journal v0 | planned | Event store, soste, media e DailyPage. | Cloud media pubblico. |
 | 6 | Conversation Core v0 | planned | Outbox, fake server e driver policy. | Discovery live. |
@@ -31,28 +31,28 @@
 | MapScene | #7 / #10 | `2128f24b4a6ab00aeb437ed48a0af2910f33e9ec` |
 | Serial PR governance | #14 / #15 | `76680433089842db5805d28eb50416a23c7d0a88` |
 | LocationSample/replay | #11 / #16 | `020f8495f7fbbae81f1463b098b0ddd2a079c873` |
+| Matched position/route progress | #17 / #18 | `9921fbcc1da1000e6434bdae49646122cae8f0e0` |
 
-## Slice G — matched position e route progress
+## Slice H — porta map matching e fake deterministico
 
-- issue [#17](https://github.com/kinderp/tdna/issues/17);
-- PR [#18](https://github.com/kinderp/tdna/pull/18);
-- branch `agent/matched-route-progress`;
-- base `020f8495f7fbbae81f1463b098b0ddd2a079c873`;
-- stato **substantive work complete; final CI and reviews pending**.
+- issue [#19](https://github.com/kinderp/tdna/issues/19);
+- PR [#20](https://github.com/kinderp/tdna/pull/20);
+- branch `agent/map-matcher-port`;
+- base `9921fbcc1da1000e6434bdae49646122cae8f0e0`;
+- stato **substantive work and documentation complete; final gate pending**.
 
 Deliverable:
 
-- [x] `RouteCoordinate` e `MatchedRoutePosition`;
-- [x] sequence/tempo/progresso separati;
-- [x] stationary accepted e regression rejected;
-- [x] active-leg boundary policy;
-- [x] binary search leg/manovra;
-- [x] tie-break `Arrive`;
-- [x] route-overlay binding verificato;
-- [x] compact map delta;
-- [x] Lab e benchmark multi-leg;
-- [x] chapter 47, scenario e code map;
-- [x] tracepoint, indici e report;
+- [x] `MapMatcherPort` e `MapMatchSession` route-bound;
+- [x] capability e descriptor;
+- [x] `Matched`, `Unmatched` e `Failure` distinti;
+- [x] postcondizioni di route/sample/provider;
+- [x] fake a catalogo esatto e stato bounded;
+- [x] fresh-session determinism;
+- [x] conformance testkit;
+- [x] pipeline verso route progress;
+- [x] Lab, benchmark e metadata sintetici;
+- [x] chapter 48, scenario, code map/tracepoint e report;
 - [ ] CI verde sul final substantive head;
 - [ ] clean review round 1;
 - [ ] clean review round 2 sullo stesso SHA;
@@ -65,8 +65,9 @@ Deliverable:
 - [x] routing contracts e plugin SDK;
 - [x] fake route planner;
 - [x] MapScene e fake renderer;
-- [x] LocationSample, clock e replay su `main`;
-- [ ] matched position/route progress su `main`;
+- [x] LocationSample, clock e replay;
+- [x] matched position/route progress;
+- [ ] map-matching boundary su `main`;
 - [ ] missed-exit scenario;
 - [x] benchmark seed diagnostici;
 - [ ] Gradle Wrapper;

@@ -36,6 +36,8 @@ teaching documentation for Travel DNA.
    monotonic samples, ordering gate, virtual clock and replay.
 5. [`47-posizione-matched-e-route-progress.md`](it/47-posizione-matched-e-route-progress.md):
    already-matched positions, route progress, maneuver/arrival policy and map delta.
+6. [`48-porta-map-matching-e-fake-deterministico.md`](it/48-porta-map-matching-e-fake-deterministico.md):
+   route-bound matching port, explicit outcomes, deterministic fake and progress pipeline.
 
 Run all foundation checks:
 
@@ -51,6 +53,7 @@ sh tools/tdna lab routing-contracts
 sh tools/tdna lab map-scene
 sh tools/tdna lab location-replay
 sh tools/tdna lab route-progress
+sh tools/tdna lab map-matching
 ```
 
 Hand-written documentation remains the primary explanation. Generated reports,

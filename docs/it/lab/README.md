@@ -22,12 +22,14 @@ tracepoint logici, test, prestazioni e proprietà di sicurezza.
 | [MapScene](scenarios/map-scene-fake-renderer.md) | Scena, delta, marker e renderer conformance. | `sh tools/tdna lab map-scene` |
 | [Location replay](scenarios/location-replay-deterministico.md) | Tempo monotono, ordering gate, clock e rate. | `sh tools/tdna lab location-replay` |
 | [Route progress](scenarios/route-progress-tracker.md) | Matched position, leg, manovra, arrival e map binding. | `sh tools/tdna lab route-progress` |
+| [Map matching boundary](scenarios/map-matching-fake-provider.md) | Sessione route-bound, Matched/Unmatched/Failure, fake e progress. | `sh tools/tdna lab map-matching` |
 
 Benchmark diagnostici:
 
 ```bash
 sh tools/tdna bench location-replay 10000 7
 sh tools/tdna bench route-progress 10000 7
+sh tools/tdna bench map-matching 10000 7
 ```
 
 ## Scenari pianificati
