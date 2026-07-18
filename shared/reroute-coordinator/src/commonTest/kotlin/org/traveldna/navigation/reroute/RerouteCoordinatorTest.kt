@@ -90,7 +90,7 @@ class RerouteCoordinatorTest {
         assertEquals(old, coordinator.activeRoute)
 
         val retry = assertIs<RerouteBeginDecision.Started>(coordinator.begin(confirmation(old))).command
-        val replacement = replacementRoute(retry.request)
+        val replacement = replacementRoute(retry.request, PlannerId)
         val replaced = assertIs<RerouteApplyDecision.Replaced>(
             coordinator.apply(RerouteOutcome.Planned(retry.attemptId, old.id, replacement)),
         )
@@ -101,7 +101,7 @@ class RerouteCoordinatorTest {
     }
 
     @Test
-    fun unexpectedExceptionBecomesFailureAndCancellationCleansInFlightState() {
+    fun unexpectedExceptionAndInvalidProvenanceBecomeFailureWhileCancellationCleansState() {
         val old = oldRoute()
         val coordinator = RerouteCoordinator(old)
         coordinator.begin(confirmation(old))
@@ -111,6 +111,17 @@ class RerouteCoordinatorTest {
             },
         )
         assertEquals(RoutePlanningErrorCode.Internal, failed.error.code)
+        assertEquals(old, coordinator.activeRoute)
+        assertNull(coordinator.pendingCommand)
+
+        val command = assertIs<RerouteBeginDecision.Started>(coordinator.begin(confirmation(old))).command
+        val wrongProvenance = replacementRoute(command.request, PluginId("org.traveldna.other-provider"))
+        val provenanceFailure = assertIs<RerouteApplyDecision.Failed>(
+            runImmediate {
+                coordinator.executePending(TestPlanner { RoutePlanningResult.Success(listOf(wrongProvenance)) })
+            },
+        )
+        assertEquals(RoutePlanningErrorCode.Internal, provenanceFailure.error.code)
         assertEquals(old, coordinator.activeRoute)
         assertNull(coordinator.pendingCommand)
 
@@ -129,7 +140,7 @@ class RerouteCoordinatorTest {
         val old = oldRoute()
         val coordinator = RerouteCoordinator(old)
         val command = assertIs<RerouteBeginDecision.Started>(coordinator.begin(confirmation(old))).command
-        val replacement = replacementRoute(command.request)
+        val replacement = replacementRoute(command.request, PlannerId)
         val result = runImmediate {
             coordinator.executePending(TestPlanner { RoutePlanningResult.Success(listOf(replacement)) })
         }
@@ -166,7 +177,7 @@ private fun oldRoute(): RoutePlan {
     )
 }
 
-private fun replacementRoute(request: RouteRequest): RoutePlan {
+private fun replacementRoute(request: RouteRequest, providerId: PluginId): RoutePlan {
     val middle = GeoPoint(0.005, 0.016)
     return RoutePlan(
         id = RouteId("replacement-reroute-test-v0"),
@@ -176,7 +187,7 @@ private fun replacementRoute(request: RouteRequest): RoutePlan {
         ),
         distanceMeters = 1_500L,
         durationSeconds = 90L,
-        provenance = RouteProvenance(PlannerId),
+        provenance = RouteProvenance(providerId),
     )
 }
 

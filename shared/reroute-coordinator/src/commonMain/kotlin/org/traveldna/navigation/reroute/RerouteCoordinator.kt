@@ -221,17 +221,7 @@ class RerouteExecutor(
 ) {
     suspend fun execute(command: RerouteCommand): RerouteOutcome = try {
         when (val result = planner.plan(command.request)) {
-            is RoutePlanningResult.Success -> {
-                if (result.routes.size > command.request.requestedAlternatives) {
-                    unexpectedFailure(command, "planner returned more alternatives than requested")
-                } else {
-                    RerouteOutcome.Planned(
-                        attemptId = command.attemptId,
-                        sourceRouteId = command.sourceRouteId,
-                        route = result.routes.first(),
-                    )
-                }
-            }
+            is RoutePlanningResult.Success -> validateSuccess(command, result)
             is RoutePlanningResult.Failure -> RerouteOutcome.Failed(
                 attemptId = command.attemptId,
                 sourceRouteId = command.sourceRouteId,
@@ -240,8 +230,26 @@ class RerouteExecutor(
         }
     } catch (cancelled: CancellationException) {
         throw cancelled
-    } catch (_: Throwable) {
+    } catch (_: Exception) {
         unexpectedFailure(command, "route planner threw an unexpected exception")
+    }
+
+    private fun validateSuccess(
+        command: RerouteCommand,
+        result: RoutePlanningResult.Success,
+    ): RerouteOutcome {
+        if (result.routes.size > command.request.requestedAlternatives) {
+            return unexpectedFailure(command, "planner returned more alternatives than requested")
+        }
+        val route = result.routes.first()
+        if (route.provenance.providerId != planner.descriptor.id) {
+            return unexpectedFailure(command, "route provenance differs from the planner descriptor")
+        }
+        return RerouteOutcome.Planned(
+            attemptId = command.attemptId,
+            sourceRouteId = command.sourceRouteId,
+            route = route,
+        )
     }
 
     private fun unexpectedFailure(

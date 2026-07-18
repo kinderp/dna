@@ -132,8 +132,10 @@ private fun runBenchmark(sampleCount: Int, iterations: Int) {
     }
     val routeId = RouteId("benchmark-off-route-v0")
     val observations = List(sampleCount) { index ->
-        val evidence = when (index % 8) {
-            1, 2 -> OffRouteEvidence.Suspicious(OffRouteEvidenceReason.LowConfidence)
+        val evidence = when {
+            index == sampleCount - 1 -> OffRouteEvidence.OnRoute
+            index % 8 == 1 || index % 8 == 2 ->
+                OffRouteEvidence.Suspicious(OffRouteEvidenceReason.LowConfidence)
             else -> OffRouteEvidence.OnRoute
         }
         observation(routeId, index.toLong(), index.toLong() * 100L, evidence)

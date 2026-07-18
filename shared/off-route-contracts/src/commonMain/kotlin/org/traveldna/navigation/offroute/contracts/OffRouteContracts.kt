@@ -2,8 +2,6 @@ package org.traveldna.navigation.offroute.contracts
 
 import kotlin.jvm.JvmInline
 import org.traveldna.location.contracts.LocationSample
-import org.traveldna.location.contracts.LocationSequence
-import org.traveldna.location.contracts.MonotonicInstant
 import org.traveldna.routing.contracts.RouteId
 import org.traveldna.routing.contracts.RoutePlan
 import org.traveldna.routing.contracts.RoutePlanningError
@@ -91,17 +89,29 @@ sealed interface OffRouteState {
         val suspiciousCount: Int,
     ) : OffRouteState {
         init {
+            require(firstObservation.evidence is OffRouteEvidence.Suspicious) {
+                "suspected state must start with suspicious evidence"
+            }
+            require(lastObservation.evidence is OffRouteEvidence.Suspicious) {
+                "suspected state must end with suspicious evidence"
+            }
             require(firstObservation.routeId == lastObservation.routeId) {
                 "suspected observations must target the same route"
             }
-            require(lastObservation.sample.sequence >= firstObservation.sample.sequence) {
-                "suspected observation sequence cannot move backwards"
-            }
-            require(lastObservation.sample.monotonicTime >= firstObservation.sample.monotonicTime) {
-                "suspected observation time cannot move backwards"
-            }
             require(suspiciousCount in 1..OffRoutePolicy.MaxConsecutiveSuspicious) {
                 "suspicious count lies outside the bounded policy range"
+            }
+            if (suspiciousCount == 1) {
+                require(firstObservation == lastObservation) {
+                    "one-count suspected state must reference the same first and last observation"
+                }
+            } else {
+                require(lastObservation.sample.sequence > firstObservation.sample.sequence) {
+                    "multi-sample suspicion sequence must increase"
+                }
+                require(lastObservation.sample.monotonicTime > firstObservation.sample.monotonicTime) {
+                    "multi-sample suspicion time must increase"
+                }
             }
         }
     }
@@ -114,14 +124,29 @@ sealed interface OffRouteState {
         val suspiciousDurationMillis: Long,
     ) : OffRouteState {
         init {
+            require(firstSuspiciousObservation.evidence is OffRouteEvidence.Suspicious) {
+                "confirmed state must start with suspicious evidence"
+            }
+            require(confirmationObservation.evidence is OffRouteEvidence.Suspicious) {
+                "confirmation observation must be suspicious evidence"
+            }
             require(firstSuspiciousObservation.routeId == confirmationObservation.routeId) {
                 "confirmed observations must target the same route"
+            }
+            require(confirmationObservation.sample.sequence > firstSuspiciousObservation.sample.sequence) {
+                "confirmation sequence must be greater than the first suspicious sequence"
+            }
+            require(confirmationObservation.sample.monotonicTime > firstSuspiciousObservation.sample.monotonicTime) {
+                "confirmation time must be greater than the first suspicious time"
             }
             require(suspiciousCount in 2..OffRoutePolicy.MaxConsecutiveSuspicious) {
                 "confirmed suspicious count lies outside the bounded policy range"
             }
-            require(suspiciousDurationMillis > 0L) {
-                "confirmed suspicious duration must be positive"
+            val elapsed = confirmationObservation.sample.monotonicTime.elapsedSince(
+                firstSuspiciousObservation.sample.monotonicTime,
+            )
+            require(suspiciousDurationMillis == elapsed) {
+                "confirmed duration must equal the observations' monotonic elapsed time"
             }
         }
     }
@@ -184,7 +209,3 @@ sealed interface RerouteOutcome {
         val error: RoutePlanningError,
     ) : RerouteOutcome
 }
-
-internal fun LocationSequence.isStrictlyAfter(other: LocationSequence): Boolean = this > other
-
-internal fun MonotonicInstant.isStrictlyAfter(other: MonotonicInstant): Boolean = this > other
