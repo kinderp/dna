@@ -28,7 +28,9 @@ comment change. Git and pull requests preserve history.
 | Route-progress map binding/projector | Hot-path reviewed | Full geometry verified at install; O(1) compact updates. |
 | Map-matching contracts/testkit | Hot-path reviewed | Route-bound session, explicit outcomes, postconditions and chapter 48. |
 | Fake map matcher | Teaching-ready | Exact catalog, fresh-session determinism, bounded deque and Lab. |
-| Production map matching/runtime | Pending | Search, scoring, topology, filtering, off-route and rerouting remain planned. |
+| Off-route contracts/state machine | Hot-path reviewed | Normalized evidence, non-mutating rejection, count+duration and chapter 49. |
+| Reroute coordinator/executor | Hot-path reviewed | Correlation, capability checks, cancellation cleanup and replacement validation. |
+| Production map matching/runtime | Pending | Search, scoring, topology, filtering and production thresholds remain planned. |
 | Android UI/adapters | Pending | No Android application code yet. |
 | iOS UI/adapters | Pending | No iOS application code yet. |
 | Backend | Pending | Architecture proposed, implementation not started. |
