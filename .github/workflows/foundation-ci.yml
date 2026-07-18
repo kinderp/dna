@@ -4,15 +4,26 @@ on:
   pull_request:
     branches:
       - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
   push:
     branches:
       - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
   foundation:
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
     name: Docs, Java, Rust, Kotlin and contract tests
     runs-on: ubuntu-latest
     timeout-minutes: 30
