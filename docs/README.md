@@ -20,11 +20,20 @@ teaching documentation for Travel DNA.
 - Contributor: [`it/00-regole-operative.md`](it/00-regole-operative.md)
 - Reviewer/maintainer: [`it/06-review-e-merge.md`](it/06-review-e-merge.md)
 - Current development state: [`project/development-status.md`](project/development-status.md)
+- Foundations closure: [`project/foundation-v0-closure.md`](project/foundation-v0-closure.md)
+- Reproducible build: [`it/37-build-riproducibile-gradle-wrapper.md`](it/37-build-riproducibile-gradle-wrapper.md)
 - Architecture: [`it/20-architettura-generale.md`](it/20-architettura-generale.md)
 - Navigation fundamentals: [`it/24-routing-e-navigazione.md`](it/24-routing-e-navigazione.md)
 - Teaching scenarios: [`it/lab/README.md`](it/lab/README.md)
 
 ## Implementation-backed learning sequence
+
+Engineering bootstrap:
+
+- [`37-build-riproducibile-gradle-wrapper.md`](it/37-build-riproducibile-gradle-wrapper.md):
+  committed Wrapper, reviewed checksums, immutable Actions and trust limits.
+
+Navigation foundations:
 
 1. [`43-reference-routing-java-rust.md`](it/43-reference-routing-java-rust.md):
    graph, Dijkstra, A* and independent Java/Rust reports.
@@ -47,7 +56,13 @@ Run all foundation checks:
 sh tools/tdna check
 ```
 
-Run individual Labs:
+Run the build-bootstrap Lab:
+
+```bash
+sh tools/tdna lab build-bootstrap
+```
+
+Run navigation Labs:
 
 ```bash
 sh tools/tdna lab reference-routing dijkstra
