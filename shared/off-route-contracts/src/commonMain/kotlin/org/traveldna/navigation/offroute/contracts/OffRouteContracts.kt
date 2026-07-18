@@ -85,31 +85,31 @@ sealed interface OffRouteState {
     data class Suspected(
         val episodeId: OffRouteEpisodeId,
         val firstObservation: OffRouteObservation,
-        val lastObservation: OffRouteObservation,
+        val lastSuspiciousObservation: OffRouteObservation,
         val suspiciousCount: Int,
     ) : OffRouteState {
         init {
             require(firstObservation.evidence is OffRouteEvidence.Suspicious) {
                 "suspected state must start with suspicious evidence"
             }
-            require(lastObservation.evidence is OffRouteEvidence.Suspicious) {
+            require(lastSuspiciousObservation.evidence is OffRouteEvidence.Suspicious) {
                 "suspected state must end with suspicious evidence"
             }
-            require(firstObservation.routeId == lastObservation.routeId) {
+            require(firstObservation.routeId == lastSuspiciousObservation.routeId) {
                 "suspected observations must target the same route"
             }
             require(suspiciousCount in 1..OffRoutePolicy.MaxConsecutiveSuspicious) {
                 "suspicious count lies outside the bounded policy range"
             }
             if (suspiciousCount == 1) {
-                require(firstObservation == lastObservation) {
+                require(firstObservation == lastSuspiciousObservation) {
                     "one-count suspected state must reference the same first and last observation"
                 }
             } else {
-                require(lastObservation.sample.sequence > firstObservation.sample.sequence) {
+                require(lastSuspiciousObservation.sample.sequence > firstObservation.sample.sequence) {
                     "multi-sample suspicion sequence must increase"
                 }
-                require(lastObservation.sample.monotonicTime > firstObservation.sample.monotonicTime) {
+                require(lastSuspiciousObservation.sample.monotonicTime > firstObservation.sample.monotonicTime) {
                     "multi-sample suspicion time must increase"
                 }
             }
