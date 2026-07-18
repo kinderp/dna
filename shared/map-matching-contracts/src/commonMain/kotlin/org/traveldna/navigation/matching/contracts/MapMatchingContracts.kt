@@ -101,14 +101,21 @@ sealed interface MapMatchResult {
     data class Failure(val error: MapMatchError) : MapMatchResult
 }
 
-/** Route-bound matching session used by the per-sample hot path. */
+/**
+ * Route-bound matching session used by the per-sample hot path.
+ *
+ * Implementations translate provider state and responses into canonical
+ * [MapMatchResult] values. Coroutine cancellation is a caller/runtime control
+ * signal, not a provider failure, and must propagate without being converted to
+ * [MapMatchResult.Failure].
+ */
 interface MapMatchSession {
     val route: RoutePlan
 
     suspend fun match(sample: LocationSample): MapMatchResult
 }
 
-/** Provider-neutral factory that validates/binds a route once per session. */
+/** Provider-neutral factory that validates and prepares one route per session. */
 interface MapMatcherPort : TravelDnaPlugin {
     fun bind(route: RoutePlan): MapMatchSession
 }

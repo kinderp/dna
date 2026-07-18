@@ -8,12 +8,27 @@ import org.traveldna.navigation.matching.contracts.MapMatchingCapabilities
 import org.traveldna.navigation.matching.contracts.requireMatches
 import org.traveldna.routing.contracts.RoutePlan
 
-/** Immutable report emitted by the reusable map-matcher conformance probe. */
+/** Immutable, bounded report emitted by the reusable conformance probe. */
 class MapMatcherContractReport(
     val providerId: String,
     checks: List<String>,
 ) {
     val checks: List<String> = checks.toList()
+
+    init {
+        require(providerId.isNotBlank() && providerId.length <= MaxProviderIdLength) {
+            "provider id must be non-blank and at most $MaxProviderIdLength characters"
+        }
+        require(this.checks.isNotEmpty() && this.checks.size <= MaxChecks) {
+            "contract report must contain between 1 and $MaxChecks checks"
+        }
+        require(this.checks.distinct().size == this.checks.size) {
+            "contract report checks must be unique"
+        }
+        require(this.checks.all { it.isNotBlank() && it.length <= MaxCheckLength }) {
+            "contract report checks must be non-blank and at most $MaxCheckLength characters"
+        }
+    }
 
     override fun equals(other: Any?): Boolean =
         other is MapMatcherContractReport && providerId == other.providerId && checks == other.checks
@@ -22,6 +37,12 @@ class MapMatcherContractReport(
 
     override fun toString(): String =
         "MapMatcherContractReport(providerId=$providerId, checks=$checks)"
+
+    companion object {
+        const val MaxProviderIdLength: Int = 128
+        const val MaxChecks: Int = 32
+        const val MaxCheckLength: Int = 128
+    }
 }
 
 /** Reusable conformance probe for deterministic route-constrained matchers. */

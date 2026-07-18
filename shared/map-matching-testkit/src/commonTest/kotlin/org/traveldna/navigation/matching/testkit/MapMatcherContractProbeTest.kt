@@ -5,6 +5,7 @@ import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.coroutines.startCoroutine
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import org.traveldna.geo.contracts.GeoPoint
 import org.traveldna.location.contracts.LocationSample
 import org.traveldna.location.contracts.LocationSampleOrigin
@@ -50,11 +51,24 @@ class MapMatcherContractProbeTest {
     }
 
     @Test
-    fun reportDefensivelyCopiesChecks() {
+    fun reportDefensivelyCopiesAndBoundsChecks() {
         val mutable = mutableListOf("first")
         val report = MapMatcherContractReport("org.traveldna.test-matcher", mutable)
         mutable.clear()
         assertEquals(listOf("first"), report.checks)
+
+        assertFailsWith<IllegalArgumentException> {
+            MapMatcherContractReport("org.traveldna.test-matcher", emptyList())
+        }
+        assertFailsWith<IllegalArgumentException> {
+            MapMatcherContractReport("org.traveldna.test-matcher", listOf("same", "same"))
+        }
+        assertFailsWith<IllegalArgumentException> {
+            MapMatcherContractReport("x".repeat(129), listOf("check"))
+        }
+        assertFailsWith<IllegalArgumentException> {
+            MapMatcherContractReport("org.traveldna.test-matcher", listOf("x".repeat(129)))
+        }
     }
 }
 
