@@ -18,7 +18,7 @@ Il progetto nasce da quattro idee unite:
 La **Documentation Foundation v0** è presente e la milestone
 **Foundations and Travel DNA Lab v0** è in corso.
 
-La sequenza didattica implementation-backed comprende sei slice:
+La sequenza didattica implementation-backed comprende sette slice:
 
 ```text
 1. grafo sintetico -> Java/Rust -> Dijkstra/A* -> report confrontato
@@ -27,6 +27,7 @@ La sequenza didattica implementation-backed comprende sei slice:
 4. fixture GPS sintetica -> LocationSample -> clock/replay -> report bounded
 5. MatchedRoutePosition -> route progress -> manovra/arrival -> delta mappa
 6. LocationSample -> fake MapMatcherPort -> Matched/Unmatched/Failure -> progress
+7. evidence off-route -> conferma -> reroute correlato -> route replacement
 ```
 
 Questi sono laboratori e contratti di fondazione, non un navigatore mobile di
@@ -89,7 +90,20 @@ sh tools/tdna bench map-matching 10000 7
 [Capitolo 48 — Porta map matching e fake deterministico](docs/it/48-porta-map-matching-e-fake-deterministico.md)
 
 Il sesto Lab usa un catalogo esatto. Non esegue ricerca di strade, snapping,
-HMM/Viterbi, filtro GPS, off-route o rerouting.
+HMM/Viterbi o filtro GPS.
+
+### 7 — missed exit e reroute
+
+```bash
+sh tools/tdna lab missed-exit
+sh tools/tdna bench off-route 10000 7
+```
+
+[Capitolo 49 — Off-route, missed exit e reroute](docs/it/49-off-route-missed-exit-e-reroute.md)
+
+Il settimo Lab usa evidenza normalizzata e soglie sintetiche. Non stabilisce
+threshold di produzione, non usa traffico live e non misura affidabilità su
+strada.
 
 ## Verifica completa
 
