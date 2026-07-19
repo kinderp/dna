@@ -1,4 +1,4 @@
-.PHONY: test core travel travel-emulator schemas kotlin demo ci-actions doctor
+.PHONY: test core travel-revision travel travel-emulator schemas kotlin demo ci-actions doctor
 
 test: core
 
@@ -9,6 +9,9 @@ schemas:
 
 kotlin:
 	./scripts/test-reference.sh
+
+travel-revision:
+	sh tools/dna check-travel-revision
 
 travel:
 	sh tools/dna check-travel
