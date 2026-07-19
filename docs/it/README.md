@@ -1,6 +1,6 @@
 # Documentazione italiana di DNA
 
-Questa cartella raccoglie la visione, le decisioni architetturali, la roadmap e lo stato dell'implementazione iniziale della piattaforma DNA.
+Questa cartella raccoglie la visione, le decisioni architetturali e la roadmap iniziale della piattaforma DNA.
 
 ## Ordine di lettura
 
@@ -11,17 +11,19 @@ Questa cartella raccoglie la visione, le decisioni architetturali, la roadmap e 
 5. [Shopping DNA](04-shopping-dna.md)
 6. [Roadmap](05-roadmap.md)
 7. [Privacy e sicurezza](06-privacy-sicurezza.md)
-8. [Implementazione di riferimento v0.1](07-implementazione-di-riferimento.md)
-
-## Contratti ed esempi
-
-- [Schemi JSON v0.1](../../schemas/v0.1/README.md)
-- [Implementazione Kotlin di riferimento](../../reference/kotlin/README.md)
-- [Esempi v0.1](../../examples/v0.1)
+8. [Implementazione di riferimento](07-implementazione-di-riferimento.md)
+9. [Alfred come Observation e Correlation Runtime per DNA](08-alfred-observation-correlation-runtime.md)
 
 ## Decisioni architetturali
 
 - [ADR-0001 — Discovery indipendente dal trasporto](adr/0001-transport-agnostic-discovery.md)
+- [ADR-0002 — Alfred come piano asincrono di osservazione e correlazione](adr/0002-alfred-observation-plane.md)
+
+## Contratti eseguibili
+
+- [JSON Schema v0.1](../../schemas/v0.1/README.md)
+- [Esempi v0.1](../../examples/v0.1/)
+- [Reference implementation Kotlin](../../reference/kotlin/README.md)
 
 ## Glossario minimo
 
@@ -36,6 +38,9 @@ Questa cartella raccoglie la visione, le decisioni architetturali, la roadmap e 
 | **GeoAnchor** | Collegamento di un'entità a un punto, un'area, una tratta o una zona dinamica. |
 | **GeoRoom** | Conversazione o spazio di coordinamento associato a un GeoAnchor. |
 | **Transport Adapter** | Implementazione di un mezzo di comunicazione: Internet, BLE, Wi-Fi, NFC, LoRa o altri. |
+| **Observation** | Rappresentazione di un fatto, misura, inferenza, azione o outcome con fonte e validità esplicite. |
+| **Correlation Pattern** | Regola versionata che collega osservazioni nel tempo e tra domini producendo un risultato spiegabile. |
+| **DNA-Alfred Bridge** | Adapter asincrono che minimizza e traduce eventi DNA nel piano di osservazione Alfred. |
 
 ## Stato dei documenti
 
