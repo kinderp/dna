@@ -1,4 +1,3 @@
 [submodule "domains/travel"]
 	path = domains/travel
 	url = https://github.com/kinderp/tdna.git
-	branch = main
