@@ -34,6 +34,7 @@ verifying that Foundations v0 and the Android shell are already on `main`.
 
 - JVM round-trip test for all routes;
 - null/unknown route fallback test;
+- exact persisted route and semantic-tag contract test;
 - semantic-tag uniqueness test;
 - instrumentation Home identity test;
 - traversal of all four destinations;
@@ -150,8 +151,21 @@ Correction:
 6. KVM permission changes remain in the reviewed CI setup step; local execution
    only validates accessibility and fails with an actionable message.
 
-The review produced finding-driven commits, so clean reviews remain `0 / 2` until
-a new exact-head CI is green and two new rounds complete.
+## Finding 4 — persisted identifiers were not pinned by tests
+
+After the runner fixes, the pre-clean review found that route round-trip and tag
+uniqueness tests would still remain green if the persisted route strings or the
+semantic identifiers changed together. That would weaken the stated stability
+contract and could leave documentation or restored state behind.
+
+Correction:
+
+- JVM tests now assert the exact ordered route values;
+- navigation tags and screen tags are asserted explicitly;
+- uniqueness remains a separate invariant.
+
+All four findings produced substantive commits, so clean reviews remain `0 / 2`
+until a new exact-head CI is green and two new rounds complete.
 
 ## Expected final evidence
 
