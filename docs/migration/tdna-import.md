@@ -10,13 +10,39 @@ Fase A attiva: `domains/travel` è un riferimento Git al repository `kinderp/tdn
 
 Questa scelta non è l'architettura finale. È un ponte conservativo che rende l'intero contenuto TDNA disponibile da un checkout DNA senza copiarlo in modo parziale o perdere la tracciabilità.
 
-## Checkout
+## Guida operativa del submodule
+
+I comandi completi per studenti e contributori sono documentati in:
+
+- [Git submodule in DNA: guida operativa e didattica](../governance/02-git-submodules.md)
+
+La guida copre:
+
+- primo clone e repository già clonato;
+- aggiornamento di `main` e cambio branch;
+- detached HEAD;
+- verifica del gitlink;
+- lavoro sul repository Travel;
+- aggiornamento intenzionale del puntatore;
+- recupero da checkout errato o conflitto;
+- fork, Windows e comportamento CI.
+
+## Checkout minimo
 
 ```bash
 git clone --recurse-submodules https://github.com/kinderp/dna.git
 cd dna
 git submodule update --init --recursive
+sh tools/dna check-travel-revision
 ```
+
+Non usare nel flusso normale:
+
+```bash
+git submodule update --remote
+```
+
+DNA deve scegliere esplicitamente un commit TDNA revisionato.
 
 ## Fonti autorevoli durante la fase A
 
@@ -31,6 +57,21 @@ git submodule update --init --recursive
 | Alfred | repository autonomo `kinderp/alfred` e bridge documentato in DNA |
 
 Una decisione trasversale nuova non deve essere aggiunta soltanto alla documentazione TDNA.
+
+## Verifica della revisione
+
+```bash
+sh tools/dna doctor
+sh tools/dna check-travel-revision
+```
+
+La verifica confronta:
+
+1. revisione attesa dalla fase di migrazione;
+2. gitlink registrato dal commit DNA corrente;
+3. commit effettivamente aperto in `domains/travel`.
+
+I tre valori devono coincidere.
 
 ## Perché non copiare subito uno snapshot
 
