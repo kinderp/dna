@@ -68,7 +68,7 @@ sh tools/dna check-travel-revision
 La verifica confronta:
 
 1. revisione attesa dalla fase di migrazione;
-2. gitlink registrato dal commit DNA corrente;
+2. gitlink registrato nell'indice Git di DNA;
 3. commit effettivamente aperto in `domains/travel`.
 
 I tre valori devono coincidere.
@@ -79,17 +79,40 @@ Una copia manuale perderebbe blame, collegamenti a commit e certezza sulla compl
 
 ## Fase B: appiattimento definitivo
 
-Il passaggio finale userà un import history-aware, preferibilmente:
+`git subtree add` richiede che il prefisso di destinazione non sia già occupato. La fase B deve quindi rimuovere prima il ponte submodule in una branch dedicata e soltanto dopo importare la cronologia TDNA.
+
+Sequenza candidata, da riesaminare nella PR della fase B:
 
 ```bash
+git switch main
+git pull --ff-only
+git switch -c agent/flatten-travel-history
+
+# Verificare prima che non esista lavoro locale dentro il submodule.
+git -C domains/travel status --short
+
+# Rimuovere il ponte submodule dal repository DNA.
+git submodule deinit -f -- domains/travel
+git rm -f domains/travel
+git rm .gitmodules
+
+# Pulizia soltanto locale dei metadati del vecchio submodule.
+rm -rf .git/modules/domains/travel
+
+git commit -m "Remove transitional Travel submodule"
+
+# Importare la storia TDNA sotto il prefisso definitivo.
 git remote add tdna https://github.com/kinderp/tdna.git
 git fetch tdna main
-git subtree add --prefix=domains/travel tdna main
+git subtree add --prefix=domains/travel tdna main \
+  -m "Import TDNA history under domains/travel"
 ```
+
+Se in futuro esisteranno altri submodule, `.gitmodules` non dovrà essere rimosso interamente: dovrà essere eliminata soltanto la sezione `domains/travel`.
 
 Prima dell'esecuzione verrà verificato se usare subtree completo o history rewrite con prefisso. Dopo l'import:
 
-1. rimuovere `.gitmodules` e il gitlink;
+1. verificare che `.gitmodules` e il gitlink Travel non esistano più;
 2. mantenere nel commit di migrazione il riferimento al commit sorgente;
 3. riallineare script e Gradle dalla root;
 4. spostare le decisioni comuni in DNA;
@@ -97,6 +120,8 @@ Prima dell'esecuzione verrà verificato se usare subtree completo o history rewr
 6. eseguire CI, emulator smoke e review;
 7. lasciare TDNA accessibile finché la nuova `main` non è stabile;
 8. archiviare TDNA con una PR/operazione separata.
+
+La pulizia con `rm -rf .git/modules/domains/travel` riguarda soltanto metadati locali dopo `deinit` e `git rm`; non deve essere eseguita prima di avere verificato e conservato eventuale lavoro locale.
 
 ## Non-obiettivi della fase A
 
