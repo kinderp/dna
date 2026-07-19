@@ -4,7 +4,7 @@
 
 ```text
 id: android-pilot0-emulator-smoke-v0
-status: executable in PR #28
+status: implementation-backed in PR #28
 platform: Android emulator / Linux CI
 issue: #27
 pull request: #28
@@ -14,16 +14,20 @@ road evidence: false
 
 ## Learning goal
 
-Seguire una APK dal checkout fino all'esecuzione su Android e distinguere build,
-installazione, instrumentation, Activity recreation e prova fisica.
+Seguire una APK dal checkout fino all'esecuzione su un solo runtime Android e
+distinguere build, installazione, instrumentation, Activity recreation, prova su
+telefono e prova su strada.
 
 ## Prerequisiti
 
 - Java 21;
 - Gradle Wrapper verificato;
 - Android SDK con command-line tools;
-- KVM consigliato;
+- KVM configurato dall'host quando disponibile;
+- nessun telefono o altro emulatore online;
 - capitoli 58 e 60.
+
+Il runner non modifica i privilegi KVM e non invoca `sudo`.
 
 ## Trigger
 
@@ -31,28 +35,49 @@ installazione, instrumentation, Activity recreation e prova fisica.
 sh tools/tdna check-android-emulator
 ```
 
-In CI il workflow passa anche:
+In CI il workflow passa:
 
 ```text
 TDNA_SUBSTANTIVE_SHA = pull_request.head.sha oppure github.sha su push
 ```
 
-Il report non deve derivare lo SHA dal merge ref implicito di un evento PR.
+Il report non deriva lo SHA dal merge ref implicito di un evento PR.
+
+## Configurazione bounded
+
+Valori di default:
+
+```text
+API 35
+default x86_64
+Pixel 2
+porta 5554
+seriale emulator-5554
+boot deadline 360 secondi
+```
+
+`TDNA_AVD_ROOT` può selezionare la directory padre dello stato temporaneo. Il
+runner crea con `mktemp` un figlio unico `tdna-avd-*` e cancella soltanto quel
+figlio. La root non può trovarsi dentro `build/android-emulator`.
 
 ## Percorso
 
 ```text
-PilotScreen route/tag contract
+PilotScreen route/tag exact contract
 -> Compose NavigationBar semantics
 -> MainActivitySmokeTest
 -> official SDK system image
--> AVD home/path espliciti
+-> unique temporary AVD child
 -> AVD discovery preflight
--> ADB registration + boot bounded
--> connectedDebugAndroidTest
--> explicit APK install/start/package checks
+-> reject other online Android devices
+-> start emulator-5554
+-> ADB registration + boot bounded on that serial
+-> connectedDebugAndroidTest through ANDROID_SERIAL
+-> explicit APK install/start/package checks with adb -s
+-> verify observed serial == emulator-5554
 -> screenshot + checksum
--> emulator-smoke.json
+-> exact-head emulator-smoke.json
+-> cleanup only owned temporary AVD child
 ```
 
 ## Expected evidence
@@ -69,24 +94,27 @@ Android connected-test XML/HTML reports
 Il report deve dichiarare almeno:
 
 ```json
-{"activity_started":true,"app_installed":true,"instrumentation_task":"connectedDebugAndroidTest","package_visible":true,"road_evidence":false,"scenario":"android-pilot0-emulator-smoke-v0","sensitive_permissions_requested":false}
+{"activity_started":true,"app_installed":true,"instrumentation_task":"connectedDebugAndroidTest","package_visible":true,"road_evidence":false,"scenario":"android-pilot0-emulator-smoke-v0","sensitive_permissions_requested":false,"serial":"emulator-5554"}
 ```
 
 `head_sha` deve coincidere con lo SHA sostanziale del checkout e dell'intera CI.
-Gli altri campi dichiarano API richiesta/reale, ABI, modello e seriale emulatore.
+Gli altri campi dichiarano API richiesta/reale, ABI e modello.
 
 ## State ownership
 
-- `PilotScreen`: insieme chiuso delle destinazioni;
+- `PilotScreen`: insieme chiuso delle destinazioni e valori persistiti esatti;
 - `selectedRoute`: stato visuale salvabile posseduto da `TravelDnaApp`;
 - Activity/Compose: restore durante recreation;
-- workflow: identità dello SHA sostanziale;
-- script emulatore: lifecycle AVD, deadline e diagnostica;
-- Gradle Android Test: installazione ed esecuzione dei test.
+- workflow: identità dello SHA sostanziale e preparazione KVM;
+- `TDNA_AVD_ROOT`: solo parent configurabile;
+- script emulatore: figlio AVD temporaneo, seriale, deadline e diagnostica;
+- Gradle Android Test: installazione ed esecuzione sul seriale dichiarato.
 
 ## Existing tests
 
-- route note e fallback;
+- valori esatti delle route `home`, `pilots`, `demo`, `study`;
+- valori esatti dei navigation tag e content tag;
+- round-trip e fallback delle route;
 - unicità dei semantic tag;
 - Home visibile;
 - tutte le destinazioni raggiungibili;
@@ -95,12 +123,13 @@ Gli altri campi dichiarano API richiesta/reale, ABI, modello e seriale emulatore
 
 ## Runtime assertions
 
-Dopo i test instrumentation il runner verifica esplicitamente:
+Dopo i test instrumentation il runner verifica:
 
 ```text
-adb install output == Success
+adb -s emulator-5554 install output == Success
 am start -W contiene Status: ok
 pm path restituisce package:
+get-serialno == emulator-5554
 ```
 
 Solo dopo queste asserzioni scrive `app_installed`, `activity_started` e
@@ -121,8 +150,19 @@ failure-screen.png
 ```
 
 Ogni comando diagnostico è bounded. Un processo emulatore terminato prima della
-registrazione ADB deve produrre un fallimento immediato, non attendere il timeout
-del job.
+registrazione ADB produce un fallimento immediato.
+
+## Failure mode principali
+
+```text
+root AVD dentro area artifact      -> fail-fast
+altro device online                -> fail-fast
+seriale emulator-5554 già occupato -> fail-fast
+KVM non accessibile                -> errore senza sudo
+AVD non scoperto                   -> errore prima del launch
+registrazione/boot oltre deadline  -> diagnostica + cleanup
+strumentation o asserzione ADB      -> report di test e file evidence
+```
 
 ## Non-goals
 
@@ -138,10 +178,11 @@ del job.
 
 1. Perché una APK instrumentation compilata non è un test eseguito?
 2. Quale stato viene provato da `ActivityScenario.recreate()`?
-3. Perché il test usa tag semantici e non coordinate?
-4. Perché `adb wait-for-device` non è sufficiente come deadline?
-5. Perché il report riceve lo SHA sostanziale dal workflow?
-6. Perché `road_evidence` rimane `false`?
+3. Perché route e tag esatti sono un contratto distinto dalla loro unicità?
+4. Perché tutti i comandi ADB devono usare un seriale?
+5. Perché il runner accetta una root ma crea autonomamente il figlio da eliminare?
+6. Perché KVM viene preparato fuori dal comando pubblico?
+7. Perché `road_evidence` rimane `false`?
 
 ## Related docs
 
