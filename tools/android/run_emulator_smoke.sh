@@ -13,6 +13,8 @@ APP_ID="org.traveldna.android"
 SUBSTANTIVE_SHA=${TDNA_SUBSTANTIVE_SHA:-${GITHUB_SHA:-local}}
 DEFAULT_AVD_ROOT=${RUNNER_TEMP:-$ROOT/build}
 AVD_HOME=${TDNA_AVD_HOME:-$DEFAULT_AVD_ROOT/tdna-avd-$AVD_NAME}
+EMULATOR_PORT=5554
+EMULATOR_SERIAL="emulator-$EMULATOR_PORT"
 
 : "${ANDROID_HOME:?ANDROID_HOME must point to an Android SDK}"
 
@@ -27,13 +29,35 @@ for executable in "$SDKMANAGER" "$AVDMANAGER" "$ADB"; do
         exit 1
     fi
 done
-if ! command -v timeout >/dev/null 2>&1; then
-    printf 'ERROR: required command timeout is missing\n' >&2
+for command_name in timeout python3; do
+    if ! command -v "$command_name" >/dev/null 2>&1; then
+        printf 'ERROR: required command is missing: %s\n' "$command_name" >&2
+        exit 1
+    fi
+done
+if [[ ! "$AVD_NAME" =~ ^[A-Za-z0-9._-]+$ ]]; then
+    printf 'ERROR: TDNA_EMULATOR_AVD_NAME contains unsafe characters: %s\n' \
+        "$AVD_NAME" >&2
     exit 1
 fi
 
+AVD_HOME=$(python3 - "$AVD_HOME" <<'PY'
+from pathlib import Path
+import sys
+print(Path(sys.argv[1]).expanduser().resolve(strict=False))
+PY
+)
+
 rm -rf "$OUTPUT_DIR"
 mkdir -p "$OUTPUT_DIR"
+case "$(basename "$AVD_HOME")" in
+    tdna-avd-*) ;;
+    *)
+        printf 'ERROR: TDNA_AVD_HOME must name a dedicated tdna-avd-* directory: %s\n' \
+            "$AVD_HOME" >&2
+        exit 1
+        ;;
+esac
 case "$AVD_HOME" in
     "$OUTPUT_DIR"|"$OUTPUT_DIR"/*)
         printf 'ERROR: TDNA_AVD_HOME must stay outside artifact output: %s\n' \
@@ -45,22 +69,39 @@ rm -rf "$AVD_HOME"
 mkdir -p "$AVD_HOME"
 AVD_PATH="$AVD_HOME/$AVD_NAME.avd"
 export ANDROID_AVD_HOME="$AVD_HOME"
+export ANDROID_SERIAL="$EMULATOR_SERIAL"
 EMULATOR_PID=""
+
+adb_target() {
+    "$ADB" -s "$EMULATOR_SERIAL" "$@"
+}
+
+assert_no_other_online_devices() {
+    local serial state
+    while read -r serial state _; do
+        [[ -n "${serial:-}" ]] || continue
+        if [[ "$state" == "device" && "$serial" != "$EMULATOR_SERIAL" ]]; then
+            printf 'ERROR: another Android device is online (%s); disconnect it before the isolated smoke test\n' \
+                "$serial" >&2
+            return 1
+        fi
+    done < <("$ADB" devices | sed -n '2,$p')
+}
 
 capture_diagnostics() {
     set +e
     timeout 10s "$ADB" devices -l > "$OUTPUT_DIR/adb-devices.txt" 2>&1
-    timeout 10s "$ADB" logcat -d -v threadtime > "$OUTPUT_DIR/logcat.txt" 2>&1
-    timeout 10s "$ADB" shell getprop > "$OUTPUT_DIR/device-properties.txt" 2>&1
-    timeout 10s "$ADB" shell screencap -p \
+    timeout 10s "$ADB" -s "$EMULATOR_SERIAL" logcat -d -v threadtime > "$OUTPUT_DIR/logcat.txt" 2>&1
+    timeout 10s "$ADB" -s "$EMULATOR_SERIAL" shell getprop > "$OUTPUT_DIR/device-properties.txt" 2>&1
+    timeout 10s "$ADB" -s "$EMULATOR_SERIAL" shell screencap -p \
         /sdcard/tdna-emulator-failure.png >/dev/null 2>&1
-    timeout 10s "$ADB" pull /sdcard/tdna-emulator-failure.png \
+    timeout 10s "$ADB" -s "$EMULATOR_SERIAL" pull /sdcard/tdna-emulator-failure.png \
         "$OUTPUT_DIR/failure-screen.png" >/dev/null 2>&1
 }
 
 cleanup() {
     set +e
-    timeout 10s "$ADB" emu kill >/dev/null 2>&1
+    timeout 10s "$ADB" -s "$EMULATOR_SERIAL" emu kill >/dev/null 2>&1
     if [[ -n "$EMULATOR_PID" ]] && kill -0 "$EMULATOR_PID" 2>/dev/null; then
         kill "$EMULATOR_PID" >/dev/null 2>&1
         for _ in {1..10}; do
@@ -112,15 +153,22 @@ if ! grep -Fx "$AVD_NAME" "$OUTPUT_DIR/avd-list.txt" >/dev/null; then
     exit 1
 fi
 
-if [[ -e /dev/kvm ]]; then
-    sudo chmod 666 /dev/kvm
+if [[ -e /dev/kvm && ( ! -r /dev/kvm || ! -w /dev/kvm ) ]]; then
+    printf 'ERROR: /dev/kvm is not accessible; configure KVM permissions outside this runner\n' >&2
+    exit 1
 fi
 
-"$ADB" kill-server
-"$ADB" start-server
+"$ADB" start-server >/dev/null
+assert_no_other_online_devices
+if adb_target get-state >/dev/null 2>&1; then
+    printf 'ERROR: target serial %s is already online; stop the existing emulator first\n' \
+        "$EMULATOR_SERIAL" >&2
+    exit 1
+fi
 
-printf 'Starting AVD %s\n' "$AVD_NAME"
+printf 'Starting AVD %s as %s\n' "$AVD_NAME" "$EMULATOR_SERIAL"
 "$EMULATOR" -avd "$AVD_NAME" \
+    -port "$EMULATOR_PORT" \
     -no-window \
     -no-audio \
     -no-boot-anim \
@@ -133,7 +181,7 @@ printf 'Starting AVD %s\n' "$AVD_NAME"
 EMULATOR_PID=$!
 
 boot_deadline=$((SECONDS + BOOT_TIMEOUT_SECONDS))
-while [[ "$("$ADB" get-state 2>/dev/null || true)" != "device" ]]; do
+while [[ "$(adb_target get-state 2>/dev/null || true)" != "device" ]]; do
     if ! kill -0 "$EMULATOR_PID" 2>/dev/null; then
         printf 'ERROR: emulator process exited before registering with adb\n' >&2
         exit 1
@@ -145,8 +193,9 @@ while [[ "$("$ADB" get-state 2>/dev/null || true)" != "device" ]]; do
     fi
     sleep 2
 done
+assert_no_other_online_devices
 
-while [[ "$("$ADB" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" != "1" ]]; do
+while [[ "$(adb_target shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" != "1" ]]; do
     if ! kill -0 "$EMULATOR_PID" 2>/dev/null; then
         printf 'ERROR: emulator process exited before boot completed\n' >&2
         exit 1
@@ -159,10 +208,10 @@ while [[ "$("$ADB" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" !
     sleep 2
 done
 
-"$ADB" shell input keyevent 82 >/dev/null
-"$ADB" shell settings put global window_animation_scale 0
-"$ADB" shell settings put global transition_animation_scale 0
-"$ADB" shell settings put global animator_duration_scale 0
+adb_target shell input keyevent 82 >/dev/null
+adb_target shell settings put global window_animation_scale 0
+adb_target shell settings put global transition_animation_scale 0
+adb_target shell settings put global animator_duration_scale 0
 
 cd "$ROOT"
 ./gradlew --no-daemon --stacktrace \
@@ -174,23 +223,28 @@ APP_APK=$(find "$ROOT/apps/android/build/outputs/apk/debug" \
     -type f -name '*.apk' | sort | sed -n '1p')
 test -n "$APP_APK"
 
-"$ADB" install -r "$APP_APK" > "$OUTPUT_DIR/adb-install.txt"
+adb_target install -r "$APP_APK" > "$OUTPUT_DIR/adb-install.txt"
 grep -Fx 'Success' "$OUTPUT_DIR/adb-install.txt" >/dev/null
-"$ADB" shell am force-stop "$APP_ID"
-"$ADB" shell am start -W -n "$APP_ID/.MainActivity" \
+adb_target shell am force-stop "$APP_ID"
+adb_target shell am start -W -n "$APP_ID/.MainActivity" \
     > "$OUTPUT_DIR/activity-start.txt"
 grep -F 'Status: ok' "$OUTPUT_DIR/activity-start.txt" >/dev/null
 sleep 2
-"$ADB" shell screencap -p /sdcard/tdna-pilot0.png
-"$ADB" pull /sdcard/tdna-pilot0.png \
+adb_target shell screencap -p /sdcard/tdna-pilot0.png
+adb_target pull /sdcard/tdna-pilot0.png \
     "$OUTPUT_DIR/pilot0-screen.png" >/dev/null
-"$ADB" shell pm path "$APP_ID" > "$OUTPUT_DIR/package-path.txt"
+adb_target shell pm path "$APP_ID" > "$OUTPUT_DIR/package-path.txt"
 grep -F 'package:' "$OUTPUT_DIR/package-path.txt" >/dev/null
 sha256sum "$APP_APK" > "$OUTPUT_DIR/app-apk-sha256.txt"
 
-MODEL=$("$ADB" shell getprop ro.product.model | tr -d '\r')
-DEVICE_API=$("$ADB" shell getprop ro.build.version.sdk | tr -d '\r')
-SERIAL=$("$ADB" get-serialno | tr -d '\r')
+MODEL=$(adb_target shell getprop ro.product.model | tr -d '\r')
+DEVICE_API=$(adb_target shell getprop ro.build.version.sdk | tr -d '\r')
+SERIAL=$(adb_target get-serialno | tr -d '\r')
+if [[ "$SERIAL" != "$EMULATOR_SERIAL" ]]; then
+    printf 'ERROR: evidence came from unexpected serial %s (expected %s)\n' \
+        "$SERIAL" "$EMULATOR_SERIAL" >&2
+    exit 1
+fi
 
 python3 - "$OUTPUT_DIR/emulator-smoke.json" \
     "$SUBSTANTIVE_SHA" "$API_LEVEL" "$DEVICE_API" "$ABI" "$MODEL" "$SERIAL" <<'PY'
