@@ -198,6 +198,9 @@ jobs:
           if-no-files-found: error
           retention-days: 14
           path: |
-            build/android-emulator/**
+            build/android-emulator/*.json
+            build/android-emulator/*.txt
+            build/android-emulator/*.log
+            build/android-emulator/*.png
             apps/android/build/reports/androidTests/connected/**
             apps/android/build/outputs/androidTest-results/connected/**
