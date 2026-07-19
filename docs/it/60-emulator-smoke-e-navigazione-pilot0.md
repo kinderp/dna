@@ -6,7 +6,8 @@
 
 Questo capitolo descrive la seconda slice Android del Pilot 0. La shell precedente
 compilava unit test, lint, APK debug e APK instrumentation; questa slice aggiunge
-la prova che l'app viene installata ed eseguita su un runtime Android in CI.
+la prova che l'app viene installata ed eseguita su un runtime Android isolato in
+CI.
 
 ```text
 APK compilata
@@ -22,13 +23,14 @@ Al termine dovresti saper spiegare:
 
 1. perché un test JVM non sostituisce un test instrumentation;
 2. come `rememberSaveable` interagisce con la ricreazione dell'Activity;
-3. perché le destinazioni devono avere identificatori stabili;
+3. perché route persistite e semantic tag devono avere valori stabili e testati;
 4. perché i test Compose usano semantics e non coordinate pixel;
 5. come viene creato, scoperto, avviato e fermato un AVD headless;
-6. perché registrazione ADB e boot devono avere un deadline;
-7. perché i dischi AVD non sono artifact di review;
-8. quali evidenze produce la CI e quali restano assenti;
-9. perché un emulatore verde non autorizza un pilot su strada.
+6. perché tutti i comandi ADB devono riferirsi a un solo seriale dichiarato;
+7. perché registrazione ADB e boot devono avere un deadline;
+8. perché il runner pubblico non deve modificare i privilegi KVM dell'host;
+9. perché i dischi AVD non sono artifact di review;
+10. quali evidenze produce la CI e quali restano assenti.
 
 ## Slice
 
@@ -80,17 +82,14 @@ PilotScreen.fromSavedRoute(route)
 ```
 
 Una route nota restituisce la destinazione corrispondente. `null` o una stringa
-sconosciuta tornano a `Home`. Il processo non usa `valueOf`, quindi un dato
-obsoleto o corrotto non causa un'eccezione durante la composizione.
+sconosciuta tornano a `Home`. Non viene usato `valueOf`, quindi un dato obsoleto o
+corrotto non causa un'eccezione durante la composizione.
 
-### Route e nome dell'enum
+Il nome Kotlin dell'enum è una scelta di implementazione; la route è il dato
+persistito. I test JVM bloccano esplicitamente i quattro valori, così una refactor
+non può diventare accidentalmente una migrazione dello stato salvato.
 
-Il nome Kotlin è una scelta di implementazione; la route è il dato persistito.
-Separarli permette di rinominare una costante senza trasformare una refactor in
-una migrazione involontaria dello stato salvato. Queste route non sono ancora deep
-link pubblici.
-
-## Semantics e test tag
+## Semantics e contratti di test
 
 Le voci e le superfici espongono tag stabili:
 
@@ -106,7 +105,16 @@ pilot-screen-demo
 pilot-screen-study
 ```
 
-Il percorso di test è:
+I test JVM verificano separatamente:
+
+- valori esatti e ordine delle route persistite;
+- valori esatti dei tag di navigazione;
+- valori esatti dei tag delle superfici;
+- round-trip route → destinazione;
+- fallback per route nulla o sconosciuta;
+- unicità dei tag.
+
+Il percorso instrumentation è:
 
 ```text
 find navigation node by semantic tag
@@ -139,11 +147,7 @@ death reale, restore dopo reboot, storage durevole o stato di una sessione viagg
 
 ### Unit test JVM
 
-`PilotScreenTest` controlla:
-
-- round-trip di tutte le route;
-- fallback per valore nullo o sconosciuto;
-- unicità dei tag semantici.
+`PilotScreenTest` controlla contratti puri che non richiedono Android.
 
 ### Instrumentation test
 
@@ -156,7 +160,7 @@ death reale, restore dopo reboot, storage durevole o stato di una sessione viagg
 ### Manifest guard
 
 Il checker esistente continua a verificare manifest sorgente e fuso. Il job
-emulatore non introduce permessi.
+emulatore non introduce permessi sensibili.
 
 ## Emulator runner
 
@@ -178,12 +182,14 @@ Gradle Wrapper
 
 Non viene introdotta una GitHub Action di terze parti per l'emulatore.
 
-## Device dichiarato
+## Device e seriale dichiarati
 
 ```text
 API Android: 35
 image: default x86_64
 profilo: Pixel 2
+seriale: emulator-5554
+porta: 5554
 UI: headless
 GPU: SwiftShader indirect
 snapshot: disabilitati
@@ -193,28 +199,62 @@ boot data: pulito a ogni run
 L'app mantiene `compileSdk` e `targetSdk` 37. API 35 è una singola prova di
 compatibilità runtime, non una matrice di versioni o produttori.
 
+Ogni comando destinato al device usa `adb -s emulator-5554`. Il runner esporta
+anche `ANDROID_SERIAL`, così `connectedDebugAndroidTest` è vincolato allo stesso
+emulatore. Se un telefono o un altro emulatore risulta online, il comando fallisce
+prima dei test: una prova isolata non deve dipendere dal device collegato per caso.
+
+## Stato AVD con ownership sicura
+
+`TDNA_AVD_ROOT` sceglie soltanto la directory padre. Il runner crea al suo interno
+una directory unica:
+
+```text
+tdna-avd-<nome>.<suffisso-casuale>
+```
+
+mediante `mktemp`. Il cleanup elimina esclusivamente quel figlio creato dal run.
+Un valore di configurazione non viene mai trattato direttamente come directory da
+cancellare.
+
+La root AVD non può ricadere dentro `build/android-emulator`, che contiene solo le
+evidenze revisionabili.
+
+## KVM e privilegi dell'host
+
+Il runner pubblico non usa `sudo`, non esegue `chmod` e non modifica la macchina.
+Se `/dev/kvm` esiste ma non è leggibile e scrivibile, fallisce con un messaggio
+esplicito.
+
+La CI prepara KVM in uno step separato e revisionato del workflow. Su una macchina
+locale i permessi devono essere configurati dall'amministratore prima di eseguire
+il comando.
+
 ## Sequenza del runner
 
 ```text
-verifica ANDROID_HOME, tool e command timeout
--> installa/aggiorna emulator e system image dichiarata
--> imposta ANDROID_AVD_HOME in RUNNER_TEMP o build/tdna-avd-*
--> rifiuta una AVD home dentro build/android-emulator
+verifica ANDROID_HOME e tool richiesti
+-> installa/aggiorna emulator e system image dichiarata con timeout
+-> normalizza TDNA_AVD_ROOT
+-> crea un figlio AVD unico con mktemp
 -> crea AVD con path esplicito
 -> verifica il nome con emulator -list-avds
--> abilita KVM quando disponibile
--> avvia emulator headless
--> attende registrazione adb con deadline e controllo PID
+-> verifica accessibilità KVM senza cambiare privilegi
+-> avvia ADB server
+-> rifiuta altri device online o seriale già occupato
+-> avvia emulator headless su porta 5554
+-> attende registrazione adb -s emulator-5554 con deadline e controllo PID
 -> attende sys.boot_completed sullo stesso deadline
--> disabilita animazioni
+-> disabilita animazioni sul seriale dichiarato
 -> assembleDebug + assembleDebugAndroidTest
--> connectedDebugAndroidTest
--> installa esplicitamente APK debug e verifica Success
+-> connectedDebugAndroidTest con ANDROID_SERIAL
+-> installa APK debug con adb -s e verifica Success
 -> avvia MainActivity e verifica Status: ok
 -> verifica package path
 -> acquisisce screenshot e checksum
+-> verifica che il seriale osservato sia emulator-5554
 -> produce report JSON legato allo SHA sostanziale
--> arresta emulatore e cancella AVD home
+-> arresta emulatore e cancella soltanto il figlio AVD temporaneo
 ```
 
 ## Timeout e stato bounded
@@ -222,71 +262,66 @@ verifica ANDROID_HOME, tool e command timeout
 I limiti iniziali sono:
 
 ```text
-sdkmanager install       900 secondi
-avdmanager create         60 secondi
-registrazione + boot     360 secondi complessivi
-singolo comando diagnostico 10 secondi
-job GitHub Actions        35 minuti
+sdkmanager install          900 secondi
+avdmanager create            60 secondi
+registrazione + boot        360 secondi complessivi
+singolo comando diagnostico  10 secondi
+job GitHub Actions           35 minuti
 ```
 
-Il runner non usa `adb wait-for-device`, perché quell'operazione può attendere
-indefinitamente quando il processo emulatore è già terminato. Un loop controlla
-insieme `adb get-state`, PID e deadline.
+Il runner non usa `adb wait-for-device`, perché può attendere indefinitamente
+quando il processo emulatore è già terminato. Un loop controlla insieme stato ADB,
+PID e deadline.
 
-Le aree hanno ownership diverse:
+Le aree hanno ownership differenti:
 
 ```text
-RUNNER_TEMP/tdna-avd-* oppure build/tdna-avd-*
-    stato pesante e usa-e-getta del dispositivo virtuale
+RUNNER_TEMP/tdna-avd-* oppure <TDNA_AVD_ROOT>/tdna-avd-*
+    stato pesante, univoco e usa-e-getta del dispositivo virtuale
 
 build/android-emulator
     report, log, testo e screenshot bounded da revisionare
 ```
 
-La AVD home viene eliminata nel cleanup e non deve mai essere inclusa negli
-artifact. L'upload CI consente soltanto file top-level `.json`, `.txt`, `.log` e
-`.png`, oltre ai report connected-test dichiarati.
+L'upload CI consente soltanto file top-level `.json`, `.txt`, `.log` e `.png`,
+oltre ai report connected-test dichiarati.
 
-## Finding 1 — AVD non scoperto e attesa infinita
+## Finding risolti durante lo sviluppo
 
-La run di sviluppo #240 ha prodotto:
+### AVD non scoperto e attesa infinita
 
-```text
-Unknown AVD name [tdna_pilot0_api35]
-HOME is defined but there is no file tdna_pilot0_api35.ini
-```
+Una prima run creava l'AVD fuori dal percorso cercato da `emulator`; il processo
+terminava, mentre `adb wait-for-device` restava bloccato. Sono stati aggiunti path
+esplicito, discovery preflight, deadline e controllo PID.
 
-`avdmanager` aveva terminato senza rendere l'AVD visibile nel percorso cercato da
-`emulator`. Il processo è uscito immediatamente; `adb wait-for-device` ha poi
-atteso fino al timeout esterno.
+### Artifact da circa 512 MB
 
-Correzione:
+Una run verde aveva incluso i dischi AVD nell'artifact. Lo stato virtuale è stato
+spostato fuori dall'area evidenze e l'upload è stato trasformato in allowlist.
 
-1. AVD home e path espliciti;
-2. preflight `emulator -list-avds`;
-3. registrazione ADB bounded;
-4. controllo PID durante registrazione e boot;
-5. diagnostica e cleanup con timeout.
+### Directory configurabile eliminata direttamente
 
-## Finding 2 — artifact da 512 MB
+Una versione del runner accettava `TDNA_AVD_HOME` e la cancellava con `rm -rf`.
+Ora `TDNA_AVD_ROOT` seleziona solo un padre e `mktemp` crea il figlio esatto di cui
+il processo possiede il lifecycle.
 
-La run di sviluppo #246 ha completato build, boot, test, installazione e upload,
-ma l'artifact emulatore misurava circa 512 MB perché la AVD home viveva dentro
-`build/android-emulator/**`.
+### Device non isolato
 
-Il contenuto comprendeva dischi e configurazioni del device virtuale: dati
-riproducibili, voluminosi e inutili per la review. Il finding non invalida i test,
-ma invalida la policy di artifact della run.
+Comandi ADB non qualificati potevano osservare un telefono o un altro emulatore.
+Ora seriale, porta, `adb -s`, `ANDROID_SERIAL`, preflight e report finale sono
+correlati.
 
-Correzione:
+### Privilegi KVM nel comando pubblico
 
-1. AVD home spostata fuori dall'output evidence;
-2. rifiuto fail-fast se `TDNA_AVD_HOME` ricade nell'area artifact;
-3. cancellazione AVD nel cleanup;
-4. upload allowlisted per estensione e report connected-test;
-5. SHA sostanziale passato esplicitamente dal workflow.
+Il runner invocava `sudo chmod`. La mutazione è stata rimossa: la CI prepara KVM
+nel workflow, mentre il comando locale verifica soltanto i prerequisiti.
 
-Entrambi i finding sono sostanziali e azzerano il conteggio delle review.
+### Identificatori dichiarati stabili ma non bloccati
+
+Round-trip e unicità non proteggevano i valori esatti. I test ora fissano route e
+tag persistiti, separando stabilità da unicità.
+
+Ogni finding ha prodotto un commit sostanziale e ha azzerato le review pulite.
 
 ## Diagnostica in caso di errore
 
@@ -302,8 +337,8 @@ logcat.txt
 failure-screen.png, quando disponibile
 ```
 
-Ogni comando ADB diagnostico è bounded, così la raccolta delle prove non diventa
-un secondo blocco infinito.
+Ogni comando ADB diagnostico è bounded e indirizzato al seriale dichiarato quando
+possibile.
 
 ## Evidenza di successo
 
@@ -332,7 +367,7 @@ road_evidence
 ```
 
 `head_sha` arriva dal checkout sostanziale della CI, non dal merge ref implicito.
-`road_evidence` rimane esplicitamente `false`.
+`serial` deve essere `emulator-5554`. `road_evidence` rimane `false`.
 
 Altri output:
 
@@ -352,6 +387,7 @@ Una CI verde dimostra:
 
 - checkout pulito e identità dello SHA;
 - creazione, discovery e boot del device dichiarato;
+- isolamento sul seriale dichiarato;
 - installazione dell'APK e avvio Activity;
 - esecuzione dei test instrumentation;
 - navigazione semantica delle quattro superfici;
@@ -374,13 +410,22 @@ Non dimostra:
 
 `sdkmanager` fallisce o raggiunge il timeout prima della creazione dell'AVD.
 
-### AVD non visibile
+### Root AVD dentro l'area artifact
 
-La lista AVD non contiene il nome dichiarato; il runner fallisce prima del launch.
+Il runner rifiuta la configurazione prima di creare il device.
 
-### AVD dentro l'area artifact
+### Altro device online
 
-Il runner rifiuta la configurazione prima di scaricare o avviare il device.
+Il preflight rifiuta la prova per evitare evidenze provenienti da un target
+ambiguo.
+
+### Seriale 5554 già occupato
+
+Il runner non riusa un emulatore precedente: chiede di arrestarlo.
+
+### KVM non accessibile
+
+Il comando fallisce senza tentare escalation di privilegi.
 
 ### Emulatore termina prima di ADB
 
@@ -397,13 +442,13 @@ mostrano quale contratto non è stato soddisfatto.
 
 ## Esercizi
 
-1. Aggiungere una destinazione fittizia e aggiornare test e tag.
+1. Aggiungere una destinazione fittizia e aggiornare route, tag e test esatti.
 2. Dimostrare che una route sconosciuta non causa crash.
 3. Rompere volontariamente un tag e leggere il report instrumentation.
-4. Impostare `TDNA_AVD_HOME` sotto l'output e verificare il fail-fast.
-5. Ridurre il timeout di boot e osservare gli artifact diagnostici.
-6. Spiegare Activity recreation, process death e reboot.
-7. Proporre una matrice fisica minima senza equipararla all'emulatore.
+4. Collegare un secondo device e osservare il fail-fast di isolamento.
+5. Impostare `TDNA_AVD_ROOT` nell'area evidence e verificare il rifiuto.
+6. Ridurre il timeout di boot e osservare gli artifact diagnostici.
+7. Spiegare Activity recreation, process death e reboot.
 
 ## Passo successivo
 
