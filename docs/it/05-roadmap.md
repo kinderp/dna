@@ -10,6 +10,14 @@ Regola:
 
 La roadmap privilegia prototipi end-to-end e differisce hardware, microservizi e marketplace completo finché non sono necessari.
 
+La strategia di prodotto adotta inoltre:
+
+```text
+un ecosistema DNA
++ una app mobile modulare
++ esperienze separate per Android Auto e Android Automotive OS
+```
+
 ## 2. Obiettivo del primo ciclo
 
 Validare il flusso comune:
@@ -39,11 +47,12 @@ con adapter Internet e simulato, senza dipendenza da LoRa o altri dispositivi es
 - modello GeoRoom e Subscription;
 - threat model iniziale;
 - ADR principali;
+- architettura multi-esperienza mobile/auto;
 - scelta di licenza e governance.
 
 ### Criterio di uscita
 
-Le principali responsabilità sono assegnate a moduli precisi e nessun verticale dipende direttamente da BLE, NFC, Wi-Fi o LoRa.
+Le principali responsabilità sono assegnate a moduli precisi e nessun verticale dipende direttamente da BLE, NFC, Wi-Fi, LoRa o da una specifica superficie UI.
 
 ## 4. Fase 1 — Vertical slice online
 
@@ -116,7 +125,81 @@ Lo stesso caso d'uso funziona senza modifiche di dominio passando da Internet a 
 - informazioni territoriali con scadenza;
 - primo contratto stabile con Geo & Navigation Core.
 
-## 7. Fase 4 — Adapter Android di prossimità
+## 7. Fase 4 — App mobile DNA e design system
+
+### Obiettivo
+
+Costruire una shell mobile unica, modulare e riconoscibile.
+
+### Deliverable
+
+- `:app-mobile`;
+- `:design-system`;
+- `DomainSwitcher` visibile e accessibile;
+- Home/Oggi, Mappa, Attività e Profilo;
+- feature module Travel e Shopping;
+- accenti visivi di dominio;
+- layer cartografici comuni;
+- stato condiviso tra domini;
+- deep link interni e notifiche;
+- possibilità di escludere un dominio da una build.
+
+### Regola UX
+
+Lo swipe può essere una scorciatoia tra lenti compatibili, ma non l'unico modo per cambiare dominio.
+
+## 8. Fase 5 — Android Auto Navigation v1
+
+### Obiettivo
+
+Esporre una esperienza di guida minima e conforme, inizialmente nella categoria `NAVIGATION`.
+
+### Deliverable
+
+- modulo `:car-experience`;
+- `CarAppService`, `Session` e schermate template;
+- percorso attivo;
+- ricerca e avvio navigazione;
+- stato condiviso telefono → auto;
+- azioni vocali e intenti di navigazione richiesti;
+- test DHU;
+- checklist Car App Quality;
+- nessuna funzione estranea alla categoria dichiarata.
+
+### Criterio di uscita
+
+La navigazione può essere avviata sul telefono e continuata in Android Auto senza duplicare il dominio o riusare UI mobile.
+
+## 9. Fase 6 — Android Automotive OS
+
+### Deliverable
+
+- modulo `:app-automotive`;
+- build e manifest dedicati;
+- riuso del modulo `:car-experience`;
+- persistenza e offline appropriati al veicolo;
+- test su emulatore Automotive;
+- decisione su package e listing condivisi o separati.
+
+## 10. Fase 7 — POI e primo caso cross-domain in auto
+
+Aggiungere `POI` soltanto quando esiste una esperienza completa e verificabile.
+
+Primo caso consigliato:
+
+```text
+TravelRouteActivated
++ ShoppingOpportunityDetected
+→ proposta di aggiungere una fermata conveniente
+```
+
+In auto si mostra solo l'azione breve:
+
+> Aggiungere la fermata al percorso?
+
+Il confronto dettagliato, il checkout e la gestione del gruppo restano sul telefono.
+
+## 11. Fase 8 — Adapter Android di prossimità
 
 Ordine raccomandato:
 
@@ -135,7 +218,7 @@ Ordine raccomandato:
 - handover NFC → GeoRoom;
 - test dei permessi e del comportamento in background.
 
-## 8. Fase 5 — LoRa sperimentale
+## 12. Fase 9 — LoRa sperimentale
 
 LoRa entra come adapter opzionale, non come requisito del pilot principale.
 
@@ -154,7 +237,7 @@ LoRa entra come adapter opzionale, non come requisito del pilot principale.
 
 Due utenti rilevano una compatibilità tramite LoRa e completano lo scambio autorizzato tramite un altro canale senza che il dominio sappia quale adapter è stato usato.
 
-## 9. Fase 6 — Shopping Price Radar
+## 13. Fase 10 — Shopping Price Radar
 
 ### Pilot locale
 
@@ -170,7 +253,7 @@ Due utenti rilevano una compatibilità tramite LoRa e completano lo scambio auto
 
 Nessun rider e nessuna consegna in questa fase.
 
-## 10. Fase 7 — Basket Optimizer
+## 14. Fase 11 — Basket Optimizer
 
 - confronto del paniere;
 - costo di percorso e tempo;
@@ -182,7 +265,7 @@ Nessun rider e nessuna consegna in questa fase.
 
 Questa fase valida il riuso del navigatore TDNA fuori dal travel.
 
-## 11. Fase 8 — Contributor e gruppi d'acquisto
+## 15. Fase 12 — Contributor e gruppi d'acquisto
 
 - missioni informative pagate;
 - verifica di prezzi e disponibilità;
@@ -193,7 +276,7 @@ Questa fase valida il riuso del navigatore TDNA fuori dal travel.
 - regole di rimborso;
 - reputazione contestuale.
 
-## 12. Fase 9 — Pilot di consegna equa
+## 16. Fase 13 — Pilot di consegna equa
 
 Solo dopo aver validato dati, domanda e gruppi:
 
@@ -206,7 +289,7 @@ Solo dopo aver validato dati, domanda e gruppi:
 - ottimizzazione multi-stop;
 - assicurazione, inquadramento e procedure di contestazione.
 
-## 13. Fase 10 — Ecosistema locale
+## 17. Fase 14 — Ecosistema locale
 
 - integrazione con gestionali;
 - cataloghi dei commercianti;
@@ -217,7 +300,7 @@ Solo dopo aver validato dati, domanda e gruppi:
 - smart locker e sensori opzionali;
 - gateway comunitari solo dove producono valore.
 
-## 14. Backlog tecnico iniziale
+## 18. Backlog tecnico iniziale
 
 ### Epic A — Domain core
 
@@ -267,7 +350,18 @@ Solo dopo aver validato dati, domanda e gruppi:
 - Basket Optimizer;
 - group purchase.
 
-## 15. Decisioni da non anticipare
+### Epic F — Surface architecture
+
+- design system;
+- app mobile shell;
+- DomainSwitcher;
+- car-experience;
+- app Automotive;
+- state handoff;
+- voice e notifiche;
+- feature flags per build.
+
+## 19. Decisioni da non anticipare
 
 Rimandare finché non esiste evidenza:
 
@@ -279,9 +373,11 @@ Rimandare finché non esiste evidenza:
 - ranking reputazionale unico;
 - marketplace nazionale;
 - gestione bancaria interna;
-- AI generativa come requisito centrale.
+- AI generativa come requisito centrale;
+- APK separato per ogni dominio;
+- dichiarazione contemporanea di tutte le categorie Android for Cars.
 
-## 16. Metriche di piattaforma
+## 20. Metriche di piattaforma
 
 - tempo da intento a compatibilità utile;
 - percentuale di compatibilità accettate;
@@ -292,9 +388,12 @@ Rimandare finché non esiste evidenza:
 - consumo energetico;
 - falsi match e segnalazioni di abuso;
 - GeoRoom che producono un'azione strutturata;
-- valore generato da almeno due verticali.
+- valore generato da almeno due verticali;
+- tempo necessario per passare da telefono ad auto;
+- percentuale di azioni Car completate senza ritorno al telefono;
+- numero di feature non conformi bloccate prima della release.
 
-## 17. Prossima implementazione consigliata
+## 21. Prossima implementazione consigliata
 
 La prima sprint di codice deve costruire un **vertical slice online** e un `MockTransportAdapter`, non l'hardware LoRa.
 
@@ -310,3 +409,5 @@ Deliverable della sprint:
 8. test di scadenza, revoca, duplicazione e perdita;
 9. documentazione API;
 10. demo riproducibile.
+
+Subito dopo il vertical slice, il prossimo passo applicativo è la shell mobile modulare con design system condiviso; Android Auto entra come superficie separata inizialmente limitata alla navigazione.
