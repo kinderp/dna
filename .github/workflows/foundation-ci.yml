@@ -184,6 +184,7 @@ jobs:
       - name: Boot emulator and execute instrumentation
         shell: bash
         env:
+          TDNA_SUBSTANTIVE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
           TDNA_EMULATOR_API_LEVEL: "35"
           TDNA_EMULATOR_ABI: x86_64
           TDNA_EMULATOR_BOOT_TIMEOUT_SECONDS: "360"
