@@ -40,6 +40,16 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
+      - name: Verify hosted Android SDK 37
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${ANDROID_HOME:-}"
+          platform_jar=$(find "${ANDROID_HOME}/platforms" -maxdepth 2 -type f -path '*/android-37*/android.jar' | sort | sed -n '1p')
+          build_tools=$(find "${ANDROID_HOME}/build-tools" -maxdepth 1 -type d -name '36.0.0' | sort | sed -n '1p')
+          test -n "$platform_jar"
+          test -n "$build_tools"
+          printf 'ANDROID_HOME=%s\nplatform=%s\nbuild-tools=%s\n' "$ANDROID_HOME" "$platform_jar" "$build_tools"
       - name: Configure Gradle cache
         uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6
         with:
