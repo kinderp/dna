@@ -6,6 +6,7 @@ Questa cartella raccoglie visione, decisioni architetturali e roadmap iniziale d
 
 - [Regole operative comuni](../governance/00-operational-rules.md)
 - [Review e merge seriale](../governance/01-review-and-merge.md)
+- [Git submodule: guida operativa e didattica](../governance/02-git-submodules.md)
 - [Manifest della migrazione TDNA](../migration/tdna-import.md)
 - [`AGENTS.md`](../../AGENTS.md)
 
@@ -22,7 +23,7 @@ Questa cartella raccoglie visione, decisioni architetturali e roadmap iniziale d
 9. [Alfred come Observation e Correlation Runtime per DNA](08-alfred-observation-correlation-runtime.md)
 10. [Architettura delle esperienze DNA: mobile, Android Auto e Automotive](09-architettura-esperienze-app-e-automotive.md)
 
-La documentazione tecnica e didattica Travel resta temporaneamente in `domains/travel/docs` durante la fase A della migrazione.
+La documentazione tecnica e didattica Travel resta temporaneamente in `domains/travel/docs` durante la fase A della migrazione. Prima di usare quella directory, inizializzare e verificare il submodule seguendo la [guida Git](../governance/02-git-submodules.md).
 
 ## Decisioni architetturali
 
@@ -56,6 +57,7 @@ La documentazione tecnica e didattica Travel resta temporaneamente in `domains/t
 | **Surface** | Esperienza di presentazione specifica per telefono, Android Auto, Android Automotive OS, voce o notifiche. |
 | **Domain Lens** | Vista che filtra la piattaforma comune secondo Travel, Shopping, Social, Economy o un altro dominio. |
 | **Migration gitlink** | Riferimento temporaneo e verificabile al commit TDNA durante l'import history-aware. |
+| **Git submodule** | Repository Git figlio collegato dal repository padre mediante un commit preciso. |
 
 ## Stato dei documenti
 
