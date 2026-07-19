@@ -24,26 +24,42 @@ for executable in "$SDKMANAGER" "$AVDMANAGER" "$ADB"; do
         exit 1
     fi
 done
+if ! command -v timeout >/dev/null 2>&1; then
+    printf 'ERROR: required command timeout is missing\n' >&2
+    exit 1
+fi
 
 rm -rf "$OUTPUT_DIR"
 mkdir -p "$OUTPUT_DIR"
+AVD_HOME="$OUTPUT_DIR/avd"
+AVD_PATH="$AVD_HOME/$AVD_NAME.avd"
+mkdir -p "$AVD_HOME"
+export ANDROID_AVD_HOME="$AVD_HOME"
 EMULATOR_PID=""
 
 capture_diagnostics() {
     set +e
-    "$ADB" devices -l > "$OUTPUT_DIR/adb-devices.txt" 2>&1
-    "$ADB" logcat -d -v threadtime > "$OUTPUT_DIR/logcat.txt" 2>&1
-    "$ADB" shell getprop > "$OUTPUT_DIR/device-properties.txt" 2>&1
-    "$ADB" shell screencap -p /sdcard/tdna-emulator-failure.png >/dev/null 2>&1
-    "$ADB" pull /sdcard/tdna-emulator-failure.png \
+    timeout 10s "$ADB" devices -l > "$OUTPUT_DIR/adb-devices.txt" 2>&1
+    timeout 10s "$ADB" logcat -d -v threadtime > "$OUTPUT_DIR/logcat.txt" 2>&1
+    timeout 10s "$ADB" shell getprop > "$OUTPUT_DIR/device-properties.txt" 2>&1
+    timeout 10s "$ADB" shell screencap -p \
+        /sdcard/tdna-emulator-failure.png >/dev/null 2>&1
+    timeout 10s "$ADB" pull /sdcard/tdna-emulator-failure.png \
         "$OUTPUT_DIR/failure-screen.png" >/dev/null 2>&1
 }
 
 cleanup() {
     set +e
-    "$ADB" emu kill >/dev/null 2>&1
-    if [[ -n "$EMULATOR_PID" ]]; then
+    timeout 10s "$ADB" emu kill >/dev/null 2>&1
+    if [[ -n "$EMULATOR_PID" ]] && kill -0 "$EMULATOR_PID" 2>/dev/null; then
         kill "$EMULATOR_PID" >/dev/null 2>&1
+        for _ in {1..10}; do
+            kill -0 "$EMULATOR_PID" 2>/dev/null || break
+            sleep 1
+        done
+        kill -9 "$EMULATOR_PID" >/dev/null 2>&1
+    fi
+    if [[ -n "$EMULATOR_PID" ]]; then
         wait "$EMULATOR_PID" >/dev/null 2>&1
     fi
 }
@@ -60,18 +76,30 @@ on_exit() {
 trap on_exit EXIT
 
 printf 'Installing emulator package %s\n' "$SYSTEM_IMAGE"
-"$SDKMANAGER" --install "platform-tools" "emulator" "$SYSTEM_IMAGE"
+timeout 900s "$SDKMANAGER" --install \
+    "platform-tools" "emulator" "$SYSTEM_IMAGE"
 
 if [[ ! -x "$EMULATOR" ]]; then
-    printf 'ERROR: emulator binary is missing after SDK installation: %s\n' "$EMULATOR" >&2
+    printf 'ERROR: emulator binary is missing after SDK installation: %s\n' \
+        "$EMULATOR" >&2
     exit 1
 fi
 
-printf 'no\n' | "$AVDMANAGER" create avd \
+printf 'Creating AVD %s under %s\n' "$AVD_NAME" "$AVD_HOME"
+printf 'no\n' | timeout 60s "$AVDMANAGER" create avd \
     --force \
     --name "$AVD_NAME" \
+    --path "$AVD_PATH" \
     --package "$SYSTEM_IMAGE" \
-    --device "$DEVICE_PROFILE"
+    --device "$DEVICE_PROFILE" \
+    > "$OUTPUT_DIR/avdmanager-create.log" 2>&1
+
+"$EMULATOR" -list-avds > "$OUTPUT_DIR/avd-list.txt"
+if ! grep -Fx "$AVD_NAME" "$OUTPUT_DIR/avd-list.txt" >/dev/null; then
+    printf 'ERROR: created AVD is not visible to the emulator: %s\n' \
+        "$AVD_NAME" >&2
+    exit 1
+fi
 
 if [[ -e /dev/kvm ]]; then
     sudo chmod 666 /dev/kvm
@@ -81,7 +109,7 @@ fi
 "$ADB" start-server
 
 printf 'Starting AVD %s\n' "$AVD_NAME"
-"$EMULATOR" "@$AVD_NAME" \
+"$EMULATOR" -avd "$AVD_NAME" \
     -no-window \
     -no-audio \
     -no-boot-anim \
@@ -93,16 +121,28 @@ printf 'Starting AVD %s\n' "$AVD_NAME"
     > "$OUTPUT_DIR/emulator.log" 2>&1 &
 EMULATOR_PID=$!
 
-"$ADB" wait-for-device
 boot_deadline=$((SECONDS + BOOT_TIMEOUT_SECONDS))
-while [[ "$("$ADB" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" != "1" ]]; do
+while [[ "$("$ADB" get-state 2>/dev/null || true)" != "device" ]]; do
+    if ! kill -0 "$EMULATOR_PID" 2>/dev/null; then
+        printf 'ERROR: emulator process exited before registering with adb\n' >&2
+        exit 1
+    fi
     if (( SECONDS >= boot_deadline )); then
-        printf 'ERROR: emulator did not boot within %s seconds\n' \
+        printf 'ERROR: emulator did not register with adb within %s seconds\n' \
             "$BOOT_TIMEOUT_SECONDS" >&2
         exit 1
     fi
+    sleep 2
+done
+
+while [[ "$("$ADB" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" != "1" ]]; do
     if ! kill -0 "$EMULATOR_PID" 2>/dev/null; then
         printf 'ERROR: emulator process exited before boot completed\n' >&2
+        exit 1
+    fi
+    if (( SECONDS >= boot_deadline )); then
+        printf 'ERROR: emulator did not boot within %s seconds\n' \
+            "$BOOT_TIMEOUT_SECONDS" >&2
         exit 1
     fi
     sleep 2
@@ -129,7 +169,8 @@ test -n "$APP_APK"
     > "$OUTPUT_DIR/activity-start.txt"
 sleep 2
 "$ADB" shell screencap -p /sdcard/tdna-pilot0.png
-"$ADB" pull /sdcard/tdna-pilot0.png "$OUTPUT_DIR/pilot0-screen.png" >/dev/null
+"$ADB" pull /sdcard/tdna-pilot0.png \
+    "$OUTPUT_DIR/pilot0-screen.png" >/dev/null
 "$ADB" shell pm path "$APP_ID" > "$OUTPUT_DIR/package-path.txt"
 sha256sum "$APP_APK" > "$OUTPUT_DIR/app-apk-sha256.txt"
 
