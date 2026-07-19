@@ -12,7 +12,7 @@ SYSTEM_IMAGE="system-images;android-${API_LEVEL};default;${ABI}"
 APP_ID="org.traveldna.android"
 SUBSTANTIVE_SHA=${TDNA_SUBSTANTIVE_SHA:-${GITHUB_SHA:-local}}
 DEFAULT_AVD_ROOT=${RUNNER_TEMP:-$ROOT/build}
-AVD_HOME=${TDNA_AVD_HOME:-$DEFAULT_AVD_ROOT/tdna-avd-$AVD_NAME}
+AVD_ROOT=${TDNA_AVD_ROOT:-$DEFAULT_AVD_ROOT}
 EMULATOR_PORT=5554
 EMULATOR_SERIAL="emulator-$EMULATOR_PORT"
 
@@ -41,7 +41,7 @@ if [[ ! "$AVD_NAME" =~ ^[A-Za-z0-9._-]+$ ]]; then
     exit 1
 fi
 
-AVD_HOME=$(python3 - "$AVD_HOME" <<'PY'
+AVD_ROOT=$(python3 - "$AVD_ROOT" <<'PY'
 from pathlib import Path
 import sys
 print(Path(sys.argv[1]).expanduser().resolve(strict=False))
@@ -50,23 +50,15 @@ PY
 
 rm -rf "$OUTPUT_DIR"
 mkdir -p "$OUTPUT_DIR"
-case "$(basename "$AVD_HOME")" in
-    tdna-avd-*) ;;
-    *)
-        printf 'ERROR: TDNA_AVD_HOME must name a dedicated tdna-avd-* directory: %s\n' \
-            "$AVD_HOME" >&2
-        exit 1
-        ;;
-esac
-case "$AVD_HOME" in
+case "$AVD_ROOT" in
     "$OUTPUT_DIR"|"$OUTPUT_DIR"/*)
-        printf 'ERROR: TDNA_AVD_HOME must stay outside artifact output: %s\n' \
-            "$AVD_HOME" >&2
+        printf 'ERROR: TDNA_AVD_ROOT must stay outside artifact output: %s\n' \
+            "$AVD_ROOT" >&2
         exit 1
         ;;
 esac
-rm -rf "$AVD_HOME"
-mkdir -p "$AVD_HOME"
+mkdir -p "$AVD_ROOT"
+AVD_HOME=$(mktemp -d "$AVD_ROOT/tdna-avd-${AVD_NAME}.XXXXXX")
 AVD_PATH="$AVD_HOME/$AVD_NAME.avd"
 export ANDROID_AVD_HOME="$AVD_HOME"
 export ANDROID_SERIAL="$EMULATOR_SERIAL"
