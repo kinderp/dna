@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kinderp/dna/schemas/v0.1/dna-intent.schema.json",
+  "title": "DNAIntent v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "intentId", "ownerEphemeralId", "domain", "intentType", "attributes", "validFrom", "validUntil"],
+  "properties": {
+    "schemaVersion": { "const": "0.1" },
+    "intentId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "ownerEphemeralId": { "type": "string", "minLength": 8, "maxLength": 128 },
+    "domain": { "enum": ["travel", "shopping", "social", "mobility", "local_services"] },
+    "intentType": { "type": "string", "pattern": "^[a-z][a-z0-9_-]{1,63}$" },
+    "attributes": {
+      "type": "object",
+      "maxProperties": 64,
+      "additionalProperties": {
+        "type": ["string", "number", "integer", "boolean", "null"]
+      }
+    },
+    "geoAnchor": { "$ref": "geo-anchor.schema.json" },
+    "visibility": { "enum": ["private", "matched_only", "group", "public_aggregate"], "default": "matched_only" },
+    "validFrom": { "type": "string", "format": "date-time" },
+    "validUntil": { "type": "string", "format": "date-time" },
+    "revocable": { "type": "boolean", "default": true },
+    "consentRef": { "type": "string", "maxLength": 256 }
+  }
+}

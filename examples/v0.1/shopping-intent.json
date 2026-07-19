@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "0.1",
+  "intentId": "shopping-001",
+  "ownerEphemeralId": "ephemeral-shopper-001",
+  "domain": "shopping",
+  "intentType": "group_purchase",
+  "attributes": {
+    "productKey": "ean:800000000001",
+    "quantity": 3,
+    "targetUnitPrice": 8.5
+  },
+  "geoAnchor": {
+    "anchorId": "area:rometta-spadafora",
+    "kind": "area",
+    "label": "Rometta–Spadafora",
+    "precision": "coarse",
+    "polygon": [[15.40, 38.22], [15.45, 38.22], [15.45, 38.27], [15.40, 38.22]]
+  },
+  "visibility": "matched_only",
+  "validFrom": "2026-07-19T10:30:00Z",
+  "validUntil": "2026-07-20T18:00:00Z",
+  "revocable": true,
+  "consentRef": "consent:shopping-group-v1"
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kinderp/dna/schemas/v0.1/transport-envelope.schema.json",
+  "title": "TransportEnvelope v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["envelopeVersion", "messageType", "messageId", "ephemeralSenderId", "issuedAt", "expiresAt", "priority", "hopLimit", "contentEncoding", "payload"],
+  "properties": {
+    "envelopeVersion": { "const": "0.1" },
+    "messageType": { "enum": ["dna_trace", "rendezvous", "short_message", "local_alert", "sync_hint"] },
+    "messageId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "ephemeralSenderId": { "type": "string", "minLength": 8, "maxLength": 128 },
+    "correlationId": { "type": "string", "maxLength": 128 },
+    "issuedAt": { "type": "string", "format": "date-time" },
+    "expiresAt": { "type": "string", "format": "date-time" },
+    "priority": { "enum": ["background", "normal", "urgent", "emergency"] },
+    "hopLimit": { "type": "integer", "minimum": 0, "maximum": 255 },
+    "contentEncoding": { "enum": ["json", "cbor", "protobuf", "opaque"] },
+    "payload": { "type": "string", "contentEncoding": "base64" },
+    "authenticationData": { "type": "string", "contentEncoding": "base64" }
+  }
+}
