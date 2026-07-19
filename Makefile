@@ -1,12 +1,29 @@
-.PHONY: test schemas kotlin demo
+.PHONY: test core travel-revision travel travel-emulator schemas kotlin demo ci-actions doctor
 
-test: kotlin schemas
+test: core
+
+core: ci-actions schemas kotlin
+
+schemas:
+	python3 scripts/validate-schemas.py
 
 kotlin:
 	./scripts/test-reference.sh
 
-schemas:
-	python3 scripts/validate-schemas.py
+travel-revision:
+	sh tools/dna check-travel-revision
+
+travel:
+	sh tools/dna check-travel
+
+travel-emulator:
+	sh tools/dna check-travel-emulator
+
+ci-actions:
+	sh tools/dna check-ci-actions
+
+doctor:
+	sh tools/dna doctor
 
 demo:
 	./scripts/run-demo.sh

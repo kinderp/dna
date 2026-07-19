@@ -2,69 +2,75 @@
 
 **DNA** è una piattaforma modulare per mettere in relazione persone, luoghi, intenzioni e servizi attraverso frammenti di profilo condivisibili, matching contestuale, mappe, comunità e diversi canali di comunicazione.
 
-Il progetto nasce dall'esperienza di **TDNA / Travel DNA**, ma il nucleo è progettato per supportare più verticali: viaggio, spesa e acquisti, mobilità, servizi locali, socialità e futuri domini.
+Travel è il primo dominio applicativo della piattaforma. Durante la migrazione, l'intero repository TDNA è disponibile sotto `domains/travel` come riferimento Git fissato a un commit verificabile.
 
 ## Principi
 
-- **DNA privato per impostazione predefinita**: il profilo completo non viene trasmesso; si condividono frammenti minimali, contestuali, revocabili e con scadenza.
-- **Architettura multi-verticale**: Travel, Shopping e gli altri servizi usano capacità comuni senza dipendere gli uni dagli altri.
-- **Mappa come interfaccia territoriale**: luoghi, zone, tratte, conversazioni, richieste, offerte e gruppi sono rappresentabili nel navigatore.
-- **Comunicazione transport-agnostic**: Internet, Wi-Fi, Wi-Fi Direct/Aware, Bluetooth LE, NFC e LoRa sono adapter intercambiabili con capacità differenti.
-- **LoRa come opzione, non dipendenza**: può trasportare trace o rendezvous; i contenuti completi passano normalmente attraverso Wi-Fi, rete mobile o Internet.
-- **Coordinamento umano**: chat geografiche, topic, sottoscrizioni e gruppi permettono agli utenti di confrontarsi e organizzarsi direttamente.
-- **Un ecosistema, più esperienze**: mobile, Android Auto e Android Automotive OS condividono dominio e identità visiva, ma usano presentazioni specializzate.
-- **Privacy, sicurezza e trasparenza by design**.
+- DNA privato per impostazione predefinita.
+- Bounded context separati in un solo monorepo.
+- Mappa come superficie territoriale comune.
+- Comunicazione transport-agnostic.
+- Un ecosistema e più esperienze specializzate.
+- Alfred come piano asincrono di osservazione e correlazione.
+- Coordinamento umano tramite GeoRoom, topic e gruppi.
+- Privacy, sicurezza, prove e documentazione by design.
 
 ## Componenti
 
-- **DNA Identity** — identità, pseudonimi e dispositivi.
-- **DNA Exchange** — frammenti, consenso, matching e revoca.
-- **DNA Discovery** — scoperta di prossimità e rendezvous indipendenti dal trasporto.
-- **DNA Commons** — GeoChat, topic, gruppi, sottoscrizioni e moderazione.
-- **Geo & Navigation Core** — luoghi, aree, tratte, percorsi e ancore geografiche.
-- **DNA–Alfred Bridge** — osservazione e correlazione asincrona cross-domain.
-- **Surface adapters** — mobile, Android Auto, Android Automotive OS, voce e notifiche.
-- **Verticali** — TDNA Travel, Shopping DNA e futuri servizi.
+- DNA Identity
+- DNA Exchange
+- DNA Discovery
+- DNA Commons
+- Geo & Navigation Core
+- Event Backbone
+- Trust & Moderation
+- DNA–Alfred Bridge
+- domini Travel, Shopping, Social ed Economy
+- superfici mobile, Android Auto e Android Automotive OS
 
-## Stato
+## Checkout completo
 
-La baseline v0.1 comprende documentazione, schemi JSON versionati e un simulatore Kotlin/JVM del primo flusso comune:
-
-```text
-DNA Profile
-  → DNA Fragment
-  → DNA Trace
-  → Discovery / Compatibility
-  → Consent / Rendezvous
-  → GeoRoom o azione di un verticale
+```bash
+git clone --recurse-submodules https://github.com/kinderp/dna.git
+cd dna
+git submodule update --init --recursive
+sh tools/dna check-travel-revision
 ```
 
-Il simulatore verifica matching Travel e Shopping, consenso, scelta del trasporto, fallback, TTL e deduplicazione. Non è ancora l'SDK Android definitivo.
+Per clone esistenti, cambio branch, aggiornamento del puntatore, detached HEAD e recupero errori leggere la [guida Git submodule](docs/governance/02-git-submodules.md).
 
-La documentazione definisce inoltre la strategia multi-esperienza:
-
-```text
-una app mobile DNA modulare
-+ Android Auto orientato ai compiti di guida
-+ una build Android Automotive OS dedicata
-```
-
-## Iniziare
+## Controlli
 
 ```bash
 python3 -m pip install -r requirements-dev.txt
-./scripts/test-reference.sh
-./scripts/run-demo.sh
+sh tools/dna check-core-contracts
+sh tools/dna check-core-reference
+sh tools/dna check-travel-revision
+sh tools/dna check-travel
 ```
 
-Sono richiesti Python 3, JDK e `kotlinc` nel `PATH`.
+Il test emulatore Travel è separato e intenzionale:
+
+```bash
+sh tools/dna check-travel-emulator
+```
+
+## Migrazione TDNA
+
+- [Manifest e strategia](docs/migration/tdna-import.md)
+- [Comandi Git submodule per studenti e contributori](docs/governance/02-git-submodules.md)
+- sorgente fissata: `kinderp/tdna@85c73ab78dd56506c5595673098adf514765de9c`
+- `kinderp/tdna` non viene archiviato finché l'import history-aware e i test del monorepo non sono completati.
 
 ## Risorse
 
 - [Documentazione italiana](docs/it/README.md)
+- [Governance](docs/governance/00-operational-rules.md)
+- [Review e merge](docs/governance/01-review-and-merge.md)
+- [Guida Git submodule](docs/governance/02-git-submodules.md)
 - [Schemi JSON v0.1](schemas/v0.1/README.md)
 - [Implementazione Kotlin di riferimento](reference/kotlin/README.md)
-- [Esempi](examples/v0.1)
+- [Issue di migrazione](https://github.com/kinderp/dna/issues/3)
 
 ## Licenza
 

@@ -1,6 +1,14 @@
 # Documentazione italiana di DNA
 
-Questa cartella raccoglie la visione, le decisioni architetturali e la roadmap iniziale della piattaforma DNA.
+Questa cartella raccoglie visione, decisioni architetturali e roadmap iniziale della piattaforma DNA.
+
+## Prima di contribuire
+
+- [Regole operative comuni](../governance/00-operational-rules.md)
+- [Review e merge seriale](../governance/01-review-and-merge.md)
+- [Git submodule: guida operativa e didattica](../governance/02-git-submodules.md)
+- [Manifest della migrazione TDNA](../migration/tdna-import.md)
+- [`AGENTS.md`](../../AGENTS.md)
 
 ## Ordine di lettura
 
@@ -15,11 +23,14 @@ Questa cartella raccoglie la visione, le decisioni architetturali e la roadmap i
 9. [Alfred come Observation e Correlation Runtime per DNA](08-alfred-observation-correlation-runtime.md)
 10. [Architettura delle esperienze DNA: mobile, Android Auto e Automotive](09-architettura-esperienze-app-e-automotive.md)
 
+La documentazione tecnica e didattica Travel resta temporaneamente in `domains/travel/docs` durante la fase A della migrazione. Prima di usare quella directory, inizializzare e verificare il submodule seguendo la [guida Git](../governance/02-git-submodules.md).
+
 ## Decisioni architetturali
 
 - [ADR-0001 — Discovery indipendente dal trasporto](adr/0001-transport-agnostic-discovery.md)
 - [ADR-0002 — Alfred come piano asincrono di osservazione e correlazione](adr/0002-alfred-observation-plane.md)
 - [ADR-0003 — Un ecosistema, più esperienze specializzate](adr/0003-multi-surface-product-architecture.md)
+- [ADR-0004 — Monorepo DNA e migrazione history-aware di TDNA](adr/0004-monorepo-and-tdna-migration.md)
 
 ## Contratti eseguibili
 
@@ -45,7 +56,9 @@ Questa cartella raccoglie la visione, le decisioni architetturali e la roadmap i
 | **DNA-Alfred Bridge** | Adapter asincrono che minimizza e traduce eventi DNA nel piano di osservazione Alfred. |
 | **Surface** | Esperienza di presentazione specifica per telefono, Android Auto, Android Automotive OS, voce o notifiche. |
 | **Domain Lens** | Vista che filtra la piattaforma comune secondo Travel, Shopping, Social, Economy o un altro dominio. |
+| **Migration gitlink** | Riferimento temporaneo e verificabile al commit TDNA durante l'import history-aware. |
+| **Git submodule** | Repository Git figlio collegato dal repository padre mediante un commit preciso. |
 
 ## Stato dei documenti
 
-Questi testi descrivono una **baseline v0.1**. Le interfacce e i nomi non sono ancora API stabili. Ogni decisione irreversibile o con impatto trasversale dovrà essere registrata mediante ADR.
+Questi testi descrivono una **baseline v0.1**. Le interfacce e i nomi non sono ancora API stabili. Ogni decisione irreversibile o con impatto trasversale deve essere registrata mediante ADR.

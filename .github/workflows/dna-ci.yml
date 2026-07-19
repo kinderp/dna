@@ -1,0 +1,64 @@
+name: DNA Core CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "schemas/**"
+      - "examples/**"
+      - "scripts/**"
+      - "reference/**"
+      - "tools/**"
+      - "docs/**"
+      - "domains/**/README.md"
+      - "AGENTS.md"
+      - "Makefile"
+      - ".github/workflows/dna-ci.yml"
+      - ".github/workflows/travel-ci.yml"
+      - ".github/workflows/travel-emulator.yml"
+  push:
+    branches: [main]
+    paths:
+      - "schemas/**"
+      - "examples/**"
+      - "scripts/**"
+      - "reference/**"
+      - "tools/**"
+      - "docs/**"
+      - "domains/**/README.md"
+      - "AGENTS.md"
+      - "Makefile"
+      - ".github/workflows/**"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  contracts:
+    name: Schemas, Kotlin reference and workflow policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out exact head
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          submodules: false
+      - name: Set up Java 21
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Install schema validator
+        run: python3 -m pip install -r requirements-dev.txt
+      - name: Validate schemas and examples
+        run: sh tools/dna check-core-contracts
+      - name: Compile and test Kotlin reference
+        run: sh tools/dna check-core-reference
+      - name: Validate immutable action pins
+        run: sh tools/dna check-ci-actions
