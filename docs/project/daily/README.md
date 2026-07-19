@@ -5,7 +5,7 @@ sostituiscono il ledger della pull request.
 
 | Data / sessione | Tema | Issue / PR | Stato nel file |
 | --- | --- | --- | --- |
-| [2026-07-19 — Android emulator smoke](2026-07-19-android-emulator-smoke.md) | Navigazione bounded, instrumentation, AVD e install evidence. | [#27](https://github.com/kinderp/tdna/issues/27) / [#28](https://github.com/kinderp/tdna/pull/28) | In sviluppo; ledger finale nella PR. |
+| [2026-07-19 — Android emulator smoke](2026-07-19-android-emulator-smoke.md) | Navigazione bounded, instrumentation, AVD e install evidence. | [#27](https://github.com/kinderp/tdna/issues/27) / [#28](https://github.com/kinderp/tdna/pull/28) | Implementation-backed; ledger operativo finale nella PR. |
 | [2026-07-18 — Android-first Pilot 0](2026-07-18-android-first-pilot-shell.md) | ADR, roadmap/studio/protocollo e shell Compose installabile. | #25 / #26 | Mergiata come `cc6f4389c3ff03c7b4c3c3a45a3cc3ddc95ae95f`. |
 | [2026-07-18 — Gradle Wrapper](2026-07-18-gradle-wrapper-foundation-closure.md) | Wrapper, checksum, Action pinning e closure Foundations. | #23 / #24 | Mergiata come `7090882b40e747a85d812decb0b3567a1276d701`. |
 | [2026-07-18 — missed exit](2026-07-18-missed-exit-reroute.md) | Evidenza, conferma, reroute e replacement. | #21 / #22 | Mergiata come `8570eb466b43384756f2678da2303929295e087a`. |
