@@ -11,7 +11,7 @@
 - [Android Pilot 0 shell report](daily/2026-07-18-android-first-pilot-shell.md)
 - [Android emulator smoke report](daily/2026-07-19-android-emulator-smoke.md)
 
-## Active operational chain
+## Android emulator operational chain
 
 ```text
 issue #27
@@ -19,12 +19,13 @@ issue #27
 -> bounded navigation and semantic tests
 -> official-SDK emulator runner
 -> exact-head build + emulator CI
+-> bounded artifact
 -> two clean reviews
 -> expected-head merge
 ```
 
-The authoritative live ledger remains PR #28 until merge. Emulator evidence is
-kept distinct from physical-device and field evidence.
+PR #28 is the durable ledger for the chain, both during review and after merge.
+Emulator evidence remains distinct from physical-device and field evidence.
 
 ## Foundation history
 
