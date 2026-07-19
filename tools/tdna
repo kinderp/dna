@@ -12,6 +12,7 @@ RUST_MANIFEST="$ROOT/crates/tdna-reference-routing/Cargo.toml"
 ROUTE_FIXTURE="$ROOT/fixtures/routes/reference-network-v0.tdna"
 LOCATION_FIXTURE="$ROOT/fixtures/gps/reference-location-replay-v0.tdna"
 GRADLEW="$ROOT/gradlew"
+ANDROID_EMULATOR_SMOKE="$ROOT/tools/android/run_emulator_smoke.sh"
 
 say() { printf '%s\n' "$*"; }
 need() { if ! command -v "$1" >/dev/null 2>&1; then say "ERROR: required command '$1' is not available."; return 1; fi; }
@@ -84,6 +85,14 @@ check_android() {
     say "PASS Android APKs and manifest report written under build/android"
 }
 
+check_android_emulator() {
+    say "== Android Pilot 0 emulator smoke =="
+    need bash
+    need java
+    need python3
+    bash "$ANDROID_EMULATOR_SMOKE"
+}
+
 run_lab() {
     scenario=${1:-}; algorithm=${2:-dijkstra}
     case "$scenario" in
@@ -123,6 +132,7 @@ case "$command" in
     check-architecture) check_architecture ;;
     check-kotlin) check_kotlin ;;
     check-android) check_android ;;
+    check-android-emulator) check_android_emulator ;;
     check) check_docs; check_architecture; check_gradle_wrapper; check_ci_actions; check_java; check_rust; check_contract; check_kotlin; say "PASS foundation checks" ;;
     lab) shift; run_lab "$@" ;;
     bench) shift; run_benchmark "$@" ;;
@@ -143,6 +153,7 @@ Commands:
   check-contract                      compare Java/Rust reports byte-for-byte
   check-kotlin                        test KMP contracts and navigation foundations
   check-android                       test, lint, manifest-check and assemble Pilot 0 APKs
+  check-android-emulator              boot an AVD and execute instrumentation tests
   check                               run the complete non-Android foundation verification
   lab build-bootstrap                 run the reproducible-build bootstrap Lab
   lab reference-routing [algorithm]   run the Java/Rust routing Lab

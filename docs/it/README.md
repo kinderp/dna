@@ -33,6 +33,7 @@ in inglese e più sintetici.
 | [57](57-protocollo-pilot-stradale-android.md) | Protocollo del futuro Pilot 1 su strada. |
 | [58](58-shell-android-pilot0.md) | Prima shell Compose, build, stato e test. |
 | **[59](59-materiali-didattici-e-acquisti-pilot-android.md)** | **Guida unica con link diretti, ordine di studio e acquisti per APK/Pilot.** |
+| [60](60-emulator-smoke-e-navigazione-pilot0.md) | Navigazione bounded, Activity recreation e test instrumentation su AVD. |
 
 Decisione: [ADR-0010 Android-first](../adr/0010-android-first-pilot-sequence.md).
 

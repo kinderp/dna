@@ -17,18 +17,23 @@ Il prodotto unisce:
 **Foundations and Travel DNA Lab v0 è completata.** Il rapporto è in
 [docs/project/foundation-v0-closure.md](docs/project/foundation-v0-closure.md).
 
-La milestone attiva è **Android-first Pilot 0**:
+La milestone corrente è **Android-first Pilot 0**:
 
 ```text
 contratti shared già testati
 -> apps/android composition root
--> Jetpack Compose
--> shell permission-free
+-> Jetpack Compose permission-free
 -> debug APK e test APK
--> installazione su emulatore/telefono
+-> navigazione semanticamente verificata
+-> instrumentation su emulatore
+-> futura installazione su telefono
 ```
 
 La shell non contiene ancora GPS, mappe reali, backend, chat o diario operativo.
+La slice runtime/emulatore è tracciata da issue
+[#27](https://github.com/kinderp/tdna/issues/27) e PR
+[#28](https://github.com/kinderp/tdna/pull/28); la PR conserva il ledger finale di
+SHA, CI, artifact, review e merge.
 
 ## Guida unica per studio, pilot e acquisti
 
@@ -61,6 +66,7 @@ Approfondimenti:
 - [Percorso di studio Manning/Pluralsight/ufficiale](docs/it/56-percorso-studio-android-first.md)
 - [Protocollo del futuro pilot su strada](docs/it/57-protocollo-pilot-stradale-android.md)
 - [Come è costruita la shell Android](docs/it/58-shell-android-pilot0.md)
+- [Emulator smoke e navigazione verificata](docs/it/60-emulator-smoke-e-navigazione-pilot0.md)
 - [ADR-0010 Android-first](docs/adr/0010-android-first-pilot-sequence.md)
 
 ## Stack Android Pilot 0
@@ -80,7 +86,7 @@ single activity
 `apps/android` è separato dai moduli Kotlin Multiplatform. I moduli shared non
 importano API Android.
 
-## Build
+## Build ed esecuzione Android
 
 Prerequisito della fondazione:
 
@@ -88,15 +94,17 @@ Prerequisito della fondazione:
 Java 21
 ```
 
-Per Android servono anche SDK Platform 37 e Build Tools 36.0.0.
+Per Android servono anche SDK Platform 37 e Build Tools 36.0.0. Per il test
+runtime vengono installati l'emulatore e la system image dichiarata dal runner.
 
 ```bash
 sh tools/tdna doctor
 sh tools/tdna check
 sh tools/tdna check-android
+sh tools/tdna check-android-emulator
 ```
 
-Artifact Android attesi:
+Artifact Android build:
 
 ```text
 build/android/tdna-pilot0-debug.apk
@@ -104,7 +112,18 @@ build/android/tdna-pilot0-debug-androidTest.apk
 build/android/sha256.txt
 ```
 
-La APK instrumentation compilata non equivale a un test eseguito su dispositivo.
+Evidenza emulatore:
+
+```text
+build/android-emulator/emulator-smoke.json
+build/android-emulator/pilot0-screen.png
+build/android-emulator/package-path.txt
+build/android-emulator/app-apk-sha256.txt
+```
+
+I dischi AVD sono stato usa-e-getta, restano fuori dagli artifact e vengono
+rimossi nel cleanup. Una APK instrumentation compilata non equivale a un test
+eseguito; un emulatore verde non equivale a prova su telefono o su strada.
 
 ## Percorso didattico implementation-backed
 
@@ -122,6 +141,7 @@ La APK instrumentation compilata non equivale a un test eseguito su dispositivo.
 57  protocollo stradale
 58  shell Android Pilot 0
 59  materiali linkati e acquisti per fase
+60  emulator smoke, semantics e Activity recreation
 ```
 
 Indice completo: [docs/README.md](docs/README.md).
@@ -135,8 +155,8 @@ L'ordine minimo consigliato è:
 Kotlin idiomatico
 -> Android fundamentals/lifecycle
 -> Jetpack Compose e state
+-> instrumentation e Activity recreation
 -> coroutines/cancellation/Flow
--> test Android
 -> Intents
 -> permessi e foreground service solo prima del Pilot 1
 ```
@@ -166,6 +186,7 @@ prove di affidabilità su strada.
 ## Da dove iniziare
 
 - [Guida didattica Android e acquisti](docs/it/59-materiali-didattici-e-acquisti-pilot-android.md)
+- [Emulator smoke e navigazione](docs/it/60-emulator-smoke-e-navigazione-pilot0.md)
 - [Guida alla lettura](docs/it/03-guida-lettura-documentazione.md)
 - [Regole operative](docs/it/00-regole-operative.md)
 - [Review e merge](docs/it/06-review-e-merge.md)

@@ -25,32 +25,47 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.traveldna.android.pilot.PilotCatalog
 import org.traveldna.android.pilot.PilotMilestone
 
-enum class PilotScreen(val label: String) {
-    Home("Home"),
-    Pilots("Pilot"),
-    Demo("Demo"),
-    Study("Studio"),
+enum class PilotScreen(
+    val route: String,
+    val label: String,
+) {
+    Home("home", "Home"),
+    Pilots("pilots", "Pilot"),
+    Demo("demo", "Demo"),
+    Study("study", "Studio");
+
+    val navigationTag: String
+        get() = "pilot-navigation-$route"
+
+    val contentTag: String
+        get() = "pilot-screen-$route"
+
+    companion object {
+        fun fromSavedRoute(route: String?): PilotScreen =
+            entries.firstOrNull { it.route == route } ?: Home
+    }
 }
 
 @Composable
 fun TravelDnaApp() {
-    var selectedName by rememberSaveable { mutableStateOf(PilotScreen.Home.name) }
-    val selected = PilotScreen.entries.firstOrNull { it.name == selectedName }
-        ?: PilotScreen.Home
+    var selectedRoute by rememberSaveable { mutableStateOf(PilotScreen.Home.route) }
+    val selected = PilotScreen.fromSavedRoute(selectedRoute)
 
     Scaffold(
         bottomBar = {
             NavigationBar {
                 PilotScreen.entries.forEach { screen ->
                     NavigationBarItem(
+                        modifier = Modifier.testTag(screen.navigationTag),
                         selected = selected == screen,
-                        onClick = { selectedName = screen.name },
+                        onClick = { selectedRoute = screen.route },
                         icon = {
                             Text(
                                 text = screen.label.take(1),
@@ -76,7 +91,10 @@ fun TravelDnaApp() {
 @Composable
 private fun HomeScreen(padding: PaddingValues) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(padding),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(padding)
+            .testTag(PilotScreen.Home.contentTag),
         contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -118,7 +136,10 @@ private fun HomeScreen(padding: PaddingValues) {
 @Composable
 private fun PilotRoadmapScreen(padding: PaddingValues) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(padding),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(padding)
+            .testTag(PilotScreen.Pilots.contentTag),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -153,7 +174,10 @@ private fun PilotCard(milestone: PilotMilestone) {
 private fun DemoScreen(padding: PaddingValues) {
     val snapshot = remember { PilotCatalog.demoSnapshot() }
     LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(padding),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(padding)
+            .testTag(PilotScreen.Demo.contentTag),
         contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -193,7 +217,10 @@ private fun DemoScreen(padding: PaddingValues) {
 @Composable
 private fun StudyScreen(padding: PaddingValues) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(padding),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(padding)
+            .testTag(PilotScreen.Study.contentTag),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {

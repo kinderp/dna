@@ -18,6 +18,7 @@ tracepoint logici, test, prestazioni e proprietà di sicurezza.
 | --- | --- | --- |
 | [Gradle Wrapper riproducibile](scenarios/gradle-wrapper-riproducibile.md) | Bootstrap, checksum, Action SHA e trust model. | `sh tools/tdna lab build-bootstrap` |
 | [Android Pilot 0 shell](scenarios/android-pilot0-shell.md) | App composition root, Compose, shared contracts e APK. | `sh tools/tdna check-android` |
+| [Android emulator smoke](scenarios/android-pilot0-emulator-smoke.md) | Semantics, Activity recreation, AVD, installazione e instrumentation reale. | `sh tools/tdna check-android-emulator` |
 
 ## Scenari navigation eseguibili
 

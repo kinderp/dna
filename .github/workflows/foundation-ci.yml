@@ -147,3 +147,60 @@ jobs:
           name: tdna-build-diagnostics
           if-no-files-found: ignore
           path: build/
+
+  android-emulator:
+    name: Android Pilot 0 emulator smoke
+    needs: foundation
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Check out exact substantive head
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Set up Java 21
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Configure Gradle cache
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6
+        with:
+          cache-provider: basic
+          add-job-summary: on-failure
+
+      - name: Enable KVM access
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Boot emulator and execute instrumentation
+        shell: bash
+        env:
+          TDNA_SUBSTANTIVE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          TDNA_EMULATOR_API_LEVEL: "35"
+          TDNA_EMULATOR_ABI: x86_64
+          TDNA_EMULATOR_BOOT_TIMEOUT_SECONDS: "360"
+        run: sh tools/tdna check-android-emulator
+
+      - name: Upload emulator observations and diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: tdna-android-emulator-observations
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            build/android-emulator/*.json
+            build/android-emulator/*.txt
+            build/android-emulator/*.log
+            build/android-emulator/*.png
+            apps/android/build/reports/androidTests/connected/**
+            apps/android/build/outputs/androidTest-results/connected/**
