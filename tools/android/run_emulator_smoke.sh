@@ -1,0 +1,168 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
+OUTPUT_DIR="$ROOT/build/android-emulator"
+API_LEVEL=${TDNA_EMULATOR_API_LEVEL:-35}
+ABI=${TDNA_EMULATOR_ABI:-x86_64}
+DEVICE_PROFILE=${TDNA_EMULATOR_DEVICE_PROFILE:-pixel_2}
+AVD_NAME=${TDNA_EMULATOR_AVD_NAME:-tdna_pilot0_api${API_LEVEL}}
+BOOT_TIMEOUT_SECONDS=${TDNA_EMULATOR_BOOT_TIMEOUT_SECONDS:-360}
+SYSTEM_IMAGE="system-images;android-${API_LEVEL};default;${ABI}"
+APP_ID="org.traveldna.android"
+
+: "${ANDROID_HOME:?ANDROID_HOME must point to an Android SDK}"
+
+SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+AVDMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager"
+EMULATOR="$ANDROID_HOME/emulator/emulator"
+ADB="$ANDROID_HOME/platform-tools/adb"
+
+for executable in "$SDKMANAGER" "$AVDMANAGER" "$ADB"; do
+    if [[ ! -x "$executable" ]]; then
+        printf 'ERROR: required Android SDK tool is missing: %s\n' "$executable" >&2
+        exit 1
+    fi
+done
+
+rm -rf "$OUTPUT_DIR"
+mkdir -p "$OUTPUT_DIR"
+EMULATOR_PID=""
+
+capture_diagnostics() {
+    set +e
+    "$ADB" devices -l > "$OUTPUT_DIR/adb-devices.txt" 2>&1
+    "$ADB" logcat -d -v threadtime > "$OUTPUT_DIR/logcat.txt" 2>&1
+    "$ADB" shell getprop > "$OUTPUT_DIR/device-properties.txt" 2>&1
+    "$ADB" shell screencap -p /sdcard/tdna-emulator-failure.png >/dev/null 2>&1
+    "$ADB" pull /sdcard/tdna-emulator-failure.png \
+        "$OUTPUT_DIR/failure-screen.png" >/dev/null 2>&1
+}
+
+cleanup() {
+    set +e
+    "$ADB" emu kill >/dev/null 2>&1
+    if [[ -n "$EMULATOR_PID" ]]; then
+        kill "$EMULATOR_PID" >/dev/null 2>&1
+        wait "$EMULATOR_PID" >/dev/null 2>&1
+    fi
+}
+
+on_exit() {
+    status=$?
+    trap - EXIT
+    if [[ $status -ne 0 ]]; then
+        capture_diagnostics
+    fi
+    cleanup
+    exit "$status"
+}
+trap on_exit EXIT
+
+printf 'Installing emulator package %s\n' "$SYSTEM_IMAGE"
+"$SDKMANAGER" --install "platform-tools" "emulator" "$SYSTEM_IMAGE"
+
+if [[ ! -x "$EMULATOR" ]]; then
+    printf 'ERROR: emulator binary is missing after SDK installation: %s\n' "$EMULATOR" >&2
+    exit 1
+fi
+
+printf 'no\n' | "$AVDMANAGER" create avd \
+    --force \
+    --name "$AVD_NAME" \
+    --package "$SYSTEM_IMAGE" \
+    --device "$DEVICE_PROFILE"
+
+if [[ -e /dev/kvm ]]; then
+    sudo chmod 666 /dev/kvm
+fi
+
+"$ADB" kill-server
+"$ADB" start-server
+
+printf 'Starting AVD %s\n' "$AVD_NAME"
+"$EMULATOR" "@$AVD_NAME" \
+    -no-window \
+    -no-audio \
+    -no-boot-anim \
+    -no-snapshot \
+    -wipe-data \
+    -camera-back none \
+    -camera-front none \
+    -gpu swiftshader_indirect \
+    > "$OUTPUT_DIR/emulator.log" 2>&1 &
+EMULATOR_PID=$!
+
+"$ADB" wait-for-device
+boot_deadline=$((SECONDS + BOOT_TIMEOUT_SECONDS))
+while [[ "$("$ADB" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" != "1" ]]; do
+    if (( SECONDS >= boot_deadline )); then
+        printf 'ERROR: emulator did not boot within %s seconds\n' \
+            "$BOOT_TIMEOUT_SECONDS" >&2
+        exit 1
+    fi
+    if ! kill -0 "$EMULATOR_PID" 2>/dev/null; then
+        printf 'ERROR: emulator process exited before boot completed\n' >&2
+        exit 1
+    fi
+    sleep 2
+done
+
+"$ADB" shell input keyevent 82 >/dev/null
+"$ADB" shell settings put global window_animation_scale 0
+"$ADB" shell settings put global transition_animation_scale 0
+"$ADB" shell settings put global animator_duration_scale 0
+
+cd "$ROOT"
+./gradlew --no-daemon --stacktrace \
+    :apps:android:assembleDebug \
+    :apps:android:assembleDebugAndroidTest \
+    :apps:android:connectedDebugAndroidTest
+
+APP_APK=$(find "$ROOT/apps/android/build/outputs/apk/debug" \
+    -type f -name '*.apk' | sort | sed -n '1p')
+test -n "$APP_APK"
+
+"$ADB" install -r "$APP_APK" > "$OUTPUT_DIR/adb-install.txt"
+"$ADB" shell am force-stop "$APP_ID"
+"$ADB" shell am start -W -n "$APP_ID/.MainActivity" \
+    > "$OUTPUT_DIR/activity-start.txt"
+sleep 2
+"$ADB" shell screencap -p /sdcard/tdna-pilot0.png
+"$ADB" pull /sdcard/tdna-pilot0.png "$OUTPUT_DIR/pilot0-screen.png" >/dev/null
+"$ADB" shell pm path "$APP_ID" > "$OUTPUT_DIR/package-path.txt"
+sha256sum "$APP_APK" > "$OUTPUT_DIR/app-apk-sha256.txt"
+
+MODEL=$("$ADB" shell getprop ro.product.model | tr -d '\r')
+DEVICE_API=$("$ADB" shell getprop ro.build.version.sdk | tr -d '\r')
+SERIAL=$("$ADB" get-serialno | tr -d '\r')
+HEAD_SHA=${GITHUB_SHA:-local}
+
+python3 - "$OUTPUT_DIR/emulator-smoke.json" \
+    "$HEAD_SHA" "$API_LEVEL" "$DEVICE_API" "$ABI" "$MODEL" "$SERIAL" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path, head, requested_api, device_api, abi, model, serial = sys.argv[1:]
+report = {
+    "scenario": "android-pilot0-emulator-smoke-v0",
+    "head_sha": head,
+    "requested_api": int(requested_api),
+    "device_api": int(device_api),
+    "abi": abi,
+    "model": model,
+    "serial": serial,
+    "instrumentation_task": "connectedDebugAndroidTest",
+    "app_installed": True,
+    "sensitive_permissions_requested": False,
+    "road_evidence": False,
+}
+Path(path).write_text(
+    json.dumps(report, separators=(",", ":"), sort_keys=True) + "\n",
+    encoding="utf-8",
+)
+print(json.dumps(report, separators=(",", ":"), sort_keys=True))
+PY
+
+printf 'PASS Android emulator smoke evidence written under %s\n' "$OUTPUT_DIR"
