@@ -45,12 +45,14 @@ verifying that Foundations v0 and the Android shell are already on `main`.
 - command `sh tools/tdna check-android-emulator`;
 - official `sdkmanager`, `avdmanager`, `emulator` and `adb` only;
 - API 35 default x86_64 image and Pixel 2 profile;
-- KVM access where available;
-- disposable AVD home outside artifact output;
+- KVM access prepared outside the public runner;
+- unique disposable AVD directory below a configured root;
 - explicit path plus discovery preflight;
+- one declared serial, `emulator-5554`;
+- fail-fast when another Android device is online;
 - bounded SDK install, AVD creation, ADB registration and boot;
 - clean AVD without snapshots;
-- connected instrumentation execution;
+- connected instrumentation execution through `ANDROID_SERIAL`;
 - explicit APK install, Activity start and package-path assertions;
 - screenshot, APK checksum and exact-head JSON report;
 - bounded diagnostics and cleanup.
@@ -118,15 +120,38 @@ disks are reproducible execution state, not useful review evidence.
 
 Correction:
 
-1. AVD home moved to `RUNNER_TEMP` in CI and a separate build directory locally;
-2. fail-fast if `TDNA_AVD_HOME` is inside `build/android-emulator`;
-3. AVD home deleted during cleanup;
-4. artifact upload restricted to top-level JSON/TXT/LOG/PNG plus test reports;
-5. report SHA supplied explicitly from the checked-out substantive head;
-6. install/start/package assertions added before success report generation.
+1. AVD state moved outside `build/android-emulator`;
+2. AVD state deleted during cleanup;
+3. artifact upload restricted to top-level JSON/TXT/LOG/PNG plus test reports;
+4. report SHA supplied explicitly from the checked-out substantive head;
+5. install/start/package assertions added before success report generation.
 
 Run #246 is valid functional development evidence but not the final artifact-policy
-evidence. Both findings and fixes are substantive; clean reviews remain `0 / 2`.
+evidence.
+
+## Finding 3 — round 1 local-run safety
+
+The first final review on head
+`7b537d7603524dcc829a80a0110b37d72c4f1629` found three risks that did not
+appear on the isolated hosted runner:
+
+1. `TDNA_AVD_HOME` could point directly to a directory deleted with `rm -rf`;
+2. unscoped ADB commands and `connectedDebugAndroidTest` could observe a phone or
+   another emulator already attached to a developer machine;
+3. the public runner changed `/dev/kvm` permissions through interactive `sudo`.
+
+Correction:
+
+1. `TDNA_AVD_ROOT` selects only a parent directory;
+2. `mktemp` creates a unique `tdna-avd-*` child and cleanup removes only that child;
+3. the emulator is bound to port 5554 and serial `emulator-5554`;
+4. target operations use `adb -s` and Gradle receives `ANDROID_SERIAL`;
+5. the runner rejects other online devices and verifies the final evidence serial;
+6. KVM permission changes remain in the reviewed CI setup step; local execution
+   only validates accessibility and fails with an actionable message.
+
+The review produced finding-driven commits, so clean reviews remain `0 / 2` until
+a new exact-head CI is green and two new rounds complete.
 
 ## Expected final evidence
 
@@ -143,6 +168,7 @@ Required report invariants:
 
 ```text
 head_sha = exact substantive head
+serial = emulator-5554
 app_installed=true
 activity_started=true
 package_visible=true
@@ -169,6 +195,5 @@ rounds.
 
 ## Next step
 
-Obtain one exact-head green run with a bounded emulator artifact, inspect the
-report and test results, run two clean review rounds and merge with expected-head
-verification.
+Obtain one exact-head green run after the review fixes, inspect the bounded
+artifacts, run two clean review rounds and merge with expected-head verification.
