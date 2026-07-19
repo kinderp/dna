@@ -18,7 +18,33 @@ class PilotScreenTest {
     }
 
     @Test
-    fun semanticTagsAreStableAndUnique() {
+    fun routesAndSemanticTagsMatchPersistedContract() {
+        assertEquals(
+            listOf("home", "pilots", "demo", "study"),
+            PilotScreen.entries.map { it.route },
+        )
+        assertEquals(
+            listOf(
+                "pilot-navigation-home",
+                "pilot-navigation-pilots",
+                "pilot-navigation-demo",
+                "pilot-navigation-study",
+            ),
+            PilotScreen.entries.map { it.navigationTag },
+        )
+        assertEquals(
+            listOf(
+                "pilot-screen-home",
+                "pilot-screen-pilots",
+                "pilot-screen-demo",
+                "pilot-screen-study",
+            ),
+            PilotScreen.entries.map { it.contentTag },
+        )
+    }
+
+    @Test
+    fun semanticTagsAreUnique() {
         assertEquals(PilotScreen.entries.size, PilotScreen.entries.map { it.navigationTag }.toSet().size)
         assertEquals(PilotScreen.entries.size, PilotScreen.entries.map { it.contentTag }.toSet().size)
     }
