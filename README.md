@@ -17,7 +17,7 @@ Il prodotto unisce:
 **Foundations and Travel DNA Lab v0 è completata.** Il rapporto è in
 [docs/project/foundation-v0-closure.md](docs/project/foundation-v0-closure.md).
 
-La milestone attiva è **Android-first Pilot 0**:
+La milestone corrente è **Android-first Pilot 0**:
 
 ```text
 contratti shared già testati
@@ -30,9 +30,10 @@ contratti shared già testati
 ```
 
 La shell non contiene ancora GPS, mappe reali, backend, chat o diario operativo.
-La slice attiva è tracciata da issue
+La slice runtime/emulatore è tracciata da issue
 [#27](https://github.com/kinderp/tdna/issues/27) e PR
-[#28](https://github.com/kinderp/tdna/pull/28).
+[#28](https://github.com/kinderp/tdna/pull/28); la PR conserva il ledger finale di
+SHA, CI, artifact, review e merge.
 
 ## Guida unica per studio, pilot e acquisti
 
@@ -120,8 +121,9 @@ build/android-emulator/package-path.txt
 build/android-emulator/app-apk-sha256.txt
 ```
 
-Una APK instrumentation compilata non equivale a un test eseguito; un emulatore
-verde non equivale a prova su telefono o su strada.
+I dischi AVD sono stato usa-e-getta, restano fuori dagli artifact e vengono
+rimossi nel cleanup. Una APK instrumentation compilata non equivale a un test
+eseguito; un emulatore verde non equivale a prova su telefono o su strada.
 
 ## Percorso didattico implementation-backed
 
