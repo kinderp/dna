@@ -24,10 +24,13 @@
 - [Percorso di studio](it/56-percorso-studio-android-first.md)
 - [Protocollo su strada](it/57-protocollo-pilot-stradale-android.md)
 - [Shell Android Pilot 0](it/58-shell-android-pilot0.md)
-- [Scenario Lab/app](it/lab/scenarios/android-pilot0-shell.md)
+- [Materiali e acquisti](it/59-materiali-didattici-e-acquisti-pilot-android.md)
+- [Emulator smoke e navigazione verificata](it/60-emulator-smoke-e-navigazione-pilot0.md)
+- [Scenario shell](it/lab/scenarios/android-pilot0-shell.md)
+- [Scenario emulator smoke](it/lab/scenarios/android-pilot0-emulator-smoke.md)
 
 ## Convenzione
 
 La documentazione narrativa è la fonte didattica. PR, CI, artifact e test sono la
-fonte delle prove operative. Un Lab o una APK debug non equivalgono a capacità di
-produzione.
+fonte delle prove operative. Un Lab, una APK debug o un emulatore verde non
+equivalgono a capacità di produzione o affidabilità su strada.
