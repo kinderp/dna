@@ -138,6 +138,14 @@ git -C domains/travel rev-parse HEAD
 git ls-tree HEAD domains/travel
 ```
 
+### Commit Travel registrato nell'indice Git corrente
+
+```bash
+git ls-files --stage -- domains/travel
+```
+
+L'indice è il valore che sarà incluso nel prossimo commit. Durante un aggiornamento intenzionale del puntatore può essere diverso da `HEAD`.
+
 ### Differenza del puntatore tra due commit DNA
 
 ```bash
@@ -203,7 +211,7 @@ sh tools/dna doctor
 Il comando `check-travel-revision` verifica che:
 
 - il submodule sia inizializzato;
-- il commit aperto in `domains/travel` coincida con il gitlink registrato da DNA;
+- il commit aperto in `domains/travel` coincida con il gitlink nell'indice DNA;
 - il gitlink coincida con la revisione Travel approvata per questa fase.
 
 ## 10. Lavorare sul codice Travel durante la fase A
