@@ -33,7 +33,7 @@
 Le issue Foundation aggregate #1 e #2 sono state chiuse come completate dopo la
 verifica del merge Android-first e dell'inventario del tracker.
 
-## Slice attiva — Android Pilot 0 v0.2 emulator smoke
+## Slice seriale — Android Pilot 0 v0.2 emulator smoke
 
 - issue [#27](https://github.com/kinderp/tdna/issues/27);
 - PR [#28](https://github.com/kinderp/tdna/pull/28);
@@ -42,7 +42,7 @@ verifica del merge Android-first e dell'inventario del tracker.
 - rischio `R2`;
 - capitolo [60](60-emulator-smoke-e-navigazione-pilot0.md).
 
-Deliverable:
+Deliverable implementati:
 
 - [x] destinazioni tipizzate e fallback sicuro;
 - [x] semantic tag stabili per navigation e screen;
@@ -50,20 +50,23 @@ Deliverable:
 - [x] instrumentation test delle quattro superfici;
 - [x] test di Activity recreation;
 - [x] runner AVD basato su Android SDK ufficiale;
-- [x] timeout boot e diagnostica bounded;
+- [x] AVD path/discovery, boot e diagnostica bounded;
+- [x] installazione, Activity start e package assertions;
+- [x] SHA sostanziale nel report;
+- [x] AVD usa-e-getta escluso dagli artifact;
 - [x] job CI emulatore separato;
-- [x] capitolo e scenario implementation-backed;
-- [ ] CI build verde sul final substantive head;
-- [ ] CI emulator smoke verde sullo stesso SHA;
-- [ ] artifact e report emulatore verificati;
-- [ ] due round puliti sullo stesso SHA;
-- [ ] expected-head merge e post-merge verification.
+- [x] capitolo e scenario implementation-backed.
+
+La chiusura operativa — SHA finale, due job verdi, artifact bounded, due review
+pulite, expected-head merge e verifica post-merge — è registrata in PR #28. Il
+registro non duplica checkbox transitorie che diventerebbero obsolete dopo il
+merge.
 
 ## Stato del Pilot 0
 
 ```text
 0.1 shell/build/APK                 merged
-0.2 navigation/runtime emulator     active
+0.2 navigation/runtime emulator     review-gated in PR #28
 0.3 replay e route progress UI      planned
 0.4 missed-exit/reroute UI          planned
 ```
