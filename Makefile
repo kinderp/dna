@@ -2,7 +2,7 @@
 
 test: core
 
-core: schemas
+core: ci-actions schemas kotlin
 
 schemas:
 	python3 scripts/validate-schemas.py
