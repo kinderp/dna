@@ -1,6 +1,6 @@
 # Regole operative di DNA
 
-Questo documento è la costituzione pratica del monorepo. Le procedure dettagliate di review sono in [01-review-and-merge.md](01-review-and-merge.md).
+Questo documento è la costituzione pratica del monorepo. Le procedure dettagliate di review sono in [01-review-and-merge.md](01-review-and-merge.md). Durante la fase A della migrazione Travel, i comandi Git obbligatori sono spiegati nella [guida ai submodule](02-git-submodules.md).
 
 ## 1. Obiettivo
 
@@ -33,7 +33,7 @@ Prima di modificare codice o contratti:
 4. leggere issue, roadmap e contratto del componente;
 5. aprire codice e test reali;
 6. verificare SHA di `main`, PR aperte e dipendenze;
-7. per Travel, verificare il commit TDNA registrato nel manifest di migrazione.
+7. per Travel, leggere la guida ai submodule e verificare il commit TDNA registrato nel manifest di migrazione.
 
 ## 4. Scheda del task
 
