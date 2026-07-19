@@ -62,7 +62,7 @@ Android SDK command-line tools
 emulator package
 system-images;android-35;default;x86_64
 KVM when available
-bash, adb, avdmanager and sdkmanager
+bash, timeout, adb, avdmanager and sdkmanager
 ```
 
 Run:
@@ -74,12 +74,17 @@ sh tools/tdna check-android-emulator
 Optional environment overrides:
 
 ```text
+TDNA_SUBSTANTIVE_SHA
 TDNA_EMULATOR_API_LEVEL
 TDNA_EMULATOR_ABI
 TDNA_EMULATOR_DEVICE_PROFILE
 TDNA_EMULATOR_AVD_NAME
 TDNA_EMULATOR_BOOT_TIMEOUT_SECONDS
+TDNA_AVD_HOME
 ```
+
+`TDNA_SUBSTANTIVE_SHA` is supplied by CI from the checked-out PR head or push SHA.
+A local run falls back to `GITHUB_SHA` and then `local`.
 
 Default CI device:
 
@@ -87,9 +92,14 @@ Default CI device:
 API 35
 x86_64 default system image
 Pixel 2 profile
-360-second boot timeout
+360-second registration/boot deadline
 headless, clean data, no snapshots
 ```
+
+The AVD home defaults to a directory under `RUNNER_TEMP` in CI and to
+`build/tdna-avd-<name>` locally. It must remain outside
+`build/android-emulator`, because virtual-disk data are execution state rather
+than review evidence. The runner removes the AVD home during cleanup.
 
 Success evidence:
 
@@ -101,9 +111,14 @@ build/android-emulator/package-path.txt
 build/android-emulator/app-apk-sha256.txt
 ```
 
+The CI upload is allowlisted to top-level JSON, text, log and PNG files plus the
+connected-test reports. It does not recursively upload the AVD directory.
+
 Failure diagnostics attempt to preserve:
 
 ```text
+build/android-emulator/avdmanager-create.log
+build/android-emulator/avd-list.txt
 build/android-emulator/adb-devices.txt
 build/android-emulator/device-properties.txt
 build/android-emulator/emulator.log
@@ -112,8 +127,9 @@ build/android-emulator/failure-screen.png
 ```
 
 The runner uses official Android SDK tools and does not hide emulator lifecycle
-inside a third-party GitHub Action. It always attempts cleanup through `adb emu
-kill` and the process PID.
+inside a third-party GitHub Action. It verifies AVD discovery before launch,
+checks the emulator PID during ADB registration and boot, and bounds cleanup and
+diagnostics.
 
 A green emulator proves installation and declared instrumentation behavior on one
 virtual device. It is not physical-device, battery, accessibility or road
@@ -136,13 +152,14 @@ still prevents Android tasks from entering foundation commands.
 ## Generated outputs
 
 All generated artifacts stay under `build/` or module build directories. Never
-commit APKs, traces, Gradle caches or real user locations.
+commit APKs, traces, AVD disks, Gradle caches or real user locations.
 
 ## Rules
 
 - local and CI use the same project commands;
 - missing required tools fail explicitly;
 - new commands require documentation and CI in the same PR;
-- emulator boot is timeout-bounded and diagnostics are retained;
+- emulator registration/boot, diagnostics and cleanup are bounded;
+- AVD state is disposable and excluded from artifacts;
 - benchmarks are observations, not SLA;
 - emulator, physical-device and field evidence remain separate.
