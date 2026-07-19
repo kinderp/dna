@@ -24,18 +24,22 @@ in inglese e più sintetici.
 | [48](48-porta-map-matching-e-fake-deterministico.md) | Porta map matching. |
 | [49](49-off-route-missed-exit-e-reroute.md) | Missed exit e reroute. |
 
-## Android-first
+## Android-first e automotive
 
 | Capitolo | Tema |
 | --- | --- |
-| [55](55-roadmap-android-first-e-pilot.md) | Roadmap Pilot 0/1/2, stack, APK e requisiti. |
+| [55](55-roadmap-android-first-e-pilot.md) | Roadmap Pilot 0/1/2, APK, POI-first e gate automotive. |
 | [56](56-percorso-studio-android-first.md) | Percorso narrativo di studio Manning/Pluralsight/ufficiale. |
 | [57](57-protocollo-pilot-stradale-android.md) | Protocollo del futuro Pilot 1 su strada. |
 | [58](58-shell-android-pilot0.md) | Prima shell Compose, build, stato e test. |
 | **[59](59-materiali-didattici-e-acquisti-pilot-android.md)** | **Guida unica con link diretti, ordine di studio e acquisti per APK/Pilot.** |
 | [60](60-emulator-smoke-e-navigazione-pilot0.md) | Navigazione bounded, Activity recreation e test instrumentation su AVD. |
+| [61](61-android-auto-compliance-e-roadmap-automotive.md) | Android Auto POI-first, snapshot driver-safe, DHU e Navigation beta. |
 
-Decisione: [ADR-0010 Android-first](../adr/0010-android-first-pilot-sequence.md).
+Decisioni:
+
+- [ADR-0010 Android-first](../adr/0010-android-first-pilot-sequence.md)
+- [ADR-0011 Android Auto POI-first](../adr/0011-android-auto-poi-first-and-car-surfaces.md)
 
 ## Altri capitoli
 

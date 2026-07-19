@@ -26,14 +26,49 @@ contratti shared già testati
 -> debug APK e test APK
 -> navigazione semanticamente verificata
 -> instrumentation su emulatore
+-> prossima UI replay/progress
 -> futura installazione su telefono
 ```
 
+Le slice Android già mergiate sono:
+
+```text
+0.1 shell/build/APK                 PR #26
+0.2 navigation/runtime emulator     PR #28
+```
+
 La shell non contiene ancora GPS, mappe reali, backend, chat o diario operativo.
-La slice runtime/emulatore è tracciata da issue
-[#27](https://github.com/kinderp/tdna/issues/27) e PR
-[#28](https://github.com/kinderp/tdna/pull/28); la PR conserva il ledger finale di
-SHA, CI, artifact, review e merge.
+La prossima slice runtime prevista è **Pilot 0 v0.3: replay deterministico,
+route progress e snapshot driver-safe condiviso**.
+
+## Strategia Android Auto
+
+Travel DNA non proietterà la UI Compose del telefono sulla head unit. Android Auto
+avrà una car experience separata, basata sui template e sulle categorie consentite
+dalla piattaforma.
+
+Decisione corrente:
+
+```text
+Pilot 0 v0.3/v0.4
+    prepara stato driver-safe provider-neutral
+
+Automotive readiness spike
+    Car App Library + categoria POI + Desktop Head Unit
+
+Pilot 1
+    POI companion + handoff al navigatore esterno
+
+Internal Navigation Beta
+    categoria Navigation solo dopo guidance, reroute, voice e AUTO_DRIVE
+```
+
+- [Roadmap Android Auto compliance](docs/it/61-android-auto-compliance-e-roadmap-automotive.md)
+- [ADR-0011 POI-first e superfici auto separate](docs/adr/0011-android-auto-poi-first-and-car-surfaces.md)
+
+Android Auto, Android Automotive OS, emulatore mobile, DHU, veicolo reale e field
+test producono evidenze diverse. Nessuna simulazione costituisce da sola prova di
+affidabilità o sicurezza su strada.
 
 ## Guida unica per studio, pilot e acquisti
 
@@ -41,7 +76,7 @@ Il riferimento principale per prepararsi e pianificare le prove è:
 
 - **[Materiali didattici con link diretti e roadmap acquisti dei pilot Android](docs/it/59-materiali-didattici-e-acquisti-pilot-android.md)**
 
-Il documento raccoglie in un solo posto:
+Il documento raccoglie:
 
 - libri Manning con link diretto;
 - corsi Pluralsight con link diretto;
@@ -55,9 +90,12 @@ Il documento raccoglie in un solo posto:
 
 | Pilot | Finestra di pianificazione | Risultato |
 | --- | --- | --- |
-| **Pilot 0** | 10–21 agosto 2026 | APK didattica installabile per maintainer e studenti. |
-| **Pilot 1** | 21 settembre–9 ottobre 2026 | Companion stradale foreground per 5–10 tester controllati. |
+| **Pilot 0** | 10–21 agosto 2026 | APK didattica installabile, replay sintetico e gate manuali. |
+| **Pilot 1** | 21 settembre–9 ottobre 2026 | Companion foreground, navigatori esterni e POI Android Auto per tester controllati. |
 | **Pilot 2** | 2 novembre–11 dicembre 2026, da ristimare | Piccola beta chiusa dopo le evidenze del Pilot 1. |
+
+Le date sono finestre di pianificazione, non promesse di pubblicazione. Il lavoro
+automotive viene ristimato dopo v0.3/v0.4 e lo spike POI.
 
 Approfondimenti:
 
@@ -67,7 +105,9 @@ Approfondimenti:
 - [Protocollo del futuro pilot su strada](docs/it/57-protocollo-pilot-stradale-android.md)
 - [Come è costruita la shell Android](docs/it/58-shell-android-pilot0.md)
 - [Emulator smoke e navigazione verificata](docs/it/60-emulator-smoke-e-navigazione-pilot0.md)
+- [Android Auto compliance e roadmap automotive](docs/it/61-android-auto-compliance-e-roadmap-automotive.md)
 - [ADR-0010 Android-first](docs/adr/0010-android-first-pilot-sequence.md)
+- [ADR-0011 Android Auto POI-first](docs/adr/0011-android-auto-poi-first-and-car-surfaces.md)
 
 ## Stack Android Pilot 0
 
@@ -84,7 +124,7 @@ single activity
 ```
 
 `apps/android` è separato dai moduli Kotlin Multiplatform. I moduli shared non
-importano API Android.
+importano API Android o Car App Library.
 
 ## Build ed esecuzione Android
 
@@ -123,7 +163,8 @@ build/android-emulator/app-apk-sha256.txt
 
 I dischi AVD sono stato usa-e-getta, restano fuori dagli artifact e vengono
 rimossi nel cleanup. Una APK instrumentation compilata non equivale a un test
-eseguito; un emulatore verde non equivale a prova su telefono o su strada.
+eseguito; un emulatore verde non equivale a prova su telefono, Android Auto o
+strada.
 
 ## Percorso didattico implementation-backed
 
@@ -142,6 +183,7 @@ eseguito; un emulatore verde non equivale a prova su telefono o su strada.
 58  shell Android Pilot 0
 59  materiali linkati e acquisti per fase
 60  emulator smoke, semantics e Activity recreation
+61  Android Auto compliance e roadmap automotive
 ```
 
 Indice completo: [docs/README.md](docs/README.md).
@@ -158,14 +200,16 @@ Kotlin idiomatico
 -> instrumentation e Activity recreation
 -> coroutines/cancellation/Flow
 -> Intents
--> permessi e foreground service solo prima del Pilot 1
+-> permessi e foreground service prima del Pilot 1
+-> Android for Cars App Library solo prima dello spike automotive
 ```
 
 Link, priorità, esercizi e acquisti sono nella
 **[guida didattica e roadmap acquisti](docs/it/59-materiali-didattici-e-acquisti-pilot-android.md)**.
 
-Il primo eventuale acquisto utile è un telefono Android reale, non un altro
-corso.
+Il primo eventuale acquisto utile è un telefono Android reale, non un altro corso
+o una head unit da laboratorio: il primo spike Android Auto può usare il Desktop
+Head Unit.
 
 ## Laboratori della fondazione
 
@@ -187,6 +231,7 @@ prove di affidabilità su strada.
 
 - [Guida didattica Android e acquisti](docs/it/59-materiali-didattici-e-acquisti-pilot-android.md)
 - [Emulator smoke e navigazione](docs/it/60-emulator-smoke-e-navigazione-pilot0.md)
+- [Android Auto compliance](docs/it/61-android-auto-compliance-e-roadmap-automotive.md)
 - [Guida alla lettura](docs/it/03-guida-lettura-documentazione.md)
 - [Regole operative](docs/it/00-regole-operative.md)
 - [Review e merge](docs/it/06-review-e-merge.md)
@@ -201,7 +246,7 @@ prove di affidabilità su strada.
 Travel DNA dipende dai propri contratti, non dai provider.
 Il navigatore è una capacità, non l'intero prodotto.
 Il diario è privato per impostazione predefinita.
-Ogni astrazione e linguaggio devono pagare il proprio costo.
+Ogni superficie deve rispettare capacità e limiti della piattaforma.
 Una funzione corretta ma lenta, insicura o non documentata non è conclusa.
 ```
 

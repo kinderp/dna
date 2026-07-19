@@ -36,3 +36,4 @@ decisione e conseguenze; `docs/it` spiega il sistema in modo narrativo.
 | [0008](0008-documentation-and-lab-as-product.md) | Accepted | Documentazione e Lab come prodotto. |
 | [0009](0009-project-licensing-model.md) | Proposed | Licenza codice, documentazione e fixture. |
 | [0010](0010-android-first-pilot-sequence.md) | Accepted | Android-first, Pilot 0/1/2 e app separata dai moduli KMP. |
+| [0011](0011-android-auto-poi-first-and-car-surfaces.md) | Accepted | Android Auto POI-first, Navigation differita e renderer auto separati. |

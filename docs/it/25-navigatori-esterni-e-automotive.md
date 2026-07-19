@@ -1,243 +1,274 @@
 # Navigatori esterni e superfici automotive
 
-## Decisione di prodotto
+## Stato
 
-Travel DNA non presume che l'utente abbandoni un navigatore affidabile. La
-modalità Companion con navigatore esterno è una funzione primaria.
+`foundation complete for provider boundaries; automotive direction accepted by ADR-0011`
+
+Travel DNA non presume che l'utente abbandoni un navigatore affidabile. La modalità
+Companion con navigatore esterno è una funzione primaria. Le superfici automotive
+sono renderer separati e devono rispettare categorie, template e quality policy
+della piattaforma.
+
+## Decisione di prodotto
 
 ```text
 Navigatore esterno
-  -> svolte, traffico, corsie, ricalcolo
+    svolte, traffico, corsie, ricalcolo
 
-Travel DNA
-  -> diario, guida, presenza, DNA, chat, memoria e suggerimenti
+Travel DNA mobile
+    viaggio, diario, guida, presenza, DNA, chat e memoria
+
+Travel DNA Android Auto POI
+    tappe, luoghi utili, stato breve e handoff
+
+Travel DNA Navigation futura
+    turn-by-turn soltanto dopo guidance e car quality gates
 ```
 
 Il navigatore interno resta una possibilità strategica e deve guadagnarsi la
-scelta attraverso fluidità, affidabilità e valore turistico.
+scelta attraverso affidabilità, evidenza e valore turistico.
 
-## Tre modalità
+## Tre modalità di navigazione
 
 ### 1. Handoff a navigatore esterno
 
-Travel DNA apre:
+Travel DNA può aprire:
 
 - Waze;
 - Google Maps;
 - Sygic o altri navigatori disponibili;
 - selettore di sistema.
 
-Capacità possibili:
+Capability candidate:
 
 - destinazione;
 - origine opzionale;
-- waypoint, quando supportati;
+- waypoint quando supportati;
+- travel mode;
 - preferenze limitate;
 - avvio navigazione;
-- fallback a browser/store.
+- fallback a browser o store;
+- return link quando realmente disponibile.
 
-L'adapter verifica disponibilità e dichiara le capability reali.
+L'adapter verifica disponibilità e dichiara soltanto capability osservabili.
 
 ### 2. Navigazione incorporata tramite SDK
 
-Provider futuri:
+Provider futuri possono includere Google Navigation SDK, Sygic Maps SDK o altri
+SDK commerciali. L'utente resta dentro Travel DNA, ma routing e guidance dipendono
+dal provider.
 
-- Google Navigation SDK;
-- Sygic Maps SDK;
-- altri SDK commerciali.
+Ogni spike documenta:
 
-L'utente resta dentro Travel DNA, ma routing/guidance possono essere forniti dal
-provider. Costi, licenze, termini, telemetria e lock-in devono essere documentati.
+- licenza e costo;
+- termini e telemetria;
+- dimensione SDK;
+- lock-in;
+- supporto offline;
+- mapping nel modello canonico;
+- compatibilità Android/iOS e automotive.
 
 ### 3. Navigazione open source
 
-MapLibre + Valhalla + Ferrostar, con futura sostituzione progressiva dei componenti
-strategici.
+Baseline strategica:
 
-## Waze
+```text
+MapLibre
++ Valhalla
++ Ferrostar
++ componenti TDNA sostituibili
+```
 
-I Waze Deep Link possono aprire l'app o il web e avviare ricerca/navigazione con
+Questa direzione non entra nel Pilot 0 e non è necessaria per il primo spike
+Android Auto POI, che usa una mappa resa dall'host.
+
+## Provider esterni
+
+### Waze
+
+I deep link pubblici possono aprire app o web e avviare ricerca/navigazione con i
 parametri supportati.
 
 Vantaggi:
 
 - integrazione semplice;
-- mantiene l'esperienza Waze;
+- esperienza Waze conservata;
 - nessun motore Waze incorporato;
-- ottimo fallback iniziale.
+- buon fallback iniziale.
 
 Limiti:
 
-- non inseriamo Travel DNA dentro la UI di Waze;
-- non riceviamo normalmente route, manovre o ETA dettagliati;
-- supporto waypoint e interoperabilità sono limitati;
-- un'integrazione più profonda richiede programmi/partnership specifici.
+- TDNA non entra nella UI di Waze;
+- nessun feed affidabile di route, manovre o ETA dettagliati;
+- waypoint e interoperabilità limitati;
+- integrazioni profonde richiedono programmi specifici.
 
-Quindi un `WazeHandoffPlugin` implementa soltanto ciò che la documentazione
-pubblica permette.
+### Google Maps
 
-## Google Maps
-
-Maps URLs offrono sintassi cross-platform per ricerca e indicazioni; le opzioni
+Maps URLs offrono sintassi cross-platform per ricerca e indicazioni. Le opzioni
 native possono avviare l'app e, sui dispositivi mobili, la navigazione.
 
-Vantaggi:
-
-- ampia disponibilità;
-- URL universali;
-- fallback web;
-- possibilità separata di Navigation SDK incorporato.
-
 Limiti:
 
-- un URL non fornisce un feed di route di ritorno;
-- limite di lunghezza e differenze di piattaforma;
-- non possiamo sovrapporre UI Travel DNA dentro Google Maps;
-- l'SDK incorporato introduce costo e condizioni commerciali.
+- un URL non restituisce la route a TDNA;
+- lunghezza e comportamento differiscono per piattaforma;
+- TDNA non sovrappone UI dentro Maps;
+- Navigation SDK è un prodotto distinto con condizioni proprie.
 
-## Sygic
+### Sygic
 
-Sygic può essere valutato in due forme:
-
-- handoff all'app esterna, se supportato dal contratto disponibile;
-- SDK incorporato con routing, guidance e funzioni offline.
-
-Vantaggi potenziali:
-
-- esperienza di navigazione matura;
-- funzioni offline;
-- API orientate all'integrazione.
-
-Rischi:
-
-- licenza e costo;
-- dipendenza dal provider;
-- dimensione SDK;
-- mapping nel modello canonico;
-- compatibilità Android/iOS da testare.
+Può essere valutato come handoff esterno o SDK incorporato. Le capacità vengono
+dichiarate dopo verifica del contratto disponibile, non dedotte dal marketing.
 
 ## Percorso ombra
 
-Quando il navigatore esterno è autorità, Travel DNA calcola una route indicativa.
-
-Usi:
+Quando il navigatore esterno è autorità, TDNA può calcolare una route indicativa
+per:
 
 - corridor dei POI;
-- prossime aree di servizio;
-- compagni nella stessa direzione;
-- suggerimenti di guida;
-- diario e classificazione delle soste.
+- aree di servizio;
+- suggerimenti turistici;
+- diario e classificazione delle soste;
+- compagni nella stessa direzione.
 
-Non usa la route ombra per dire al conducente dove svoltare.
+Non usa la route ombra per dare manovre al conducente.
 
 ### Confidenza
 
 ```text
 HIGH
-  posizione coerente, destinazione nota, route plausibile
+    posizione coerente, destinazione nota, route plausibile
 
 MEDIUM
-  piccole deviazioni o alternative parallele
+    alternative parallele o piccole deviazioni
 
 LOW
-  percorso esterno probabilmente diverso
+    percorso esterno probabilmente diverso
 
 UNKNOWN
-  dati insufficienti
+    dati insufficienti
 ```
 
 Policy:
 
-- `HIGH`: suggerimenti temporali precisi;
-- `MEDIUM`: suggerimenti con margine;
-- `LOW`: solo vicinanza geografica;
-- `UNKNOWN`: sospendere anticipazioni di percorso.
+- `HIGH`: suggerimenti temporali più precisi;
+- `MEDIUM`: margine dichiarato;
+- `LOW`: sola vicinanza geografica;
+- `UNKNOWN`: sospensione delle anticipazioni di percorso.
 
 ## Avvio sessione Companion
 
 ```text
-1. utente preme Parti
-2. Travel DNA salva TripSession
-3. attiva recorder secondo permessi
-4. registra messaging/push
-5. pubblica presenza secondo consenso
-6. calcola route ombra
-7. apre navigatore esterno
+utente configura viaggio
+-> TDNA salva TripSession
+-> attiva recorder secondo permessi
+-> calcola route ombra
+-> apre navigatore esterno
+-> mantiene stato locale bounded
+-> ritorno a TDNA quando disponibile e sicuro
 ```
 
-Il servizio di background necessario va avviato mentre l'app è in uno stato
-consentito dalla piattaforma. Il comportamento reale deve essere verificato per
-versione OS.
+Servizi e processi devono essere avviati in stati consentiti dalla versione Android
+corrente. Il comportamento reale viene verificato per OS e dispositivo.
 
-## Chat attiva
-
-La chat non viene sospesa. Cambia superficie.
+## Conducente, passeggero e chat
 
 ### Conducente
 
-- lettura vocale;
-- risposta vocale;
-- quick reaction;
+- nessuna chat completa;
+- eventuale lettura/risposta vocale solo in categorie e policy ammesse;
+- quick action bounded;
 - salva per dopo;
 - silenzia;
-- domanda strutturata;
-- nessuna lista lunga.
+- modalità conservativa quando il ruolo è sconosciuto.
 
 ### Passeggero
 
-- chat completa;
-- foto e Cartoline DNA;
-- ricerca compagni;
-- gruppi e Carovana;
-- gestione della guida.
-
-### Stato sconosciuto
-
-Adottare la modalità più conservativa. Non dedurre con certezza chi tiene il
-telefono. Un viaggio condiviso con ruoli espliciti è preferibile.
+Sul telefono può usare chat completa, foto, Cartoline DNA, gruppi e configurazione
+viaggio. La car surface non diventa una scorciatoia per proiettare queste funzioni.
 
 ## Android Auto
 
-Android Auto usa un host che rende template e notifiche. Travel DNA non controlla
-liberamente un layout “Waze + Travel DNA + Spotify”.
+La decisione normativa è in:
 
-Superfici possibili:
+- [ADR-0011](../adr/0011-android-auto-poi-first-and-car-surfaces.md)
+- [capitolo 61](61-android-auto-compliance-e-roadmap-automotive.md)
 
-### Messaging notifications
+Android Auto usa un host che rende template. TDNA non controlla un layout arbitrario
+“Waze + Travel DNA + Spotify”.
 
-Una vera conversazione può usare notifiche `MessagingStyle`, azioni di risposta
-e mark-as-read. Android Auto legge e raccoglie risposte vocali.
+### Pilot 1: categoria POI
 
-### POI app
+```text
+androidx.car.app.category.POI
+```
 
-Travel DNA può mostrare luoghi e opportunità con template approvati e inoltrare
-la destinazione a un navigatore.
+Use case candidato:
 
-### Navigation app
+```text
+viaggio configurato sul telefono
+-> lista breve di tappe o luoghi utili
+-> dettaglio bounded
+-> scelta destinazione
+-> handoff al navigatore esterno
+```
 
-Se il navigatore interno raggiunge i requisiti, può dichiararsi app di
-navigazione e usare template dedicati.
+Baseline del primo spike:
 
-### Widget e nuove superfici
+- `PlaceListMapTemplate`;
+- mappa resa dall'host;
+- permesso `androidx.car.app.MAP_TEMPLATES` nel prototipo;
+- nessun SDK cartografico;
+- Desktop Head Unit prima del veicolo;
+- nessuna categoria Navigation.
 
-Vanno trattati come progressive enhancement e verificati per disponibilità e
-policy correnti. Non devono essere necessari al prodotto base.
+### Navigation futura
+
+```text
+androidx.car.app.category.NAVIGATION
+```
+
+Entra soltanto dopo route/guidance runtime, map matching, progress, reroute,
+`NavigationManager`, trip/step/destination, audio guidance, navigation intents,
+`onAutoDriveEnabled()`, DHU matrix, vehicle test e car quality review.
+
+La simulazione deterministica può alimentare AUTO_DRIVE, ma non è road evidence.
+
+### Permessi
+
+Il pilot preferisce completare consenso e configurazione sul telefono prima della
+partenza. Quando una car app usa `CarContext.requestPermissions()`, il dialog di
+Android Auto viene comunque presentato sul telefono. Nessun flusso deve indurre il
+conducente a guardarlo mentre guida.
+
+### Messaging
+
+Una futura esperienza messaging deve appartenere a una categoria supportata e
+rispettare i relativi template/notifiche. Non viene inclusa automaticamente nella
+car app POI del Pilot 1.
+
+## Android Automotive OS
+
+Android Automotive OS esegue un'app installata nel veicolo. Può riusare dominio e
+mapping, ma richiede:
+
+- manifest e package automotive;
+- emulator/device matrix dedicata;
+- distribuzione e trusted source applicabili;
+- lifecycle e permessi specifici;
+- evidenza distinta dal DHU Android Auto.
+
+Non si assume un unico artifact mobile/AAOS.
 
 ## CarPlay
 
-Possibili superfici:
-
-- messaging/VoIP con SiriKit intents;
-- navigation app con entitlement;
-- widget e Live Activity;
-- categorie approvate come parcheggio o fueling quando applicabili.
-
-Travel DNA deve richiedere entitlement quando necessario e non assumere che una
-UI arbitraria sia accettata.
+CarPlay resta una milestone successiva. Possibili superfici dipendono da entitlement
+e categorie Apple correnti. TDNA non assume che la strategia Android Auto possa
+essere copiata senza un ADR e uno spike dedicati.
 
 ## Priorità audio
 
-Il sistema deve coordinare:
+Ordine concettuale:
 
 ```text
 critical navigation prompt
@@ -247,31 +278,25 @@ normal message
 travel opportunity
 ```
 
-Una manovra imminente può rinviare la lettura di un messaggio. La musica può
-essere attenuata secondo policy e preferenze.
-
-## Notifiche senza sistema auto
-
-Con il telefono:
-
-- il navigatore resta in primo piano;
-- Travel DNA usa notification channel/conversation notification;
-- assistente o TTS può leggere;
-- reply action invia in background;
-- una risposta non inviata resta in coda.
+La navigazione futura usa il canale audio dedicato solo per istruzioni di guidance.
+Una manovra imminente può rinviare messaggi o opportunità. Nessun contenuto social
+si presenta come prompt di navigazione.
 
 ## Stato di processo e consegna
 
-Non basarsi su un WebSocket sempre vivo. Modello:
+Non basarsi su un WebSocket sempre vivo:
 
 ```text
-server is source of pending delivery
-push wakes/notifies
-local sync fetches durable message
-foreground websocket reduces latency when available
+server source of pending delivery
+-> push wakes/notifies
+-> local sync fetches durable message
+-> foreground websocket reduces latency when available
 ```
 
-## ExternalNavigationProvider
+Questo modello riguarda la consegna mobile/backend e non autorizza chat completa
+sul display auto.
+
+## Contratti provider
 
 ```kotlin
 interface ExternalNavigationProvider {
@@ -281,7 +306,7 @@ interface ExternalNavigationProvider {
 }
 ```
 
-Capability:
+Capability candidate:
 
 ```text
 DESTINATION
@@ -292,37 +317,71 @@ AVOID_TOLLS
 RETURN_LINK
 ```
 
-## CarSurfaceProvider
+Il futuro adapter automotive consuma uno snapshot driver-safe:
 
 ```kotlin
 interface CarSurfaceProvider {
     val descriptor: ProviderDescriptor
-    suspend fun publish(snapshot: CarCompanionSnapshot)
+    suspend fun publish(snapshot: DriverJourneySnapshot)
     fun actions(): Flow<CarAction>
 }
 ```
 
+Il nome e la firma sono candidati di roadmap. `DriverJourneySnapshot` non esiste
+ancora e non deve dipendere da `androidx.car.app`.
+
 ## Test essenziali
 
-- handoff URL encoding;
+### Navigatori esterni
+
+- URL e intent encoding;
 - app non installata;
-- waypoint non supportati;
-- ritorno da navigatore;
-- Waze in primo piano + push chat;
-- voice reply;
+- capability non supportata;
+- waypoint rifiutati;
+- ritorno dal navigatore;
 - perdita rete;
 - processo ucciso;
-- ruolo passeggero;
-- Android Auto Desktop Head Unit;
-- CarPlay simulator;
-- nessun focus steal.
+- nessun feed inventato.
+
+### Android Auto POI
+
+- categoria e manifest del prototipo;
+- content limits e metadati distanza;
+- mappa host-rendered;
+- DHU touch/rotary/day/night;
+- permission flow sul telefono;
+- handoff;
+- perdita connessione;
+- nessun focus steal;
+- nessun contenuto fuori categoria.
+
+### Navigation futura
+
+- start/stop/focus;
+- AUTO_DRIVE;
+- trip/step/destination;
+- reroute;
+- audio focus;
+- navigation intents;
+- cluster quando applicabile;
+- car quality checklist.
 
 ## Errori comuni
 
 - promettere split-screen controllato dall'app;
-- chiamare deep link “integrazione SDK”;
+- chiamare un deep link “integrazione SDK”;
 - assumere feed di ritorno dal navigatore;
-- aprire Travel DNA sopra una manovra critica;
-- disattivare la chat invece di adattarla;
+- aprire TDNA sopra una manovra critica;
 - mostrare UI completa al conducente;
+- dichiarare Navigation perché esiste una mappa;
+- usare il canale audio navigation per chat o suggerimenti;
+- confondere DHU, AAOS emulator, veicolo e strada;
 - dipendere dal WebSocket per consegna affidabile.
+
+## Collegamenti
+
+- [Android Auto compliance](61-android-auto-compliance-e-roadmap-automotive.md)
+- [Roadmap Android-first](55-roadmap-android-first-e-pilot.md)
+- [Protocollo Pilot 1](57-protocollo-pilot-stradale-android.md)
+- [Privacy, sicurezza e guida](33-privacy-security-driving-safety.md)
+- [ADR-0011](../adr/0011-android-auto-poi-first-and-car-surfaces.md)
