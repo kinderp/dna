@@ -1,129 +1,83 @@
 # Project tooling
 
-`tools/tdna` è l'entry point comune per build, test, Lab e benchmark. È un
-orchestratore POSIX sottile che invoca Java, Cargo, il Gradle Wrapper e Python.
+Entry point:
 
 ```bash
 sh tools/tdna COMMAND
 ```
 
-## Bootstrap supportato
+## Core commands
 
-```text
-Java 21
-Python 3
-Rust stable per i task Rust
-./gradlew committato per i task Kotlin
-```
-
-Un comando globale `gradle` è opzionale e non viene usato come fonte di verità.
-
-## Comandi
-
-| Comando | Scopo |
+| Command | Purpose |
 | --- | --- |
-| `doctor` | Mostra tool richiesti/opzionali e presenza del Wrapper. |
-| `check-gradle-wrapper` | Verifica file, proprietà, JAR, permessi e hash. |
-| `check-ci-actions` | Verifica allowlist e SHA immutabili delle Actions. |
-| `check-docs` | Verifica link e code fence. |
-| `check-architecture` | Controlla import Kotlin shared. |
-| `check-java` | Compila/testa Java 21. |
-| `check-rust` | Esegue fmt e test Rust. |
-| `check-contract` | Confronta report Java/Rust. |
-| `check-kotlin` | Esegue test KMP, Lab e benchmark tramite `./gradlew`. |
-| `check` | Esegue l'intera Foundation CI localmente. |
-| `lab build-bootstrap` | Lab Wrapper, hash e Action pinning. |
-| `lab reference-routing [dijkstra\|astar]` | Lab algoritmo. |
-| `lab routing-contracts` | Lab provider-neutral routing. |
-| `lab map-scene` | Lab scena/renderer. |
-| `lab location-replay` | Lab sample/replay. |
-| `lab route-progress` | Lab matched route progress. |
-| `lab map-matching` | Lab porta matcher/fake/progress. |
-| `lab missed-exit` | Lab evidenza off-route e reroute correlato. |
-| `bench location-replay [n] [run-dispari]` | Benchmark replay. |
-| `bench route-progress [n] [run-dispari]` | Benchmark progress. |
-| `bench map-matching [n] [run-dispari]` | Benchmark matching fake + progress. |
-| `bench off-route [n] [run-dispari]` | Benchmark state machine off-route. |
-| `clean` | Rimuove `build/`. |
+| `doctor` | Java/Python/Rust/Wrapper/Android SDK/global Gradle status. |
+| `check-gradle-wrapper` | Wrapper version and checksum policy. |
+| `check-ci-actions` | Immutable reviewed GitHub Action SHAs. |
+| `check-android-build-policy` | Mixed Android/KMP plugin IDs, version refs and root classpath contract. |
+| `check-docs` | Markdown links and fences. |
+| `check-architecture` | Shared Kotlin source boundaries. |
+| `check-java` | Java routing. |
+| `check-rust` | Rust routing. |
+| `check-contract` | Java/Rust byte report equality. |
+| `check-kotlin` | Foundation KMP tests/Labs without Android SDK. |
+| `check-android` | Android policy, unit tests, lint, manifest guard and APK builds. |
+| `check` | Complete non-Android foundation verification. |
 
-## Ambiente CI
+## Android
+
+Prerequisites:
 
 ```text
-Ubuntu 24.04
 Java 21
-Gradle Wrapper 9.5.1
-Kotlin 2.4.0
-Rust stable
+Android SDK Platform 37
+Build Tools 36.0.0
 ```
 
-La CI configura la cache Gradle ma non installa una versione globale del tool.
-Esegue `./gradlew` dalla clone pulita.
+```bash
+sh tools/tdna check-android-build-policy
+sh tools/tdna check-android
+```
 
-## Output generati
+The policy check runs before Gradle and requires the Android application,
+Compose compiler, Kotlin Multiplatform and Kotlin JVM plugin families to remain
+preloaded together in the root `plugins` block. This is a tested classloader
+contract of the mixed Android/KMP build, not cosmetic centralization.
+
+Outputs:
 
 ```text
-build/java/reference-routing/
-build/rust/
-build/contract/
-build/kotlin/build-bootstrap-lab.json
-build/kotlin/routing-contracts-lab.json
-build/kotlin/map-scene-lab.json
-build/kotlin/location-replay-lab.json
-build/kotlin/location-replay-benchmark.json
-build/kotlin/route-progress-lab.json
-build/kotlin/route-progress-benchmark.json
-build/kotlin/map-matching-lab.json
-build/kotlin/map-matching-benchmark.json
-build/kotlin/missed-exit-lab.json
-build/kotlin/off-route-benchmark.json
+build/android/tdna-pilot0-debug.apk
+build/android/tdna-pilot0-debug-androidTest.apk
+build/android/manifest-report.json
+build/android/sha256.txt
 ```
 
-La CI conserva gli output Kotlin come artifact `foundation-kotlin-observations`
-per 14 giorni. I benchmark non sono gate.
+The CI compiles the instrumentation APK but does not yet execute it on an
+emulator. A green build is not road evidence.
 
-## Build-bootstrap checks
+## Foundation-only Gradle graph
 
-```bash
-sh tools/tdna check-gradle-wrapper
-sh tools/tdna check-ci-actions
-sh tools/tdna lab build-bootstrap
+`check-kotlin`, Labs and benchmarks pass:
+
+```text
+-Ptdna.includeAndroid=false
 ```
 
-Il primo checker confronta i byte con
-`gradle/wrapper/tdna-wrapper-policy.json`. Il secondo rifiuta action esterne non
-allowlisted o non bloccate a full SHA. Il Lab emette un report JSON canonico.
+so deterministic shared work remains accessible without installing the Android
+SDK. Android commands include the app by default. The Android/Compose plugin
+markers remain declared `apply false` at the root so they share a compatible
+classloader with the Kotlin plugin families; excluding the Android subproject
+still prevents Android tasks from entering foundation commands.
 
-I checksum rilevano drift/corruzione rispetto alla policy revisionata; non sono
-presentati come firma o prova indipendente dell'identità dell'editore.
+## Generated outputs
 
-## Benchmark off-route
+All generated artifacts stay under `build/` or module build directories. Never
+commit APKs, traces, Gradle caches or real user locations.
 
-```bash
-sh tools/tdna bench off-route 10000 7
-```
+## Rules
 
-Misura validazione, transizione e commit in-memory del tracker; non provider,
-rete, route replacement, dispositivo o strada.
-
-## Benchmark map matching boundary
-
-```bash
-sh tools/tdna bench map-matching 10000 7
-```
-
-Misura exact fake lookup, diagnostica bounded e progress accept; non ricerca
-geografica o accuratezza.
-
-## Architecture checker
-
-`tools/check_architecture.py` verifica import ammessi e token provider/piattaforma
-nei moduli shared. È un guardrail sorgente, non un sostituto del grafo Gradle.
-
-## Regole
-
-- locale e CI usano lo stesso entry point;
-- il Wrapper è l'unico Gradle supportato;
-- tool mancanti causano un errore esplicito;
-- output generati restano in `build/`;
-- un comando nuovo richiede test, documentazione e CI nella stessa PR;
-- un benchmark diagnostico non diventa SLA.
+- local and CI use the same project commands;
+- missing required tools fail explicitly;
+- new commands require documentation and CI in the same PR;
+- benchmarks are observations, not SLA;
+- Android device/field evidence is recorded separately from JVM/CI evidence.

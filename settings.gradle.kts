@@ -2,6 +2,7 @@ import org.gradle.api.initialization.resolve.RepositoriesMode
 
 pluginManagement {
     repositories {
+        google()
         gradlePluginPortal()
         mavenCentral()
     }
@@ -10,6 +11,7 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
+        google()
         mavenCentral()
     }
 }
@@ -42,3 +44,10 @@ include(":labs:location-replay-cli")
 include(":labs:route-progress-cli")
 include(":labs:map-matching-cli")
 include(":labs:missed-exit-cli")
+
+// Foundation-only commands set -Ptdna.includeAndroid=false so students can run
+// the deterministic shared Labs without installing the Android SDK. Android
+// builds use the default and include the application module.
+if (providers.gradleProperty("tdna.includeAndroid").orNull != "false") {
+    include(":apps:android")
+}

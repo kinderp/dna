@@ -1,67 +1,55 @@
 # Documentazione didattica di Travel DNA
 
-Questa cartella contiene la spiegazione in italiano del prodotto e della
-codebase. I commenti nel codice restano in inglese e più sintetici.
+Questa cartella contiene il libro vivo in italiano. I commenti nel codice restano
+in inglese e più sintetici.
 
-## Indice ragionato
+## Percorsi principali
 
-| Capitolo | Cosa spiega | Chi lo legge | Quando |
-| --- | --- | --- | --- |
-| [00 - Regole operative](00-regole-operative.md) | Metodo, scope, hot path, PR seriale, test e gate review. | Tutti i contributori. | Prima di lavorare. |
-| [01 - Visione](01-visione-prodotto.md) | Problema, atmosfera, diario, guida e socialità. | Tutti. | Per capire il prodotto. |
-| [02 - Glossario](02-glossario.md) | Termini di prodotto, dominio, mappe e navigazione. | Tutti. | Quando un termine non è chiaro. |
-| [03 - Guida alla lettura](03-guida-lettura-documentazione.md) | Percorsi per studente, mobile, Java, Rust e Kotlin. | Tutti. | Quando non sai cosa leggere. |
-| [04 - Come contribuire](04-come-contribuire.md) | Branch da `main`, una PR, test, review e merge. | Nuovi contributori. | Prima della prima PR. |
-| [05 - Tracciabilità](05-tracciabilita-conversazione.md) | Origine delle decisioni iniziali. | Maintainer e studenti. | Per ricostruire il ragionamento. |
-| [06 - Review e merge](06-review-e-merge.md) | Flusso seriale, due round, reset e expected-head. | Reviewer e agenti. | Prima di chiudere una PR. |
-| [10 - DDD](10-ddd-bounded-context.md) | Domini, confini e linguaggio condiviso. | Architettura. | Prima di introdurre moduli. |
-| [11 - Use case](11-use-case-principali.md) | Flussi utente completi e criteri di valore. | Prodotto, design e test. | Prima di una slice. |
-| [12 - Stato funzionalità](12-stato-funzionalita.md) | Implementato, pianificato e non-obiettivi. | Tutti. | Prima di promettere una feature. |
-| [20 - Architettura](20-architettura-generale.md) | Contesto, componenti, runtime e deployment. | Tecnici. | Prima del codice. |
-| [21 - Repository](21-struttura-repository.md) | Monorepo, moduli e responsabilità. | Contributori. | Prima di creare moduli. |
-| [22 - Plugin e provider](22-architettura-plugin-provider.md) | Porte, adapter, capability e contract test. | Architettura. | Prima di integrare librerie. |
-| [23 - OSM](23-openstreetmap-e-cartografia.md) | Dati OSM, tile, POI, ricerca e licenze. | Mappe e backend. | Prima dei servizi OSM. |
-| [24 - Routing e navigazione](24-routing-e-navigazione.md) | Dal grafo al turn-by-turn. | Navigation team. | Per capire un navigatore. |
-| [25 - Navigatori esterni](25-navigatori-esterni-e-automotive.md) | Waze, Maps, Android Auto e CarPlay. | Mobile/automotive. | Prima dell'auto. |
-| [26 - Diario e media](26-diario-media-pagina-giorno.md) | Timeline, soste, foto e pensieri. | Journey. | Prima del diario. |
-| [27 - Presenza e chat](27-presenza-chat-dna.md) | Compagni, consenso e scambio DNA. | Social/backend. | Prima di prossimità. |
-| [28 - Linguaggi e GUI](28-stack-linguaggi-e-gui.md) | Kotlin, Java, Swift, Rust e UI native. | Tecnici. | Prima dello stack. |
-| [29 - Backend](29-backend-dati-sync.md) | Local-first, sync, messaggi e presenza. | Backend/mobile data. | Prima di API/DB. |
-| [30 - Test](30-strategia-test.md) | Unit, contract, replay, UI e field test. | Contributori. | Prima dei test. |
-| [31 - GPS replay](31-gps-replay-e-fixture.md) | Fixture deterministiche e simulazione. | Navigation team. | Prima degli algoritmi GPS. |
-| [32 - Prestazioni](32-performance-budget.md) | Hot path, budget e benchmark. | Tecnici. | Prima di codice critico. |
-| [33 - Privacy e sicurezza](33-privacy-security-driving-safety.md) | Dati, minacce, guida e moderazione. | Tutti. | Prima di funzioni sensibili. |
-| [34 - Debugging](34-debugging-e-strumenti.md) | Strumenti JVM, Rust, mobile e rete. | Studenti. | Quando qualcosa non funziona. |
-| [35 - Qualità](35-qualita-prodotto-software.md) | Correttezza, robustezza, energia e maturità. | Tutti. | Per valutare una feature. |
-| [36 - Licenze](36-licenze-dati-supply-chain.md) | ODbL, SBOM e supply chain. | Maintainer. | Prima delle dipendenze. |
-| [37 - Build riproducibile](37-build-riproducibile-gradle-wrapper.md) | Wrapper, checksum, Action SHA, trust model e upgrade. | Tutti i tecnici. | Prima del primo build. |
-| [40 - Mappa codice](40-mappa-codice-e-stati.md) | Percorsi reali, ownership e stati. | Studenti/reviewer. | Per orientarsi. |
-| [41 - Tracepoint](41-tracepoint-model-v0.md) | Nomi logici stabili per gli stage. | Lab e test. | Prima degli scenari. |
-| [42 - Lab roadmap](42-traveldna-lab-roadmap.md) | Scenari didattici riproducibili. | Docenti/studenti. | Per i laboratori. |
-| [43 - Routing Java/Rust](43-reference-routing-java-rust.md) | Grafo, Dijkstra, A* e confronto. | Studenti Java/Rust. | Primo Lab navigation. |
-| [44 - Contratti routing](44-contratti-routing-e-fake-provider.md) | KMP, porta, invarianti e fake provider. | Kotlin/architettura. | Dopo 43. |
-| [45 - MapScene](45-map-scene-e-fake-renderer.md) | Scena, delta, projector e fake renderer. | Kotlin/mappe. | Dopo 44. |
-| [46 - LocationSample](46-location-sample-e-replay-deterministico.md) | Tempo monotono, gate, replay e benchmark. | Navigation runtime. | Dopo 45. |
-| [47 - Route progress](47-posizione-matched-e-route-progress.md) | Posizione matched, leg, manovra, arrival e delta. | Navigation runtime. | Dopo 46. |
-| [48 - Porta map matching](48-porta-map-matching-e-fake-deterministico.md) | Sessione route-bound, esiti, postcondizioni, fake e testkit. | Navigation runtime/adapter. | Dopo 47. |
-| [49 - Off-route e reroute](49-off-route-missed-exit-e-reroute.md) | Evidenza, conferma, correlazione, cancellazione e route replacement. | Navigation runtime. | Dopo 48, prima del runtime mobile. |
-| [50 - Milestone](50-registro-milestone.md) | Evoluzione e dipendenze. | Maintainer. | Durante la pianificazione. |
-| [51 - Librerie](51-roadmap-librerie-open-source.md) | Possesso, sostituzione e upstream. | Architettura. | Prima di riscrivere. |
-| [52 - Tecnologie](52-matrice-tecnologie-decisioni.md) | Alternative, pro, contro e stato. | Tutti. | Prima di riaprire scelte. |
-| [53 - Riferimenti](53-riferimenti-tecnici.md) | Fonti ufficiali. | Tutti. | Per approfondire. |
-| [54 - LoRa](54-spike-lora-roadmap.md) | Domande LoRa/LoRaWAN future. | Ricerca. | Dopo discussione dedicata. |
+- [Guida alla lettura](03-guida-lettura-documentazione.md)
+- [Regole operative](00-regole-operative.md)
+- [Review e merge](06-review-e-merge.md)
+- [Architettura generale](20-architettura-generale.md)
+- [Stato funzionalità](12-stato-funzionalita.md)
 
-## Scrittura dei capitoli
+## Engineering e fondazione
 
-Ogni capitolo include, quando utile: obiettivi, prerequisiti, problema,
-decisione, trade-off, percorso nel codice, ownership, invarianti, test,
-benchmark, errori comuni, esercizi e non-obiettivi.
+| Capitolo | Tema |
+| --- | --- |
+| [37](37-build-riproducibile-gradle-wrapper.md) | Wrapper, checksum, Action pinning e trust model. |
+| [43](43-reference-routing-java-rust.md) | Dijkstra/A* Java e Rust. |
+| [44](44-contratti-routing-e-fake-provider.md) | Routing provider-neutral e fake. |
+| [45](45-map-scene-e-fake-renderer.md) | MapScene e fake renderer. |
+| [46](46-location-sample-e-replay-deterministico.md) | LocationSample e replay. |
+| [47](47-posizione-matched-e-route-progress.md) | Route progress. |
+| [48](48-porta-map-matching-e-fake-deterministico.md) | Porta map matching. |
+| [49](49-off-route-missed-exit-e-reroute.md) | Missed exit e reroute. |
+
+## Android-first
+
+| Capitolo | Tema |
+| --- | --- |
+| [55](55-roadmap-android-first-e-pilot.md) | Roadmap Pilot 0/1/2, stack, APK e requisiti. |
+| [56](56-percorso-studio-android-first.md) | Percorso narrativo di studio Manning/Pluralsight/ufficiale. |
+| [57](57-protocollo-pilot-stradale-android.md) | Protocollo del futuro Pilot 1 su strada. |
+| [58](58-shell-android-pilot0.md) | Prima shell Compose, build, stato e test. |
+| **[59](59-materiali-didattici-e-acquisti-pilot-android.md)** | **Guida unica con link diretti, ordine di studio e acquisti per APK/Pilot.** |
+
+Decisione: [ADR-0010 Android-first](../adr/0010-android-first-pilot-sequence.md).
+
+## Altri capitoli
+
+- prodotto/DDD/use case: `01`, `02`, `10`, `11`;
+- mappe/navigazione/auto: `23`, `24`, `25`;
+- diario/social/backend: `26`, `27`, `29`;
+- stack/test/performance/privacy: `28`, `30`–`36`;
+- codice/tracepoint/Lab: `40`–`42`;
+- milestone/librerie/tecnologie/riferimenti/LoRa: `50`–`54`.
 
 ## Stato
 
-Il percorso implementation-backed comprende il Lab di engineering del capitolo
-37 e sette Lab navigation dai capitoli 43 a 49. Per lo stato vivo consultare
-[documentation-status.md](documentation-status.md),
-[development-status.md](../project/development-status.md), il
-[rapporto Foundations v0](../project/foundation-v0-closure.md) e l'indice dei
-[report giornalieri](../project/daily/README.md).
+Consultare:
+
+- [documentation-status.md](documentation-status.md)
+- [development-status.md](../project/development-status.md)
+- [report giornalieri](../project/daily/README.md)
+- [Travel DNA Lab](lab/README.md)

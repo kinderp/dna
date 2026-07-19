@@ -17,8 +17,10 @@ say() { printf '%s\n' "$*"; }
 need() { if ! command -v "$1" >/dev/null 2>&1; then say "ERROR: required command '$1' is not available."; return 1; fi; }
 version_line() { name=$1; shift; if command -v "$name" >/dev/null 2>&1; then version=$($@ 2>&1 | sed -n '1p'); printf '%-14s %s\n' "$name" "$version"; else printf '%-14s %s\n' "$name" "MISSING"; fi; }
 wrapper_line() { if [ -x "$GRADLEW" ]; then printf '%-14s %s\n' "gradlew" "PRESENT (run check-gradle-wrapper for integrity)"; else printf '%-14s %s\n' "gradlew" "MISSING OR NOT EXECUTABLE"; fi; }
+android_sdk_line() { if [ -n "${ANDROID_HOME:-}" ] && [ -d "$ANDROID_HOME" ]; then printf '%-14s %s\n' "android-sdk" "$ANDROID_HOME"; else printf '%-14s %s\n' "android-sdk" "MISSING (optional for foundation, required for Android)"; fi; }
 need_wrapper() { if [ ! -x "$GRADLEW" ]; then say "ERROR: $GRADLEW is missing or not executable."; return 1; fi; }
 gradlew() { need_wrapper; "$GRADLEW" "$@"; }
+foundation_gradlew() { gradlew -Ptdna.includeAndroid=false "$@"; }
 
 compile_java() { need javac; rm -rf "$JAVA_BUILD"; mkdir -p "$JAVA_BUILD/classes"; find "$JAVA_MAIN" "$JAVA_TEST" -type f -name '*.java' | sort > "$JAVA_BUILD/sources.txt"; javac --release 21 -Xlint:all -Werror -d "$JAVA_BUILD/classes" @"$JAVA_BUILD/sources.txt"; }
 java_report() { java -cp "$JAVA_BUILD/classes" "$JAVA_MAIN_CLASS" "$ROUTE_FIXTURE" "$1"; }
@@ -30,24 +32,25 @@ check_docs() { say "== Documentation links and fences =="; need python3; python3
 check_architecture() { say "== Shared Kotlin architecture boundaries =="; need python3; python3 "$ROOT/tools/check_architecture.py" "$ROOT"; }
 check_gradle_wrapper() { say "== Gradle Wrapper integrity =="; need python3; python3 "$ROOT/tools/check_gradle_wrapper.py" "$ROOT"; }
 check_ci_actions() { say "== GitHub Actions immutable references =="; need python3; python3 "$ROOT/tools/check_ci_actions.py" "$ROOT"; }
+check_android_build_policy() { say "== Android/KMP Gradle plugin classpath policy =="; need python3; python3 "$ROOT/tools/check_android_build_policy.py" "$ROOT"; }
 
 check_kotlin() {
     say "== Kotlin Multiplatform contracts, fakes and navigation foundations =="
     need java
     check_gradle_wrapper
-    gradlew --no-daemon --stacktrace check
+    foundation_gradlew --no-daemon --stacktrace check
     mkdir -p "$BUILD_DIR/kotlin"
     python3 "$ROOT/tools/gradle_wrapper_report.py" "$ROOT" > "$BUILD_DIR/kotlin/build-bootstrap-lab.json"
-    gradlew --no-daemon --quiet :labs:routing-contracts-cli:run > "$BUILD_DIR/kotlin/routing-contracts-lab.json"
-    gradlew --no-daemon --quiet :labs:map-scene-cli:run > "$BUILD_DIR/kotlin/map-scene-lab.json"
-    gradlew --no-daemon --quiet :labs:location-replay-cli:run --args="$LOCATION_FIXTURE" > "$BUILD_DIR/kotlin/location-replay-lab.json"
-    gradlew --no-daemon --quiet :labs:location-replay-cli:run --args="--benchmark 10000 7" > "$BUILD_DIR/kotlin/location-replay-benchmark.json"
-    gradlew --no-daemon --quiet :labs:route-progress-cli:run > "$BUILD_DIR/kotlin/route-progress-lab.json"
-    gradlew --no-daemon --quiet :labs:route-progress-cli:run --args="--benchmark 10000 7" > "$BUILD_DIR/kotlin/route-progress-benchmark.json"
-    gradlew --no-daemon --quiet :labs:map-matching-cli:run > "$BUILD_DIR/kotlin/map-matching-lab.json"
-    gradlew --no-daemon --quiet :labs:map-matching-cli:run --args="--benchmark 10000 7" > "$BUILD_DIR/kotlin/map-matching-benchmark.json"
-    gradlew --no-daemon --quiet :labs:missed-exit-cli:run > "$BUILD_DIR/kotlin/missed-exit-lab.json"
-    gradlew --no-daemon --quiet :labs:missed-exit-cli:run --args="--benchmark 10000 7" > "$BUILD_DIR/kotlin/off-route-benchmark.json"
+    foundation_gradlew --no-daemon --quiet :labs:routing-contracts-cli:run > "$BUILD_DIR/kotlin/routing-contracts-lab.json"
+    foundation_gradlew --no-daemon --quiet :labs:map-scene-cli:run > "$BUILD_DIR/kotlin/map-scene-lab.json"
+    foundation_gradlew --no-daemon --quiet :labs:location-replay-cli:run --args="$LOCATION_FIXTURE" > "$BUILD_DIR/kotlin/location-replay-lab.json"
+    foundation_gradlew --no-daemon --quiet :labs:location-replay-cli:run --args="--benchmark 10000 7" > "$BUILD_DIR/kotlin/location-replay-benchmark.json"
+    foundation_gradlew --no-daemon --quiet :labs:route-progress-cli:run > "$BUILD_DIR/kotlin/route-progress-lab.json"
+    foundation_gradlew --no-daemon --quiet :labs:route-progress-cli:run --args="--benchmark 10000 7" > "$BUILD_DIR/kotlin/route-progress-benchmark.json"
+    foundation_gradlew --no-daemon --quiet :labs:map-matching-cli:run > "$BUILD_DIR/kotlin/map-matching-lab.json"
+    foundation_gradlew --no-daemon --quiet :labs:map-matching-cli:run --args="--benchmark 10000 7" > "$BUILD_DIR/kotlin/map-matching-benchmark.json"
+    foundation_gradlew --no-daemon --quiet :labs:missed-exit-cli:run > "$BUILD_DIR/kotlin/missed-exit-lab.json"
+    foundation_gradlew --no-daemon --quiet :labs:missed-exit-cli:run --args="--benchmark 10000 7" > "$BUILD_DIR/kotlin/off-route-benchmark.json"
     say "Diagnostic location-replay benchmark:"; cat "$BUILD_DIR/kotlin/location-replay-benchmark.json"
     say "Diagnostic route-progress benchmark:"; cat "$BUILD_DIR/kotlin/route-progress-benchmark.json"
     say "Diagnostic map-matching pipeline benchmark:"; cat "$BUILD_DIR/kotlin/map-matching-benchmark.json"
@@ -55,17 +58,43 @@ check_kotlin() {
     say "PASS Kotlin reports written under build/kotlin"
 }
 
+check_android() {
+    say "== Android Pilot 0 shell =="
+    need java
+    need python3
+    need sha256sum
+    check_android_build_policy
+    check_gradle_wrapper
+    gradlew --no-daemon --stacktrace \
+        :apps:android:testDebugUnitTest \
+        :apps:android:lintDebug \
+        :apps:android:assembleDebug \
+        :apps:android:assembleDebugAndroidTest
+    rm -rf "$BUILD_DIR/android"
+    mkdir -p "$BUILD_DIR/android"
+    python3 "$ROOT/tools/check_android_pilot.py" \
+        "$ROOT" "$BUILD_DIR/android/manifest-report.json"
+    app_apk=$(find "$ROOT/apps/android/build/outputs/apk/debug" -type f -name '*.apk' | sort | sed -n '1p')
+    test_apk=$(find "$ROOT/apps/android/build/outputs/apk/androidTest/debug" -type f -name '*.apk' | sort | sed -n '1p')
+    test -n "$app_apk" || { say "ERROR: debug APK not found"; return 1; }
+    test -n "$test_apk" || { say "ERROR: instrumentation APK not found"; return 1; }
+    cp "$app_apk" "$BUILD_DIR/android/tdna-pilot0-debug.apk"
+    cp "$test_apk" "$BUILD_DIR/android/tdna-pilot0-debug-androidTest.apk"
+    (cd "$BUILD_DIR/android" && sha256sum ./*.apk > sha256.txt)
+    say "PASS Android APKs and manifest report written under build/android"
+}
+
 run_lab() {
     scenario=${1:-}; algorithm=${2:-dijkstra}
     case "$scenario" in
         reference-routing) case "$algorithm" in dijkstra|astar) ;; *) say "ERROR: algorithm must be dijkstra or astar"; exit 2 ;; esac; compile_java; say "Java:"; java_report "$algorithm"; if command -v cargo >/dev/null 2>&1; then say "Rust:"; rust_report "$algorithm"; else say "Rust: skipped because cargo is not installed"; fi ;;
         build-bootstrap) check_gradle_wrapper >/dev/null; check_ci_actions >/dev/null; python3 "$ROOT/tools/gradle_wrapper_report.py" "$ROOT" ;;
-        routing-contracts) gradlew --no-daemon --quiet :labs:routing-contracts-cli:run ;;
-        map-scene) gradlew --no-daemon --quiet :labs:map-scene-cli:run ;;
-        location-replay) gradlew --no-daemon --quiet :labs:location-replay-cli:run --args="$LOCATION_FIXTURE" ;;
-        route-progress) gradlew --no-daemon --quiet :labs:route-progress-cli:run ;;
-        map-matching) gradlew --no-daemon --quiet :labs:map-matching-cli:run ;;
-        missed-exit) gradlew --no-daemon --quiet :labs:missed-exit-cli:run ;;
+        routing-contracts) foundation_gradlew --no-daemon --quiet :labs:routing-contracts-cli:run ;;
+        map-scene) foundation_gradlew --no-daemon --quiet :labs:map-scene-cli:run ;;
+        location-replay) foundation_gradlew --no-daemon --quiet :labs:location-replay-cli:run --args="$LOCATION_FIXTURE" ;;
+        route-progress) foundation_gradlew --no-daemon --quiet :labs:route-progress-cli:run ;;
+        map-matching) foundation_gradlew --no-daemon --quiet :labs:map-matching-cli:run ;;
+        missed-exit) foundation_gradlew --no-daemon --quiet :labs:missed-exit-cli:run ;;
         *) say "usage: sh tools/tdna lab {build-bootstrap|reference-routing [dijkstra|astar]|routing-contracts|map-scene|location-replay|route-progress|map-matching|missed-exit}"; exit 2 ;;
     esac
 }
@@ -73,25 +102,27 @@ run_lab() {
 run_benchmark() {
     family=${1:-}; samples=${2:-10000}; iterations=${3:-7}
     case "$family" in
-        location-replay) gradlew --no-daemon --quiet :labs:location-replay-cli:run --args="--benchmark $samples $iterations" ;;
-        route-progress) gradlew --no-daemon --quiet :labs:route-progress-cli:run --args="--benchmark $samples $iterations" ;;
-        map-matching) gradlew --no-daemon --quiet :labs:map-matching-cli:run --args="--benchmark $samples $iterations" ;;
-        off-route) gradlew --no-daemon --quiet :labs:missed-exit-cli:run --args="--benchmark $samples $iterations" ;;
+        location-replay) foundation_gradlew --no-daemon --quiet :labs:location-replay-cli:run --args="--benchmark $samples $iterations" ;;
+        route-progress) foundation_gradlew --no-daemon --quiet :labs:route-progress-cli:run --args="--benchmark $samples $iterations" ;;
+        map-matching) foundation_gradlew --no-daemon --quiet :labs:map-matching-cli:run --args="--benchmark $samples $iterations" ;;
+        off-route) foundation_gradlew --no-daemon --quiet :labs:missed-exit-cli:run --args="--benchmark $samples $iterations" ;;
         *) say "usage: sh tools/tdna bench {location-replay|route-progress|map-matching|off-route} [sample-count] [odd-iterations]"; exit 2 ;;
     esac
 }
 
 command=${1:-help}
 case "$command" in
-    doctor) say "Travel DNA foundation toolchain"; version_line java java -version; version_line javac javac -version; version_line python3 python3 --version; version_line cargo cargo --version; version_line rustc rustc --version; wrapper_line; version_line gradle gradle --version ;;
+    doctor) say "Travel DNA toolchain"; version_line java java -version; version_line javac javac -version; version_line python3 python3 --version; version_line cargo cargo --version; version_line rustc rustc --version; wrapper_line; android_sdk_line; version_line gradle gradle --version ;;
     check-gradle-wrapper) check_gradle_wrapper ;;
     check-ci-actions) check_ci_actions ;;
+    check-android-build-policy) check_android_build_policy ;;
     check-java) check_java ;;
     check-rust) check_rust ;;
     check-contract) check_contract ;;
     check-docs) check_docs ;;
     check-architecture) check_architecture ;;
     check-kotlin) check_kotlin ;;
+    check-android) check_android ;;
     check) check_docs; check_architecture; check_gradle_wrapper; check_ci_actions; check_java; check_rust; check_contract; check_kotlin; say "PASS foundation checks" ;;
     lab) shift; run_lab "$@" ;;
     bench) shift; run_benchmark "$@" ;;
@@ -104,13 +135,15 @@ Commands:
   doctor                              show required and optional tool versions
   check-gradle-wrapper                verify wrapper version, files and hashes
   check-ci-actions                    verify immutable reviewed Action SHAs
+  check-android-build-policy          verify the mixed Android/KMP plugin classpath
   check-docs                          validate Markdown links and code fences
   check-architecture                  validate shared Kotlin import boundaries
   check-java                          compile and test Java reference routing
   check-rust                          format and test Rust reference routing
   check-contract                      compare Java/Rust reports byte-for-byte
-  check-kotlin                        test KMP contracts, fakes and navigation foundations
-  check                               run the complete foundation verification
+  check-kotlin                        test KMP contracts and navigation foundations
+  check-android                       test, lint, manifest-check and assemble Pilot 0 APKs
+  check                               run the complete non-Android foundation verification
   lab build-bootstrap                 run the reproducible-build bootstrap Lab
   lab reference-routing [algorithm]   run the Java/Rust routing Lab
   lab routing-contracts               run the KMP routing-provider Lab

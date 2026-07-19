@@ -23,9 +23,9 @@ permissions:
 
 jobs:
   foundation:
-    name: Docs, Java, Rust, Kotlin and contract tests
+    name: Docs, Java, Rust, Kotlin and Android tests
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
 
     steps:
       - name: Check out repository
@@ -38,6 +38,20 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
+
+      - name: Verify hosted Android SDK 37
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${ANDROID_HOME:-}"
+          platform_jar=$(find "${ANDROID_HOME}/platforms" -maxdepth 2 -type f \
+            -path '*/android-37*/android.jar' | sort | sed -n '1p')
+          build_tools=$(find "${ANDROID_HOME}/build-tools" -maxdepth 1 -type d \
+            -name '36.0.0' | sort | sed -n '1p')
+          test -n "$platform_jar"
+          test -n "$build_tools"
+          printf 'ANDROID_HOME=%s\nplatform=%s\nbuild-tools=%s\n' \
+            "$ANDROID_HOME" "$platform_jar" "$build_tools"
 
       - name: Configure Gradle cache for the committed wrapper
         uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6
@@ -98,11 +112,18 @@ jobs:
           set -o pipefail
           sh tools/tdna check-kotlin 2>&1 | tee build/kotlin-check.log
 
-      - name: Upload Kotlin Lab and benchmark observations
+      - name: Build Android Pilot 0 artifacts
+        shell: bash
+        run: |
+          mkdir -p build
+          set -o pipefail
+          sh tools/tdna check-android 2>&1 | tee build/android-check.log
+
+      - name: Upload build observations and Android APKs
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: foundation-kotlin-observations
+          name: tdna-build-observations
           if-no-files-found: ignore
           retention-days: 14
           path: |
@@ -115,11 +136,14 @@ jobs:
             build/kotlin/map-matching-benchmark.json
             build/kotlin/missed-exit-lab.json
             build/kotlin/off-route-benchmark.json
+            build/android/*.apk
+            build/android/*.json
+            build/android/sha256.txt
 
       - name: Upload diagnostic output on failure
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: foundation-diagnostics
+          name: tdna-build-diagnostics
           if-no-files-found: ignore
           path: build/

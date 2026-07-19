@@ -5,19 +5,19 @@ tracepoint logici, test, prestazioni e proprietà di sicurezza.
 
 ## Come leggere uno scenario
 
-1. leggere [Tracepoint Model v0](../41-tracepoint-model-v0.md);
+1. leggere il capitolo collegato;
 2. aprire lo scenario;
-3. eseguire o ispezionare fixture, fake o policy;
+3. eseguire o ispezionare fixture, fake, policy oppure artifact;
 4. seguire funzioni e ownership;
 5. confrontare output e test;
-6. rispondere alle domande;
-7. provare una variante senza rompere il contratto.
+6. provare una variante senza rompere il contratto.
 
-## Scenario di engineering
+## Scenari di engineering e piattaforma
 
-| Scenario | Cosa insegna | Comando |
+| Scenario | Cosa insegna | Comando/evidenza |
 | --- | --- | --- |
 | [Gradle Wrapper riproducibile](scenarios/gradle-wrapper-riproducibile.md) | Bootstrap, checksum, Action SHA e trust model. | `sh tools/tdna lab build-bootstrap` |
+| [Android Pilot 0 shell](scenarios/android-pilot0-shell.md) | App composition root, Compose, shared contracts e APK. | `sh tools/tdna check-android` |
 
 ## Scenari navigation eseguibili
 
@@ -28,8 +28,8 @@ tracepoint logici, test, prestazioni e proprietà di sicurezza.
 | [MapScene](scenarios/map-scene-fake-renderer.md) | Scena, delta, marker e renderer conformance. | `sh tools/tdna lab map-scene` |
 | [Location replay](scenarios/location-replay-deterministico.md) | Tempo monotono, ordering gate, clock e rate. | `sh tools/tdna lab location-replay` |
 | [Route progress](scenarios/route-progress-tracker.md) | Matched position, leg, manovra, arrival e map binding. | `sh tools/tdna lab route-progress` |
-| [Map matching boundary](scenarios/map-matching-fake-provider.md) | Sessione route-bound, Matched/Unmatched/Failure, fake e progress. | `sh tools/tdna lab map-matching` |
-| [Missed exit e reroute](scenarios/navigation-missed-exit-reroute.md) | Evidenza, falso allarme, conferma, correlazione e route replacement. | `sh tools/tdna lab missed-exit` |
+| [Map matching boundary](scenarios/map-matching-fake-provider.md) | Sessione route-bound, esiti, fake e progress. | `sh tools/tdna lab map-matching` |
+| [Missed exit e reroute](scenarios/navigation-missed-exit-reroute.md) | Evidenza, falso allarme, conferma e replacement. | `sh tools/tdna lab missed-exit` |
 
 Benchmark diagnostici:
 
@@ -44,10 +44,10 @@ sh tools/tdna bench off-route 10000 7
 
 | Scenario | Stato | Cosa insegna |
 | --- | --- | --- |
-| [Route canonica](scenarios/render-canonical-route.md) | stable-doc | Adapter grafico reale e verifica fake/reale. |
+| [Route canonica](scenarios/render-canonical-route.md) | stable-doc | Adapter grafico reale. |
 | [Chat con navigatore esterno](scenarios/chat-with-external-navigation.md) | stable-doc | Background, push e superficie sicura. |
-| [Pagina del giorno](scenarios/daily-page-photos-thoughts.md) | stable-doc | Eventi, media, pensieri e privacy. |
-| [Scambio DNA](scenarios/dna-exchange-privacy.md) | stable-doc | Consenso, minimizzazione e revoca. |
+| [Pagina del giorno](scenarios/daily-page-photos-thoughts.md) | stable-doc | Eventi, media e privacy. |
+| [Scambio DNA](scenarios/dna-exchange-privacy.md) | stable-doc | Consenso e revoca. |
 
-`executable` significa che comando, dati/fake/policy e test esistono; non significa
-capacità di prodotto o affidabilità su strada.
+`executable` o `implementation-backed` significa che codice e prove esistono;
+non significa capacità di produzione o affidabilità su strada.

@@ -37,7 +37,8 @@ RULES = {
 }
 FORBIDDEN_CODE_TOKENS = (
     "maplibre", "valhalla", "ferrostar", "google.maps", "waze", "sygic",
-    "android.location", "corelocation", "cllocation", "org.traveldna.reference.routing",
+    "android.", "androidx.", "corelocation", "cllocation",
+    "org.traveldna.reference.routing",
 )
 
 
@@ -67,10 +68,14 @@ def main(argv: list[str]) -> int:
             code_lower = strip_non_code(text).lower()
             for token in FORBIDDEN_CODE_TOKENS:
                 if token in code_lower:
-                    errors.append(f"{path.relative_to(root)}: forbidden provider/platform/Lab code token: {token}")
+                    errors.append(
+                        f"{path.relative_to(root)}: forbidden provider/platform/Lab code token: {token}"
+                    )
             for imported in IMPORT.findall(text):
                 if not imported.startswith(prefixes):
-                    errors.append(f"{path.relative_to(root)}: import {imported} violates {module} boundary")
+                    errors.append(
+                        f"{path.relative_to(root)}: import {imported} violates {module} boundary"
+                    )
     if errors:
         print("Architecture validation failed:", file=sys.stderr)
         for error in errors:
