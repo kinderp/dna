@@ -61,8 +61,8 @@ Additional requirements:
 Android SDK command-line tools
 emulator package
 system-images;android-35;default;x86_64
-KVM when available
-bash, timeout, adb, avdmanager and sdkmanager
+KVM access configured outside the runner when /dev/kvm exists
+bash, timeout, python3, mktemp, adb, avdmanager and sdkmanager
 ```
 
 Run:
@@ -80,7 +80,7 @@ TDNA_EMULATOR_ABI
 TDNA_EMULATOR_DEVICE_PROFILE
 TDNA_EMULATOR_AVD_NAME
 TDNA_EMULATOR_BOOT_TIMEOUT_SECONDS
-TDNA_AVD_HOME
+TDNA_AVD_ROOT
 ```
 
 `TDNA_SUBSTANTIVE_SHA` is supplied by CI from the checked-out PR head or push SHA.
@@ -92,14 +92,24 @@ Default CI device:
 API 35
 x86_64 default system image
 Pixel 2 profile
+serial emulator-5554
 360-second registration/boot deadline
 headless, clean data, no snapshots
 ```
 
-The AVD home defaults to a directory under `RUNNER_TEMP` in CI and to
-`build/tdna-avd-<name>` locally. It must remain outside
-`build/android-emulator`, because virtual-disk data are execution state rather
-than review evidence. The runner removes the AVD home during cleanup.
+`TDNA_AVD_ROOT` selects only the parent for disposable emulator state. The runner
+creates a unique `tdna-avd-<name>.*` child with `mktemp`, removes only that child
+on exit and rejects a root inside `build/android-emulator`. No environment value
+is treated directly as a directory to delete.
+
+The smoke test is intentionally isolated. Every target-specific ADB operation uses
+`emulator-5554`, `ANDROID_SERIAL` is exported for Gradle, and the command fails if
+a different Android device is already online. Stop or disconnect phones and other
+emulators before a local run.
+
+The runner never changes host KVM permissions or invokes `sudo`. The CI workflow
+prepares `/dev/kvm` in its own reviewed step; a local machine must be configured
+by its administrator before the command is run.
 
 Success evidence:
 
@@ -128,8 +138,8 @@ build/android-emulator/failure-screen.png
 
 The runner uses official Android SDK tools and does not hide emulator lifecycle
 inside a third-party GitHub Action. It verifies AVD discovery before launch,
-checks the emulator PID during ADB registration and boot, and bounds cleanup and
-diagnostics.
+checks the emulator PID during ADB registration and boot, targets one declared
+serial, and bounds cleanup and diagnostics.
 
 A green emulator proves installation and declared instrumentation behavior on one
 virtual device. It is not physical-device, battery, accessibility or road
@@ -160,6 +170,8 @@ commit APKs, traces, AVD disks, Gradle caches or real user locations.
 - missing required tools fail explicitly;
 - new commands require documentation and CI in the same PR;
 - emulator registration/boot, diagnostics and cleanup are bounded;
-- AVD state is disposable and excluded from artifacts;
+- AVD state is created in a unique disposable child and excluded from artifacts;
+- ADB evidence is bound to one declared emulator serial;
+- host privilege changes remain outside the public runner;
 - benchmarks are observations, not SLA;
 - emulator, physical-device and field evidence remain separate.
