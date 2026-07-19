@@ -21,9 +21,10 @@ sh tools/tdna COMMAND
 | `check-contract` | Java/Rust byte report equality. |
 | `check-kotlin` | Foundation KMP tests/Labs without Android SDK. |
 | `check-android` | Android policy, unit tests, lint, manifest guard and APK builds. |
+| `check-android-emulator` | Boot declared AVD, run instrumentation and collect runtime evidence. |
 | `check` | Complete non-Android foundation verification. |
 
-## Android
+## Android build
 
 Prerequisites:
 
@@ -43,7 +44,7 @@ Compose compiler, Kotlin Multiplatform and Kotlin JVM plugin families to remain
 preloaded together in the root `plugins` block. This is a tested classloader
 contract of the mixed Android/KMP build, not cosmetic centralization.
 
-Outputs:
+Build outputs:
 
 ```text
 build/android/tdna-pilot0-debug.apk
@@ -52,8 +53,71 @@ build/android/manifest-report.json
 build/android/sha256.txt
 ```
 
-The CI compiles the instrumentation APK but does not yet execute it on an
-emulator. A green build is not road evidence.
+## Android emulator smoke
+
+Additional requirements:
+
+```text
+Android SDK command-line tools
+emulator package
+system-images;android-35;default;x86_64
+KVM when available
+bash, adb, avdmanager and sdkmanager
+```
+
+Run:
+
+```bash
+sh tools/tdna check-android-emulator
+```
+
+Optional environment overrides:
+
+```text
+TDNA_EMULATOR_API_LEVEL
+TDNA_EMULATOR_ABI
+TDNA_EMULATOR_DEVICE_PROFILE
+TDNA_EMULATOR_AVD_NAME
+TDNA_EMULATOR_BOOT_TIMEOUT_SECONDS
+```
+
+Default CI device:
+
+```text
+API 35
+x86_64 default system image
+Pixel 2 profile
+360-second boot timeout
+headless, clean data, no snapshots
+```
+
+Success evidence:
+
+```text
+build/android-emulator/emulator-smoke.json
+build/android-emulator/pilot0-screen.png
+build/android-emulator/activity-start.txt
+build/android-emulator/package-path.txt
+build/android-emulator/app-apk-sha256.txt
+```
+
+Failure diagnostics attempt to preserve:
+
+```text
+build/android-emulator/adb-devices.txt
+build/android-emulator/device-properties.txt
+build/android-emulator/emulator.log
+build/android-emulator/logcat.txt
+build/android-emulator/failure-screen.png
+```
+
+The runner uses official Android SDK tools and does not hide emulator lifecycle
+inside a third-party GitHub Action. It always attempts cleanup through `adb emu
+kill` and the process PID.
+
+A green emulator proves installation and declared instrumentation behavior on one
+virtual device. It is not physical-device, battery, accessibility or road
+evidence.
 
 ## Foundation-only Gradle graph
 
@@ -79,5 +143,6 @@ commit APKs, traces, Gradle caches or real user locations.
 - local and CI use the same project commands;
 - missing required tools fail explicitly;
 - new commands require documentation and CI in the same PR;
+- emulator boot is timeout-bounded and diagnostics are retained;
 - benchmarks are observations, not SLA;
-- Android device/field evidence is recorded separately from JVM/CI evidence.
+- emulator, physical-device and field evidence remain separate.
