@@ -10,6 +10,7 @@ AVD_NAME=${TDNA_EMULATOR_AVD_NAME:-tdna_pilot0_api${API_LEVEL}}
 BOOT_TIMEOUT_SECONDS=${TDNA_EMULATOR_BOOT_TIMEOUT_SECONDS:-360}
 SYSTEM_IMAGE="system-images;android-${API_LEVEL};default;${ABI}"
 APP_ID="org.traveldna.android"
+SUBSTANTIVE_SHA=${TDNA_SUBSTANTIVE_SHA:-${GITHUB_SHA:-local}}
 
 : "${ANDROID_HOME:?ANDROID_HOME must point to an Android SDK}"
 
@@ -164,23 +165,25 @@ APP_APK=$(find "$ROOT/apps/android/build/outputs/apk/debug" \
 test -n "$APP_APK"
 
 "$ADB" install -r "$APP_APK" > "$OUTPUT_DIR/adb-install.txt"
+grep -Fx 'Success' "$OUTPUT_DIR/adb-install.txt" >/dev/null
 "$ADB" shell am force-stop "$APP_ID"
 "$ADB" shell am start -W -n "$APP_ID/.MainActivity" \
     > "$OUTPUT_DIR/activity-start.txt"
+grep -F 'Status: ok' "$OUTPUT_DIR/activity-start.txt" >/dev/null
 sleep 2
 "$ADB" shell screencap -p /sdcard/tdna-pilot0.png
 "$ADB" pull /sdcard/tdna-pilot0.png \
     "$OUTPUT_DIR/pilot0-screen.png" >/dev/null
 "$ADB" shell pm path "$APP_ID" > "$OUTPUT_DIR/package-path.txt"
+grep -F 'package:' "$OUTPUT_DIR/package-path.txt" >/dev/null
 sha256sum "$APP_APK" > "$OUTPUT_DIR/app-apk-sha256.txt"
 
 MODEL=$("$ADB" shell getprop ro.product.model | tr -d '\r')
 DEVICE_API=$("$ADB" shell getprop ro.build.version.sdk | tr -d '\r')
 SERIAL=$("$ADB" get-serialno | tr -d '\r')
-HEAD_SHA=${GITHUB_SHA:-local}
 
 python3 - "$OUTPUT_DIR/emulator-smoke.json" \
-    "$HEAD_SHA" "$API_LEVEL" "$DEVICE_API" "$ABI" "$MODEL" "$SERIAL" <<'PY'
+    "$SUBSTANTIVE_SHA" "$API_LEVEL" "$DEVICE_API" "$ABI" "$MODEL" "$SERIAL" <<'PY'
 import json
 import sys
 from pathlib import Path
@@ -196,6 +199,8 @@ report = {
     "serial": serial,
     "instrumentation_task": "connectedDebugAndroidTest",
     "app_installed": True,
+    "activity_started": True,
+    "package_visible": True,
     "sensitive_permissions_requested": False,
     "road_evidence": False,
 }
