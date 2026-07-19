@@ -10,11 +10,11 @@ Il progetto nasce dall'esperienza di **TDNA / Travel DNA**, ma il nucleo è prog
 - **Architettura multi-verticale**: Travel, Shopping e gli altri servizi usano capacità comuni senza dipendere gli uni dagli altri.
 - **Mappa come interfaccia territoriale**: luoghi, zone, tratte, conversazioni, richieste, offerte e gruppi sono rappresentabili nel navigatore.
 - **Comunicazione transport-agnostic**: Internet, Wi-Fi, Wi-Fi Direct/Aware, Bluetooth LE, NFC e LoRa sono adapter intercambiabili con capacità differenti.
-- **LoRa come opzione, non dipendenza**: particolarmente utile per discovery e rendezvous a basso consumo e lungo raggio; i contenuti completi passano normalmente attraverso Wi-Fi, rete mobile o Internet.
+- **LoRa come opzione, non dipendenza**: può trasportare trace o rendezvous; i contenuti completi passano normalmente attraverso Wi-Fi, rete mobile o Internet.
 - **Coordinamento umano**: chat geografiche, topic, sottoscrizioni e gruppi permettono agli utenti di confrontarsi e organizzarsi direttamente.
 - **Privacy, sicurezza e trasparenza by design**.
 
-## Componenti previsti
+## Componenti
 
 - **DNA Identity** — identità, pseudonimi e dispositivi.
 - **DNA Exchange** — frammenti, consenso, matching e revoca.
@@ -23,22 +23,37 @@ Il progetto nasce dall'esperienza di **TDNA / Travel DNA**, ma il nucleo è prog
 - **Geo & Navigation Core** — luoghi, aree, tratte, percorsi e ancore geografiche.
 - **Verticali** — TDNA Travel, Shopping DNA e futuri servizi.
 
-## Documentazione
-
-La documentazione architetturale iniziale sarà pubblicata in [`docs/it`](docs/it/README.md).
-
 ## Stato
 
-Repository in fase di fondazione e definizione architetturale. Il primo obiettivo è validare il flusso:
+La baseline v0.1 comprende documentazione, schemi JSON versionati e un simulatore Kotlin/JVM del primo flusso comune:
 
 ```text
 DNA Profile
   → DNA Fragment
   → DNA Trace
   → Discovery / Compatibility
-  → Rendezvous
+  → Consent / Rendezvous
   → GeoRoom o azione di un verticale
 ```
+
+Il simulatore verifica matching Travel e Shopping, consenso, scelta del trasporto, fallback, TTL e deduplicazione. Non è ancora l'SDK Android definitivo.
+
+## Iniziare
+
+```bash
+python3 -m pip install -r requirements-dev.txt
+./scripts/test-reference.sh
+./scripts/run-demo.sh
+```
+
+Sono richiesti Python 3, JDK e `kotlinc` nel `PATH`.
+
+## Risorse
+
+- [Documentazione italiana](docs/it/README.md)
+- [Schemi JSON v0.1](schemas/v0.1/README.md)
+- [Implementazione Kotlin di riferimento](reference/kotlin/README.md)
+- [Esempi](examples/v0.1)
 
 ## Licenza
 

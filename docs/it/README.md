@@ -1,6 +1,6 @@
 # Documentazione italiana di DNA
 
-Questa cartella raccoglie la visione, le decisioni architetturali e la roadmap iniziale della piattaforma DNA.
+Questa cartella raccoglie la visione, le decisioni architetturali, la roadmap e lo stato dell'implementazione iniziale della piattaforma DNA.
 
 ## Ordine di lettura
 
@@ -11,6 +11,13 @@ Questa cartella raccoglie la visione, le decisioni architetturali e la roadmap i
 5. [Shopping DNA](04-shopping-dna.md)
 6. [Roadmap](05-roadmap.md)
 7. [Privacy e sicurezza](06-privacy-sicurezza.md)
+8. [Implementazione di riferimento v0.1](07-implementazione-di-riferimento.md)
+
+## Contratti ed esempi
+
+- [Schemi JSON v0.1](../../schemas/v0.1/README.md)
+- [Implementazione Kotlin di riferimento](../../reference/kotlin/README.md)
+- [Esempi v0.1](../../examples/v0.1)
 
 ## Decisioni architetturali
 
