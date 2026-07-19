@@ -1,0 +1,60 @@
+#!/bin/sh
+set -eu
+
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+COMMAND=${1:-help}
+
+require_travel() {
+  if [ ! -f "$ROOT/domains/travel/tools/tdna" ]; then
+    echo "Travel submodule is missing. Run: git submodule update --init --recursive" >&2
+    exit 2
+  fi
+}
+
+case "$COMMAND" in
+  help)
+    cat <<'EOF'
+usage: sh tools/dna COMMAND
+
+commands:
+  doctor                  show local tool and submodule state
+  check-ci-actions        validate immutable GitHub Action pins
+  check-core-contracts    validate DNA JSON schemas and examples
+  check-core-reference    compile and test the Kotlin reference implementation
+  check-travel            run the TDNA non-emulator verification suite
+  check-travel-emulator   run the isolated Android emulator verification
+  check                   run CI action, core contract and Travel checks
+EOF
+    ;;
+  doctor)
+    python3 --version
+    java -version
+    git -C "$ROOT" submodule status || true
+    ;;
+  check-ci-actions)
+    python3 "$ROOT/tools/check_ci_actions.py" "$ROOT"
+    ;;
+  check-core-contracts)
+    python3 "$ROOT/scripts/validate-schemas.py"
+    ;;
+  check-core-reference)
+    "$ROOT/scripts/test-reference.sh"
+    ;;
+  check-travel)
+    require_travel
+    (cd "$ROOT/domains/travel" && sh tools/tdna check)
+    ;;
+  check-travel-emulator)
+    require_travel
+    (cd "$ROOT/domains/travel" && sh tools/tdna check-android-emulator)
+    ;;
+  check)
+    "$0" check-ci-actions
+    "$0" check-core-contracts
+    "$0" check-travel
+    ;;
+  *)
+    echo "unknown command: $COMMAND" >&2
+    exit 2
+    ;;
+esac
