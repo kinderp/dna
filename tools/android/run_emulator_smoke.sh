@@ -11,6 +11,8 @@ BOOT_TIMEOUT_SECONDS=${TDNA_EMULATOR_BOOT_TIMEOUT_SECONDS:-360}
 SYSTEM_IMAGE="system-images;android-${API_LEVEL};default;${ABI}"
 APP_ID="org.traveldna.android"
 SUBSTANTIVE_SHA=${TDNA_SUBSTANTIVE_SHA:-${GITHUB_SHA:-local}}
+DEFAULT_AVD_ROOT=${RUNNER_TEMP:-$ROOT/build}
+AVD_HOME=${TDNA_AVD_HOME:-$DEFAULT_AVD_ROOT/tdna-avd-$AVD_NAME}
 
 : "${ANDROID_HOME:?ANDROID_HOME must point to an Android SDK}"
 
@@ -32,9 +34,16 @@ fi
 
 rm -rf "$OUTPUT_DIR"
 mkdir -p "$OUTPUT_DIR"
-AVD_HOME="$OUTPUT_DIR/avd"
-AVD_PATH="$AVD_HOME/$AVD_NAME.avd"
+case "$AVD_HOME" in
+    "$OUTPUT_DIR"|"$OUTPUT_DIR"/*)
+        printf 'ERROR: TDNA_AVD_HOME must stay outside artifact output: %s\n' \
+            "$AVD_HOME" >&2
+        exit 1
+        ;;
+esac
+rm -rf "$AVD_HOME"
 mkdir -p "$AVD_HOME"
+AVD_PATH="$AVD_HOME/$AVD_NAME.avd"
 export ANDROID_AVD_HOME="$AVD_HOME"
 EMULATOR_PID=""
 
@@ -63,6 +72,7 @@ cleanup() {
     if [[ -n "$EMULATOR_PID" ]]; then
         wait "$EMULATOR_PID" >/dev/null 2>&1
     fi
+    rm -rf "$AVD_HOME"
 }
 
 on_exit() {
