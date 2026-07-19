@@ -13,11 +13,13 @@ Questa cartella raccoglie la visione, le decisioni architetturali e la roadmap i
 7. [Privacy e sicurezza](06-privacy-sicurezza.md)
 8. [Implementazione di riferimento](07-implementazione-di-riferimento.md)
 9. [Alfred come Observation e Correlation Runtime per DNA](08-alfred-observation-correlation-runtime.md)
+10. [Architettura delle esperienze DNA: mobile, Android Auto e Automotive](09-architettura-esperienze-app-e-automotive.md)
 
 ## Decisioni architetturali
 
 - [ADR-0001 — Discovery indipendente dal trasporto](adr/0001-transport-agnostic-discovery.md)
 - [ADR-0002 — Alfred come piano asincrono di osservazione e correlazione](adr/0002-alfred-observation-plane.md)
+- [ADR-0003 — Un ecosistema, più esperienze specializzate](adr/0003-multi-surface-product-architecture.md)
 
 ## Contratti eseguibili
 
@@ -41,6 +43,8 @@ Questa cartella raccoglie la visione, le decisioni architetturali e la roadmap i
 | **Observation** | Rappresentazione di un fatto, misura, inferenza, azione o outcome con fonte e validità esplicite. |
 | **Correlation Pattern** | Regola versionata che collega osservazioni nel tempo e tra domini producendo un risultato spiegabile. |
 | **DNA-Alfred Bridge** | Adapter asincrono che minimizza e traduce eventi DNA nel piano di osservazione Alfred. |
+| **Surface** | Esperienza di presentazione specifica per telefono, Android Auto, Android Automotive OS, voce o notifiche. |
+| **Domain Lens** | Vista che filtra la piattaforma comune secondo Travel, Shopping, Social, Economy o un altro dominio. |
 
 ## Stato dei documenti
 
