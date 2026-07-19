@@ -12,6 +12,7 @@ Il progetto nasce dall'esperienza di **TDNA / Travel DNA**, ma il nucleo è prog
 - **Comunicazione transport-agnostic**: Internet, Wi-Fi, Wi-Fi Direct/Aware, Bluetooth LE, NFC e LoRa sono adapter intercambiabili con capacità differenti.
 - **LoRa come opzione, non dipendenza**: può trasportare trace o rendezvous; i contenuti completi passano normalmente attraverso Wi-Fi, rete mobile o Internet.
 - **Coordinamento umano**: chat geografiche, topic, sottoscrizioni e gruppi permettono agli utenti di confrontarsi e organizzarsi direttamente.
+- **Un ecosistema, più esperienze**: mobile, Android Auto e Android Automotive OS condividono dominio e identità visiva, ma usano presentazioni specializzate.
 - **Privacy, sicurezza e trasparenza by design**.
 
 ## Componenti
@@ -21,6 +22,8 @@ Il progetto nasce dall'esperienza di **TDNA / Travel DNA**, ma il nucleo è prog
 - **DNA Discovery** — scoperta di prossimità e rendezvous indipendenti dal trasporto.
 - **DNA Commons** — GeoChat, topic, gruppi, sottoscrizioni e moderazione.
 - **Geo & Navigation Core** — luoghi, aree, tratte, percorsi e ancore geografiche.
+- **DNA–Alfred Bridge** — osservazione e correlazione asincrona cross-domain.
+- **Surface adapters** — mobile, Android Auto, Android Automotive OS, voce e notifiche.
 - **Verticali** — TDNA Travel, Shopping DNA e futuri servizi.
 
 ## Stato
@@ -37,6 +40,14 @@ DNA Profile
 ```
 
 Il simulatore verifica matching Travel e Shopping, consenso, scelta del trasporto, fallback, TTL e deduplicazione. Non è ancora l'SDK Android definitivo.
+
+La documentazione definisce inoltre la strategia multi-esperienza:
+
+```text
+una app mobile DNA modulare
++ Android Auto orientato ai compiti di guida
++ una build Android Automotive OS dedicata
+```
 
 ## Iniziare
 
