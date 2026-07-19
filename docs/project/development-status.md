@@ -8,29 +8,33 @@ Last updated: 2026-07-19
 - **Android-first Pilot 0 — in progress**
 - **Pilot 1 controlled road companion — planned**
 
-Recent merges:
+Recent verified merges:
 
 ```text
 Foundations closure  7090882b40e747a85d812decb0b3567a1276d701
 Pilot 0 shell        cc6f4389c3ff03c7b4c3c3a45a3cc3ddc95ae95f
 ```
 
-## Active slice
+## Current serial slice
 
 **Android Pilot 0 v0.2 — emulator smoke, bounded navigation and install evidence**
 
 - issue [#27](https://github.com/kinderp/tdna/issues/27);
 - PR [#28](https://github.com/kinderp/tdna/pull/28);
 - branch `agent/android-pilot0-emulator-smoke`;
-- base `cc6f4389c3ff03c7b4c3c3a45a3cc3ddc95ae95f`;
+- verified base `cc6f4389c3ff03c7b4c3c3a45a3cc3ddc95ae95f`;
 - risk `R2`;
 - chapter `60`;
 - scenario `docs/it/lab/scenarios/android-pilot0-emulator-smoke.md`;
 - report `docs/project/daily/2026-07-19-android-emulator-smoke.md`.
 
-## Current deliverables
+PR #28 is the durable operational ledger for its exact head, CI, bounded artifact,
+clean reviews and merge. This file intentionally does not duplicate transient
+checkboxes that would become stale after merge.
 
-### Merged shell
+## Implementation delivered by the slice
+
+### Existing merged shell
 
 - separate `apps/android` application composition root;
 - AGP 9.3.0, Gradle 9.5.1, SDK 37, min SDK 26;
@@ -43,7 +47,7 @@ Pilot 0 shell        cc6f4389c3ff03c7b4c3c3a45a3cc3ddc95ae95f
 - manifest and plugin-classpath guards;
 - direct Manning/Pluralsight/free learning and purchase guide.
 
-### Active emulator slice
+### Emulator/runtime slice
 
 - bounded `PilotScreen` route model with safe Home fallback;
 - stable semantic tags for navigation items and screen roots;
@@ -51,18 +55,30 @@ Pilot 0 shell        cc6f4389c3ff03c7b4c3c3a45a3cc3ddc95ae95f
 - instrumentation coverage of all four surfaces;
 - Activity recreation test for selected destination;
 - official-SDK AVD runner using API 35 x86_64;
-- bounded boot timeout, logcat, device properties and screenshot diagnostics;
-- dedicated CI job and emulator evidence artifact.
+- explicit AVD path and discovery preflight;
+- bounded SDK install, ADB registration, boot, diagnostics and cleanup;
+- install, Activity start and package visibility assertions;
+- exact-head JSON report and screenshot;
+- AVD disks excluded from bounded review artifacts;
+- dedicated CI job after the complete Foundation/Android build gate.
 
-## Gate
+## Operational closure rule
 
-- sole open PR: #28;
-- final substantive SHA: not fixed while findings/documentation can change;
-- build CI: development run required;
-- emulator CI: development run required;
-- unresolved threads: none at slice start;
-- clean reviews: `0 / 2`;
-- merge only after both jobs are green on the exact head and expected-head guard.
+The slice is considered complete only when PR #28 records:
+
+```text
+one exact substantive head
+-> Foundation/build job green
+-> emulator runtime job green
+-> bounded artifact inspected
+-> no unresolved threads
+-> two clean reviews on the same SHA
+-> expected-head merge
+-> issue/main/open-PR verification
+```
+
+Until that ledger is complete, merge remains forbidden. After merge, the same PR
+continues to be the authoritative evidence without requiring a post-review commit.
 
 ## Pilot windows
 
