@@ -164,7 +164,27 @@ Correction:
 - navigation tags and screen tags are asserted explicitly;
 - uniqueness remains a separate invariant.
 
-All four findings produced substantive commits, so clean reviews remain `0 / 2`
+## Finding 5 — implementation-backed documentation drift
+
+The first attempted clean round was followed by an independent architecture and
+documentation review. Chapter 60 and the executable scenario still described the
+pre-fix runner contract: direct `TDNA_AVD_HOME` ownership, generic ADB operations,
+KVM mutation in the runner and only the earlier development findings.
+
+That mismatch was substantive because the chapter is marked implementation-backed
+and teaches the ownership and failure model of the code.
+
+Correction:
+
+- chapter 60 now documents `TDNA_AVD_ROOT` plus a unique `mktemp` child;
+- fixed port and serial, `adb -s`, `ANDROID_SERIAL` and other-device rejection are
+  part of the documented contract;
+- KVM preparation is separated from the public command;
+- exact route/tag tests and all resolved findings are described;
+- the Lab scenario uses the same state ownership, runtime assertions and failure
+  modes as the implementation.
+
+All five findings produced substantive commits, so clean reviews remain `0 / 2`
 until a new exact-head CI is green and two new rounds complete.
 
 ## Expected final evidence
@@ -209,5 +229,6 @@ rounds.
 
 ## Next step
 
-Obtain one exact-head green run after the review fixes, inspect the bounded
-artifacts, run two clean review rounds and merge with expected-head verification.
+Obtain one exact-head green run after the documentation alignment, inspect the
+bounded artifacts, run two clean review rounds and merge with expected-head
+verification.
