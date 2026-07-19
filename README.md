@@ -34,7 +34,10 @@ Travel è il primo dominio applicativo della piattaforma. Durante la migrazione,
 git clone --recurse-submodules https://github.com/kinderp/dna.git
 cd dna
 git submodule update --init --recursive
+sh tools/dna check-travel-revision
 ```
+
+Per clone esistenti, cambio branch, aggiornamento del puntatore, detached HEAD e recupero errori leggere la [guida Git submodule](docs/governance/02-git-submodules.md).
 
 ## Controlli
 
@@ -42,6 +45,7 @@ git submodule update --init --recursive
 python3 -m pip install -r requirements-dev.txt
 sh tools/dna check-core-contracts
 sh tools/dna check-core-reference
+sh tools/dna check-travel-revision
 sh tools/dna check-travel
 ```
 
@@ -54,6 +58,7 @@ sh tools/dna check-travel-emulator
 ## Migrazione TDNA
 
 - [Manifest e strategia](docs/migration/tdna-import.md)
+- [Comandi Git submodule per studenti e contributori](docs/governance/02-git-submodules.md)
 - sorgente fissata: `kinderp/tdna@85c73ab78dd56506c5595673098adf514765de9c`
 - `kinderp/tdna` non viene archiviato finché l'import history-aware e i test del monorepo non sono completati.
 
@@ -61,6 +66,8 @@ sh tools/dna check-travel-emulator
 
 - [Documentazione italiana](docs/it/README.md)
 - [Governance](docs/governance/00-operational-rules.md)
+- [Review e merge](docs/governance/01-review-and-merge.md)
+- [Guida Git submodule](docs/governance/02-git-submodules.md)
 - [Schemi JSON v0.1](schemas/v0.1/README.md)
 - [Implementazione Kotlin di riferimento](reference/kotlin/README.md)
 - [Issue di migrazione](https://github.com/kinderp/dna/issues/3)
