@@ -2,7 +2,7 @@
 
 ## Stato
 
-`implementation-backed in PR #28`
+`implementation-backed in PR #28; operational closure in the PR ledger`
 
 Questo capitolo descrive la seconda slice Android del Pilot 0. La shell precedente
 compilava unit test, lint, APK debug e APK instrumentation; questa slice aggiunge
@@ -26,8 +26,9 @@ Al termine dovresti saper spiegare:
 4. perché i test Compose usano semantics e non coordinate pixel;
 5. come viene creato, scoperto, avviato e fermato un AVD headless;
 6. perché registrazione ADB e boot devono avere un deadline;
-7. quali evidenze produce la CI e quali restano assenti;
-8. perché un emulatore verde non autorizza ancora un pilot su strada.
+7. perché i dischi AVD non sono artifact di review;
+8. quali evidenze produce la CI e quali restano assenti;
+9. perché un emulatore verde non autorizza un pilot su strada.
 
 ## Slice
 
@@ -36,6 +37,9 @@ Al termine dovresti saper spiegare:
 - branch `agent/android-pilot0-emulator-smoke`;
 - base `cc6f4389c3ff03c7b4c3c3a45a3cc3ddc95ae95f`;
 - rischio `R2`.
+
+Il ledger esatto di SHA, CI, artifact, review e merge è nella PR. Il capitolo resta
+valido sia durante la review sia dopo il merge.
 
 ## Problema affrontato
 
@@ -194,7 +198,8 @@ compatibilità runtime, non una matrice di versioni o produttori.
 ```text
 verifica ANDROID_HOME, tool e command timeout
 -> installa/aggiorna emulator e system image dichiarata
--> imposta ANDROID_AVD_HOME dentro build/android-emulator
+-> imposta ANDROID_AVD_HOME in RUNNER_TEMP o build/tdna-avd-*
+-> rifiuta una AVD home dentro build/android-emulator
 -> crea AVD con path esplicito
 -> verifica il nome con emulator -list-avds
 -> abilita KVM quando disponibile
@@ -204,11 +209,12 @@ verifica ANDROID_HOME, tool e command timeout
 -> disabilita animazioni
 -> assembleDebug + assembleDebugAndroidTest
 -> connectedDebugAndroidTest
--> installa esplicitamente APK debug
--> avvia MainActivity
--> acquisisce screenshot e package path
--> produce report JSON e checksum
--> arresta emulatore
+-> installa esplicitamente APK debug e verifica Success
+-> avvia MainActivity e verifica Status: ok
+-> verifica package path
+-> acquisisce screenshot e checksum
+-> produce report JSON legato allo SHA sostanziale
+-> arresta emulatore e cancella AVD home
 ```
 
 ## Timeout e stato bounded
@@ -223,28 +229,27 @@ singolo comando diagnostico 10 secondi
 job GitHub Actions        35 minuti
 ```
 
-Il runner non usa più `adb wait-for-device`, perché quell'operazione può attendere
+Il runner non usa `adb wait-for-device`, perché quell'operazione può attendere
 indefinitamente quando il processo emulatore è già terminato. Un loop controlla
-invece insieme:
+insieme `adb get-state`, PID e deadline.
+
+Le aree hanno ownership diverse:
 
 ```text
-adb get-state
-PID del processo emulator
-deadline monotona del runner
-```
+RUNNER_TEMP/tdna-avd-* oppure build/tdna-avd-*
+    stato pesante e usa-e-getta del dispositivo virtuale
 
-Ogni esecuzione elimina e ricrea:
-
-```text
 build/android-emulator
+    report, log, testo e screenshot bounded da revisionare
 ```
 
-L'AVD vive in una `ANDROID_AVD_HOME` esplicita sotto tale directory, con dati
-puliti e senza snapshot persistenti.
+La AVD home viene eliminata nel cleanup e non deve mai essere inclusa negli
+artifact. L'upload CI consente soltanto file top-level `.json`, `.txt`, `.log` e
+`.png`, oltre ai report connected-test dichiarati.
 
-## Finding del primo run emulatore
+## Finding 1 — AVD non scoperto e attesa infinita
 
-La run di sviluppo #240 ha prodotto questo log:
+La run di sviluppo #240 ha prodotto:
 
 ```text
 Unknown AVD name [tdna_pilot0_api35]
@@ -252,20 +257,36 @@ HOME is defined but there is no file tdna_pilot0_api35.ini
 ```
 
 `avdmanager` aveva terminato senza rendere l'AVD visibile nel percorso cercato da
-`emulator`. Il processo emulatore è quindi uscito immediatamente. Subito dopo lo
-script era entrato in `adb wait-for-device`, che non controllava né PID né deadline;
-il job è stato cancellato soltanto dal timeout esterno.
+`emulator`. Il processo è uscito immediatamente; `adb wait-for-device` ha poi
+atteso fino al timeout esterno.
 
-La correzione è strutturale:
+Correzione:
 
-1. `ANDROID_AVD_HOME` è esplicita e contenuta negli artifact;
-2. `avdmanager --path` crea l'AVD nel percorso dichiarato;
-3. `emulator -list-avds` verifica l'identità prima dell'avvio;
-4. la registrazione ADB è un loop bounded;
-5. l'uscita prematura del processo fallisce immediatamente;
-6. diagnostica e cleanup hanno a loro volta timeout.
+1. AVD home e path espliciti;
+2. preflight `emulator -list-avds`;
+3. registrazione ADB bounded;
+4. controllo PID durante registrazione e boot;
+5. diagnostica e cleanup con timeout.
 
-Questo finding è sostanziale e azzera qualunque conteggio di review precedente.
+## Finding 2 — artifact da 512 MB
+
+La run di sviluppo #246 ha completato build, boot, test, installazione e upload,
+ma l'artifact emulatore misurava circa 512 MB perché la AVD home viveva dentro
+`build/android-emulator/**`.
+
+Il contenuto comprendeva dischi e configurazioni del device virtuale: dati
+riproducibili, voluminosi e inutili per la review. Il finding non invalida i test,
+ma invalida la policy di artifact della run.
+
+Correzione:
+
+1. AVD home spostata fuori dall'output evidence;
+2. rifiuto fail-fast se `TDNA_AVD_HOME` ricade nell'area artifact;
+3. cancellazione AVD nel cleanup;
+4. upload allowlisted per estensione e report connected-test;
+5. SHA sostanziale passato esplicitamente dal workflow.
+
+Entrambi i finding sono sostanziali e azzerano il conteggio delle review.
 
 ## Diagnostica in caso di errore
 
@@ -281,9 +302,8 @@ logcat.txt
 failure-screen.png, quando disponibile
 ```
 
-Il processo viene arrestato anche quando Gradle o un test falliscono. Ogni comando
-ADB diagnostico è bounded, così la raccolta delle prove non può diventare un
-secondo blocco infinito.
+Ogni comando ADB diagnostico è bounded, così la raccolta delle prove non diventa
+un secondo blocco infinito.
 
 ## Evidenza di successo
 
@@ -305,10 +325,13 @@ model
 serial
 instrumentation_task
 app_installed
+activity_started
+package_visible
 sensitive_permissions_requested
 road_evidence
 ```
 
+`head_sha` arriva dal checkout sostanziale della CI, non dal merge ref implicito.
 `road_evidence` rimane esplicitamente `false`.
 
 Altri output:
@@ -327,9 +350,9 @@ I report HTML/XML di Android Test vengono caricati nello stesso artifact.
 
 Una CI verde dimostra:
 
-- checkout pulito;
+- checkout pulito e identità dello SHA;
 - creazione, discovery e boot del device dichiarato;
-- installazione dell'APK;
+- installazione dell'APK e avvio Activity;
 - esecuzione dei test instrumentation;
 - navigazione semantica delle quattro superfici;
 - restore durante Activity recreation;
@@ -353,8 +376,11 @@ Non dimostra:
 
 ### AVD non visibile
 
-La lista AVD non contiene il nome dichiarato; il runner fallisce prima di avviare
-un processo destinato a terminare.
+La lista AVD non contiene il nome dichiarato; il runner fallisce prima del launch.
+
+### AVD dentro l'area artifact
+
+Il runner rifiuta la configurazione prima di scaricare o avviare il device.
 
 ### Emulatore termina prima di ADB
 
@@ -364,29 +390,24 @@ Il PID viene controllato durante la registrazione e il runner fallisce subito.
 
 La deadline condivisa chiude il run e raccoglie diagnosi.
 
-### Test non trova un nodo
+### Test o asserzione runtime fallisce
 
-Il report instrumentation identifica test e asserzione; bisogna verificare il
-contratto semantico prima di cambiare il test.
-
-### Stato non ripristinato
-
-Il test di recreation fallisce sulla superficie `Demo`; la correzione deve
-preservare ownership e serializzabilità senza aggiungere storage globale.
+I report e i file `adb-install.txt`, `activity-start.txt` e `package-path.txt`
+mostrano quale contratto non è stato soddisfatto.
 
 ## Esercizi
 
 1. Aggiungere una destinazione fittizia e aggiornare test e tag.
 2. Dimostrare che una route sconosciuta non causa crash.
 3. Rompere volontariamente un tag e leggere il report instrumentation.
-4. Usare un nome AVD non valido e verificare il fail-fast.
+4. Impostare `TDNA_AVD_HOME` sotto l'output e verificare il fail-fast.
 5. Ridurre il timeout di boot e osservare gli artifact diagnostici.
 6. Spiegare Activity recreation, process death e reboot.
 7. Proporre una matrice fisica minima senza equipararla all'emulatore.
 
 ## Passo successivo
 
-Dopo il merge della slice restano separati:
+Dopo la chiusura operativa della slice restano separati:
 
 ```text
 installazione su telefono fisico
