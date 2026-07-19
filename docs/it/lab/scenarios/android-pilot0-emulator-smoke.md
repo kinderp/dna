@@ -31,6 +31,14 @@ installazione, instrumentation, Activity recreation e prova fisica.
 sh tools/tdna check-android-emulator
 ```
 
+In CI il workflow passa anche:
+
+```text
+TDNA_SUBSTANTIVE_SHA = pull_request.head.sha oppure github.sha su push
+```
+
+Il report non deve derivare lo SHA dal merge ref implicito di un evento PR.
+
 ## Percorso
 
 ```text
@@ -38,10 +46,12 @@ PilotScreen route/tag contract
 -> Compose NavigationBar semantics
 -> MainActivitySmokeTest
 -> official SDK system image
--> AVD headless
+-> AVD home/path espliciti
+-> AVD discovery preflight
+-> ADB registration + boot bounded
 -> connectedDebugAndroidTest
--> explicit APK install/start
--> screenshot + package evidence
+-> explicit APK install/start/package checks
+-> screenshot + checksum
 -> emulator-smoke.json
 ```
 
@@ -56,20 +66,22 @@ build/android-emulator/app-apk-sha256.txt
 Android connected-test XML/HTML reports
 ```
 
-Il report deve dichiarare:
+Il report deve dichiarare almeno:
 
 ```json
-{"app_installed":true,"instrumentation_task":"connectedDebugAndroidTest","road_evidence":false,"scenario":"android-pilot0-emulator-smoke-v0","sensitive_permissions_requested":false}
+{"activity_started":true,"app_installed":true,"instrumentation_task":"connectedDebugAndroidTest","package_visible":true,"road_evidence":false,"scenario":"android-pilot0-emulator-smoke-v0","sensitive_permissions_requested":false}
 ```
 
-Gli altri campi dipendono dal runner e dal commit esatto.
+`head_sha` deve coincidere con lo SHA sostanziale del checkout e dell'intera CI.
+Gli altri campi dichiarano API richiesta/reale, ABI, modello e seriale emulatore.
 
 ## State ownership
 
 - `PilotScreen`: insieme chiuso delle destinazioni;
 - `selectedRoute`: stato visuale salvabile posseduto da `TravelDnaApp`;
 - Activity/Compose: restore durante recreation;
-- script emulatore: lifecycle del processo AVD e della diagnostica;
+- workflow: identità dello SHA sostanziale;
+- script emulatore: lifecycle AVD, deadline e diagnostica;
 - Gradle Android Test: installazione ed esecuzione dei test.
 
 ## Existing tests
@@ -81,17 +93,36 @@ Gli altri campi dipendono dal runner e dal commit esatto.
 - destinazione Demo conservata dopo recreation;
 - manifest sorgente/fuso privo di permessi vietati.
 
+## Runtime assertions
+
+Dopo i test instrumentation il runner verifica esplicitamente:
+
+```text
+adb install output == Success
+am start -W contiene Status: ok
+pm path restituisce package:
+```
+
+Solo dopo queste asserzioni scrive `app_installed`, `activity_started` e
+`package_visible` come `true`.
+
 ## Failure evidence
 
 In caso di errore il runner tenta di salvare:
 
 ```text
+avdmanager-create.log
+avd-list.txt
 adb-devices.txt
 logcat.txt
 device-properties.txt
 emulator.log
 failure-screen.png
 ```
+
+Ogni comando diagnostico è bounded. Un processo emulatore terminato prima della
+registrazione ADB deve produrre un fallimento immediato, non attendere il timeout
+del job.
 
 ## Non-goals
 
@@ -108,8 +139,9 @@ failure-screen.png
 1. Perché una APK instrumentation compilata non è un test eseguito?
 2. Quale stato viene provato da `ActivityScenario.recreate()`?
 3. Perché il test usa tag semantici e non coordinate?
-4. Quali failure possono avvenire prima dell'avvio dell'app?
-5. Perché il report mantiene `road_evidence=false`?
+4. Perché `adb wait-for-device` non è sufficiente come deadline?
+5. Perché il report riceve lo SHA sostanziale dal workflow?
+6. Perché `road_evidence` rimane `false`?
 
 ## Related docs
 
