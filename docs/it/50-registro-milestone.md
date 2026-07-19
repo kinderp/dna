@@ -6,7 +6,7 @@
 | --- | --- | --- | --- | --- |
 | 0 | Documentation Foundation v0 | done | Regole, ADR, architettura e roadmap. | Codice mobile. |
 | 1 | Foundations and Travel DNA Lab v0 | done | Build, contratti, fake, replay, matching, reroute e libro. | Provider/GPS reali. |
-| 2 | Android Pilot 0 | in-progress | APK didattica installabile, Compose e shared contracts. | Uso su strada. |
+| 2 | Android Pilot 0 | in-progress | APK didattica, Compose, shared contracts e runtime evidence. | Uso su strada. |
 | 3 | Android Pilot 1 | planned | Foreground trip companion e navigatori esterni. | Turn-by-turn TDNA. |
 | 4 | Canonical Route and Map | planned | MapLibre adapter e benchmark device. | Mappa completa subito. |
 | 5 | Journey Journal v0 | planned | Event store, soste, media e pagina del giorno. | Cloud pubblico. |
@@ -28,30 +28,48 @@
 | Map matching | #19 / #20 | `95cf2f0d900b039efb86ba0a570e3ca3f8d8cef5` |
 | Missed exit/reroute | #21 / #22 | `8570eb466b43384756f2678da2303929295e087a` |
 | Wrapper/Foundations closure | #23 / #24 | `7090882b40e747a85d812decb0b3567a1276d701` |
+| Android Pilot 0 shell | #25 / #26 | `cc6f4389c3ff03c7b4c3c3a45a3cc3ddc95ae95f` |
 
-## Slice attiva — Android Pilot 0 shell
+Le issue Foundation aggregate #1 e #2 sono state chiuse come completate dopo la
+verifica del merge Android-first e dell'inventario del tracker.
 
-- issue [#25](https://github.com/kinderp/tdna/issues/25);
-- PR [#26](https://github.com/kinderp/tdna/pull/26);
-- base `7090882b40e747a85d812decb0b3567a1276d701`;
+## Slice attiva — Android Pilot 0 v0.2 emulator smoke
+
+- issue [#27](https://github.com/kinderp/tdna/issues/27);
+- PR [#28](https://github.com/kinderp/tdna/pull/28);
+- branch `agent/android-pilot0-emulator-smoke`;
+- base `cc6f4389c3ff03c7b4c3c3a45a3cc3ddc95ae95f`;
 - rischio `R2`;
-- ADR [0010](../adr/0010-android-first-pilot-sequence.md).
+- capitolo [60](60-emulator-smoke-e-navigazione-pilot0.md).
 
 Deliverable:
 
-- [x] decisione Android-first e finestre Pilot 0/1/2;
-- [x] roadmap stack/APK/requisiti/acquisti;
-- [x] percorso studio Manning/Pluralsight/ufficiale;
-- [x] protocollo del futuro pilot stradale;
-- [x] modulo `apps/android` separato;
-- [x] shell Compose permission-free;
-- [x] consumo di contratti shared;
-- [x] unit/instrumentation source;
-- [x] CI Android e artifact path;
-- [ ] CI verde sul final substantive head;
-- [ ] installazione emulatore/telefono documentata;
+- [x] destinazioni tipizzate e fallback sicuro;
+- [x] semantic tag stabili per navigation e screen;
+- [x] unit test route/tag/fallback;
+- [x] instrumentation test delle quattro superfici;
+- [x] test di Activity recreation;
+- [x] runner AVD basato su Android SDK ufficiale;
+- [x] timeout boot e diagnostica bounded;
+- [x] job CI emulatore separato;
+- [x] capitolo e scenario implementation-backed;
+- [ ] CI build verde sul final substantive head;
+- [ ] CI emulator smoke verde sullo stesso SHA;
+- [ ] artifact e report emulatore verificati;
 - [ ] due round puliti sullo stesso SHA;
-- [ ] expected-head merge.
+- [ ] expected-head merge e post-merge verification.
+
+## Stato del Pilot 0
+
+```text
+0.1 shell/build/APK                 merged
+0.2 navigation/runtime emulator     active
+0.3 replay e route progress UI      planned
+0.4 missed-exit/reroute UI          planned
+```
+
+L'esecuzione su emulatore non sostituisce l'installazione su un telefono fisico.
+La prova fisica, font scaling e TalkBack restano un gate successivo del Pilot 0.
 
 ## Regole
 
