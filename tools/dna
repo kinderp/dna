@@ -13,7 +13,7 @@ require_travel() {
 }
 
 travel_recorded_sha() {
-  git -C "$ROOT" ls-tree HEAD domains/travel | awk '{print $3}'
+  git -C "$ROOT" ls-files --stage -- domains/travel | awk '$1 == "160000" {print $2}'
 }
 
 travel_checked_out_sha() {
@@ -26,7 +26,7 @@ check_travel_revision() {
   checked_out=$(travel_checked_out_sha)
 
   if [ -z "$recorded" ]; then
-    echo "Travel gitlink is not recorded in the current DNA commit" >&2
+    echo "Travel gitlink is not recorded in the current DNA index" >&2
     exit 1
   fi
 
