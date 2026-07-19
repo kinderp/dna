@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "0.1",
+  "intentId": "travel-001",
+  "ownerEphemeralId": "ephemeral-traveler-001",
+  "domain": "travel",
+  "intentType": "shared_transfer",
+  "attributes": {
+    "origin": "Messina",
+    "destination": "CTA",
+    "passengers": 2,
+    "hasStroller": true
+  },
+  "geoAnchor": {
+    "anchorId": "route:messina-cta",
+    "kind": "route",
+    "label": "Messina → Aeroporto di Catania",
+    "precision": "approximate",
+    "polyline": [[15.55, 38.19], [15.07, 37.47]],
+    "corridorMeters": 10000
+  },
+  "visibility": "matched_only",
+  "validFrom": "2026-07-24T04:00:00Z",
+  "validUntil": "2026-07-24T06:00:00Z",
+  "revocable": true,
+  "consentRef": "consent:travel-nearby-v1"
+}

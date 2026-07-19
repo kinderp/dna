@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kinderp/dna/schemas/v0.1/dna-trace.schema.json",
+  "title": "DNATrace v0.1",
+  "description": "Rappresentazione minimale, pseudonima e temporanea destinata alla discovery.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "traceId", "ephemeralSenderId", "domains", "intentCodes", "rendezvousCapabilities", "issuedAt", "expiresAt", "nonce", "authenticator"],
+  "properties": {
+    "schemaVersion": { "const": "0.1" },
+    "traceId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "ephemeralSenderId": { "type": "string", "minLength": 8, "maxLength": 128 },
+    "domains": {
+      "type": "array",
+      "items": { "enum": ["travel", "shopping", "social", "mobility", "local_services"] },
+      "uniqueItems": true,
+      "minItems": 1,
+      "maxItems": 8
+    },
+    "intentCodes": {
+      "type": "array",
+      "items": { "type": "integer", "minimum": 0, "maximum": 65535 },
+      "uniqueItems": true,
+      "maxItems": 16
+    },
+    "coarseGeoCell": { "type": "string", "minLength": 1, "maxLength": 32 },
+    "rendezvousCapabilities": {
+      "type": "array",
+      "items": { "enum": ["internet", "ble", "nfc", "wifi_aware", "wifi_direct", "lora", "qr"] },
+      "uniqueItems": true,
+      "minItems": 1,
+      "maxItems": 8
+    },
+    "issuedAt": { "type": "string", "format": "date-time" },
+    "expiresAt": { "type": "string", "format": "date-time" },
+    "nonce": { "type": "integer", "minimum": 0 },
+    "authenticator": { "type": "string", "contentEncoding": "base64", "maxLength": 128 }
+  }
+}

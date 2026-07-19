@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "0.1",
+  "traceId": "trace-001",
+  "ephemeralSenderId": "ephemeral-shopper-001",
+  "domains": ["shopping", "social"],
+  "intentCodes": [1001, 3004],
+  "coarseGeoCell": "it-sic-me-042",
+  "rendezvousCapabilities": ["internet", "ble", "nfc"],
+  "issuedAt": "2026-07-19T10:30:00Z",
+  "expiresAt": "2026-07-19T10:45:00Z",
+  "nonce": 42,
+  "authenticator": "YWJjZGVmZ2g="
+}

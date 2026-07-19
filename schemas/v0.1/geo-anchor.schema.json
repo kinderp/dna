@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kinderp/dna/schemas/v0.1/geo-anchor.schema.json",
+  "title": "GeoAnchor v0.1",
+  "description": "Ancora geografica indipendente dal verticale: punto, area o tratta.",
+  "oneOf": [
+    { "$ref": "#/$defs/pointAnchor" },
+    { "$ref": "#/$defs/areaAnchor" },
+    { "$ref": "#/$defs/routeAnchor" }
+  ],
+  "$defs": {
+    "coordinate": {
+      "type": "array",
+      "prefixItems": [
+        { "type": "number", "minimum": -180, "maximum": 180 },
+        { "type": "number", "minimum": -90, "maximum": 90 }
+      ],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "pointAnchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["anchorId", "kind", "coordinate"],
+      "properties": {
+        "anchorId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "kind": { "const": "point" },
+        "label": { "type": "string", "maxLength": 200 },
+        "precision": { "enum": ["exact", "approximate", "coarse"] },
+        "coordinate": { "$ref": "#/$defs/coordinate" },
+        "radiusMeters": { "type": "number", "minimum": 0, "maximum": 100000 }
+      }
+    },
+    "areaAnchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["anchorId", "kind", "polygon"],
+      "properties": {
+        "anchorId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "kind": { "const": "area" },
+        "label": { "type": "string", "maxLength": 200 },
+        "precision": { "enum": ["exact", "approximate", "coarse"] },
+        "polygon": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/coordinate" },
+          "minItems": 4,
+          "maxItems": 500
+        }
+      }
+    },
+    "routeAnchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["anchorId", "kind", "polyline"],
+      "properties": {
+        "anchorId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "kind": { "const": "route" },
+        "label": { "type": "string", "maxLength": 200 },
+        "precision": { "enum": ["exact", "approximate", "coarse"] },
+        "polyline": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/coordinate" },
+          "minItems": 2,
+          "maxItems": 5000
+        },
+        "corridorMeters": { "type": "number", "minimum": 0, "maximum": 100000 }
+      }
+    }
+  }
+}

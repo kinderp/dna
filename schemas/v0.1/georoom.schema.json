@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kinderp/dna/schemas/v0.1/georoom.schema.json",
+  "title": "GeoRoom v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "roomId", "roomType", "anchor", "topics", "visibility", "createdAt", "expiresAt"],
+  "properties": {
+    "schemaVersion": { "const": "0.1" },
+    "roomId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "roomType": { "enum": ["place", "area", "route", "intent", "transaction"] },
+    "anchor": { "$ref": "geo-anchor.schema.json" },
+    "domains": {
+      "type": "array",
+      "items": { "enum": ["travel", "shopping", "social", "mobility", "local_services"] },
+      "uniqueItems": true
+    },
+    "topics": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9_-]{1,63}$" },
+      "uniqueItems": true,
+      "maxItems": 64
+    },
+    "visibility": { "enum": ["public", "members", "matched_only", "transaction_private"] },
+    "participantEphemeralIds": { "type": "array", "items": { "type": "string", "maxLength": 128 }, "uniqueItems": true },
+    "sourceCompatibilityId": { "type": "string", "maxLength": 128 },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "expiresAt": { "type": "string", "format": "date-time" }
+  }
+}

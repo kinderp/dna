@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "0.1",
+  "purpose": "discover-group-purchase",
+  "requiredFeatures": ["broadcast", "background_discovery"],
+  "preferredTransports": ["ble", "lora", "internet"],
+  "forbiddenTransports": [],
+  "maximumPayloadBytes": 96,
+  "maximumEnergyCost": "medium",
+  "maximumMonetaryCost": "low",
+  "maximumPrivacyExposure": "high",
+  "urgency": "normal",
+  "retry": {
+    "maxAttempts": 2,
+    "backoffMillis": 500
+  },
+  "expiresAt": "2026-07-19T10:45:00Z",
+  "fallbackAllowed": true,
+  "consentRef": "consent:nearby-discovery-v1"
+}

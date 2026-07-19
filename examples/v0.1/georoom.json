@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "0.1",
+  "roomId": "room-group-purchase-001",
+  "roomType": "intent",
+  "anchor": {
+    "anchorId": "area:rometta-spadafora",
+    "kind": "area",
+    "label": "Rometta–Spadafora",
+    "precision": "coarse",
+    "polygon": [[15.40, 38.22], [15.45, 38.22], [15.45, 38.27], [15.40, 38.22]]
+  },
+  "domains": ["shopping"],
+  "topics": ["group-purchase"],
+  "visibility": "matched_only",
+  "participantEphemeralIds": ["ephemeral-shopper-001", "ephemeral-shopper-002"],
+  "sourceCompatibilityId": "compatibility-001",
+  "createdAt": "2026-07-19T10:31:00Z",
+  "expiresAt": "2026-07-19T16:31:00Z"
+}

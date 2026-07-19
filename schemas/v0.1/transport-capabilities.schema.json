@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kinderp/dna/schemas/v0.1/transport-capabilities.schema.json",
+  "title": "TransportCapabilities v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["transportId", "features", "maxPayloadBytes", "rangeClass", "latencyClass", "energyCostClass", "monetaryCostClass", "privacyExposureClass"],
+  "$defs": {
+    "featureList": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "broadcast", "peer_to_peer", "infrastructure", "background_discovery",
+          "acknowledgement", "multicast", "high_bandwidth", "offline_operation",
+          "range_estimate", "proximity_proof", "mutual_authentication", "explicit_gesture"
+        ]
+      },
+      "uniqueItems": true
+    }
+  },
+  "properties": {
+    "transportId": { "type": "string", "pattern": "^[a-z][a-z0-9_.-]{1,63}$" },
+    "features": { "$ref": "#/$defs/featureList" },
+    "maxPayloadBytes": { "type": "integer", "minimum": 1, "maximum": 1000000000 },
+    "rangeClass": { "enum": ["touch", "near", "local", "regional", "global"] },
+    "latencyClass": { "enum": ["realtime", "interactive", "delayed", "opportunistic"] },
+    "energyCostClass": { "enum": ["very_low", "low", "medium", "high"] },
+    "monetaryCostClass": { "enum": ["free", "low", "metered", "high"] },
+    "privacyExposureClass": { "enum": ["low", "medium", "high"] },
+    "regulatoryConstraints": { "type": "array", "items": { "type": "string", "maxLength": 256 }, "maxItems": 32 }
+  }
+}
