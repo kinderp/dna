@@ -4,12 +4,9 @@
 
 `implementation-backed in PR #28`
 
-Questo capitolo descrive la seconda slice Android del Pilot 0. La prima shell
+Questo capitolo descrive la seconda slice Android del Pilot 0. La shell precedente
 compilava unit test, lint, APK debug e APK instrumentation; questa slice aggiunge
-la prova che l'app viene realmente installata ed eseguita su un runtime Android
-in CI.
-
-La distinzione è importante:
+la prova che l'app viene installata ed eseguita su un runtime Android in CI.
 
 ```text
 APK compilata
@@ -27,9 +24,10 @@ Al termine dovresti saper spiegare:
 2. come `rememberSaveable` interagisce con la ricreazione dell'Activity;
 3. perché le destinazioni devono avere identificatori stabili;
 4. perché i test Compose usano semantics e non coordinate pixel;
-5. come viene avviato e fermato un emulatore headless;
-6. quali evidenze produce la CI e quali restano assenti;
-7. perché un emulatore verde non autorizza ancora un pilot su strada.
+5. come viene creato, scoperto, avviato e fermato un AVD headless;
+6. perché registrazione ADB e boot devono avere un deadline;
+7. quali evidenze produce la CI e quali restano assenti;
+8. perché un emulatore verde non autorizza ancora un pilot su strada.
 
 ## Slice
 
@@ -41,20 +39,19 @@ Al termine dovresti saper spiegare:
 
 ## Problema affrontato
 
-La shell iniziale possedeva quattro destinazioni e un test instrumentation
-compilato, ma la CI non avviava un dispositivo Android. Non era quindi provato
-che:
+La prima shell possedeva quattro destinazioni e un test instrumentation compilato,
+ma la CI non avviava un dispositivo Android. Non era quindi provato che:
 
 - l'Activity partisse su Android;
 - ogni voce della navigation bar fosse raggiungibile;
 - i nodi Compose fossero individuabili semanticamente;
 - la destinazione selezionata sopravvivesse alla ricreazione dell'Activity;
-- l'APK potesse essere installata dall'Android Debug Bridge;
+- l'APK potesse essere installata con ADB;
 - i test instrumentation venissero realmente eseguiti.
 
 ## Navigazione bounded
 
-Le destinazioni del Pilot 0 sono un insieme chiuso:
+Le destinazioni costituiscono un insieme chiuso:
 
 ```text
 home
@@ -79,17 +76,15 @@ PilotScreen.fromSavedRoute(route)
 ```
 
 Una route nota restituisce la destinazione corrispondente. `null` o una stringa
-sconosciuta tornano a `Home`. Il processo non usa `valueOf`, quindi un valore
-obsoleto o corrotto non deve causare un'eccezione durante la composizione.
+sconosciuta tornano a `Home`. Il processo non usa `valueOf`, quindi un dato
+obsoleto o corrotto non causa un'eccezione durante la composizione.
 
-## Perché la route non coincide con il nome dell'enum
+### Route e nome dell'enum
 
-Il nome Kotlin è una scelta di implementazione. La route è il dato persistito.
-Separarli permette in futuro di rinominare una costante senza trasformare
-involontariamente una refactor in una migrazione dello stato salvato.
-
-Per questa slice le route non sono deep link pubblici e non costituiscono ancora
-un contratto di navigazione esterno.
+Il nome Kotlin è una scelta di implementazione; la route è il dato persistito.
+Separarli permette di rinominare una costante senza trasformare una refactor in
+una migrazione involontaria dello stato salvato. Queste route non sono ancora deep
+link pubblici.
 
 ## Semantics e test tag
 
@@ -107,7 +102,7 @@ pilot-screen-demo
 pilot-screen-study
 ```
 
-I test eseguono:
+Il percorso di test è:
 
 ```text
 find navigation node by semantic tag
@@ -116,17 +111,13 @@ find navigation node by semantic tag
 -> assert displayed
 ```
 
-Non usano coordinate dello schermo, dimensioni del dispositivo o colori. Un test
-basato sui pixel sarebbe fragile rispetto a font scaling, densità, layout e
-accessibilità.
-
-I tag sono strumenti di test e diagnostica. Non sostituiscono label e contenuti
-accessibili agli utenti.
+Non usa coordinate, densità o colori. I tag sono strumenti di test e diagnostica;
+non sostituiscono label e contenuti accessibili agli utenti.
 
 ## Ricreazione dell'Activity
 
-Il test seleziona `Demo`, verifica la superficie, invoca la ricreazione
-controllata dell'Activity e verifica nuovamente la stessa superficie.
+Il test seleziona `Demo`, verifica la superficie, ricrea l'Activity e verifica
+nuovamente la stessa destinazione:
 
 ```text
 Demo selected
@@ -137,13 +128,8 @@ Demo selected
 -> Demo displayed
 ```
 
-Questo prova la ricreazione dell'Activity nel processo del test. Non prova ancora:
-
-- process death reale;
-- restore dopo reboot;
-- stato di una sessione viaggio;
-- storage durevole;
-- comportamento di un foreground service.
+Questo prova la ricreazione dell'Activity nel processo del test. Non prova process
+death reale, restore dopo reboot, storage durevole o stato di una sessione viaggio.
 
 ## Strategia dei test
 
@@ -155,19 +141,17 @@ Questo prova la ricreazione dell'Activity nel processo del test. Non prova ancor
 - fallback per valore nullo o sconosciuto;
 - unicità dei tag semantici.
 
-Queste proprietà non richiedono Android.
-
 ### Instrumentation test
 
 `MainActivitySmokeTest` controlla su Android:
 
 - identità della Home;
 - raggiungibilità delle quattro destinazioni;
-- persistenza della destinazione dopo `ActivityScenario.recreate()`.
+- persistenza di `Demo` dopo `ActivityScenario.recreate()`.
 
 ### Manifest guard
 
-Il checker già presente continua a verificare sorgente e manifest fuso. Il job
+Il checker esistente continua a verificare manifest sorgente e fuso. Il job
 emulatore non introduce permessi.
 
 ## Emulator runner
@@ -178,7 +162,7 @@ Il comando pubblico è:
 sh tools/tdna check-android-emulator
 ```
 
-Il runner usa soltanto strumenti dell'Android SDK:
+Il runner usa soltanto strumenti ufficiali dell'Android SDK:
 
 ```text
 sdkmanager
@@ -192,8 +176,6 @@ Non viene introdotta una GitHub Action di terze parti per l'emulatore.
 
 ## Device dichiarato
 
-Baseline della slice:
-
 ```text
 API Android: 35
 image: default x86_64
@@ -204,47 +186,94 @@ snapshot: disabilitati
 boot data: pulito a ogni run
 ```
 
-L'app mantiene `compileSdk` e `targetSdk` 37. Il test su API 35 è una prova di
-compatibilità runtime, non sostituisce una matrice di versioni e produttori.
+L'app mantiene `compileSdk` e `targetSdk` 37. API 35 è una singola prova di
+compatibilità runtime, non una matrice di versioni o produttori.
 
 ## Sequenza del runner
 
 ```text
-verifica ANDROID_HOME e tool
+verifica ANDROID_HOME, tool e command timeout
 -> installa/aggiorna emulator e system image dichiarata
--> crea AVD da zero
+-> imposta ANDROID_AVD_HOME dentro build/android-emulator
+-> crea AVD con path esplicito
+-> verifica il nome con emulator -list-avds
 -> abilita KVM quando disponibile
 -> avvia emulator headless
--> adb wait-for-device
--> attende sys.boot_completed con timeout
+-> attende registrazione adb con deadline e controllo PID
+-> attende sys.boot_completed sullo stesso deadline
 -> disabilita animazioni
 -> assembleDebug + assembleDebugAndroidTest
 -> connectedDebugAndroidTest
 -> installa esplicitamente APK debug
 -> avvia MainActivity
--> acquisisce screenshot
--> verifica package path
+-> acquisisce screenshot e package path
 -> produce report JSON e checksum
 -> arresta emulatore
 ```
 
 ## Timeout e stato bounded
 
-Il boot ha una scadenza configurabile, pari a 360 secondi nella CI iniziale. Il
-runner non attende indefinitamente. Ogni esecuzione elimina e ricrea la directory
-di output:
+I limiti iniziali sono:
+
+```text
+sdkmanager install       900 secondi
+avdmanager create         60 secondi
+registrazione + boot     360 secondi complessivi
+singolo comando diagnostico 10 secondi
+job GitHub Actions        35 minuti
+```
+
+Il runner non usa più `adb wait-for-device`, perché quell'operazione può attendere
+indefinitamente quando il processo emulatore è già terminato. Un loop controlla
+invece insieme:
+
+```text
+adb get-state
+PID del processo emulator
+deadline monotona del runner
+```
+
+Ogni esecuzione elimina e ricrea:
 
 ```text
 build/android-emulator
 ```
 
-L'AVD viene creato con dati puliti e senza snapshot persistenti.
+L'AVD vive in una `ANDROID_AVD_HOME` esplicita sotto tale directory, con dati
+puliti e senza snapshot persistenti.
+
+## Finding del primo run emulatore
+
+La run di sviluppo #240 ha prodotto questo log:
+
+```text
+Unknown AVD name [tdna_pilot0_api35]
+HOME is defined but there is no file tdna_pilot0_api35.ini
+```
+
+`avdmanager` aveva terminato senza rendere l'AVD visibile nel percorso cercato da
+`emulator`. Il processo emulatore è quindi uscito immediatamente. Subito dopo lo
+script era entrato in `adb wait-for-device`, che non controllava né PID né deadline;
+il job è stato cancellato soltanto dal timeout esterno.
+
+La correzione è strutturale:
+
+1. `ANDROID_AVD_HOME` è esplicita e contenuta negli artifact;
+2. `avdmanager --path` crea l'AVD nel percorso dichiarato;
+3. `emulator -list-avds` verifica l'identità prima dell'avvio;
+4. la registrazione ADB è un loop bounded;
+5. l'uscita prematura del processo fallisce immediatamente;
+6. diagnostica e cleanup hanno a loro volta timeout.
+
+Questo finding è sostanziale e azzera qualunque conteggio di review precedente.
 
 ## Diagnostica in caso di errore
 
-Un errore attiva automaticamente la raccolta di:
+Il runner tenta di salvare:
 
 ```text
+avdmanager-create.log
+avd-list.txt
 adb-devices.txt
 device-properties.txt
 emulator.log
@@ -252,9 +281,9 @@ logcat.txt
 failure-screen.png, quando disponibile
 ```
 
-Il processo emulatore viene arrestato anche quando Gradle o un test falliscono.
-La diagnostica non deve contenere dati personali perché la shell usa esclusivamente
-dati sintetici e non possiede account o rete.
+Il processo viene arrestato anche quando Gradle o un test falliscono. Ogni comando
+ADB diagnostico è bounded, così la raccolta delle prove non può diventare un
+secondo blocco infinito.
 
 ## Evidenza di successo
 
@@ -292,19 +321,19 @@ adb-install.txt
 app-apk-sha256.txt
 ```
 
-I report HTML/XML di Android Test vengono caricati nello stesso artifact della CI.
+I report HTML/XML di Android Test vengono caricati nello stesso artifact.
 
 ## Confini di interpretazione
 
 Una CI verde dimostra:
 
-- build su checkout pulito;
-- boot del device dichiarato;
+- checkout pulito;
+- creazione, discovery e boot del device dichiarato;
 - installazione dell'APK;
 - esecuzione dei test instrumentation;
 - navigazione semantica delle quattro superfici;
 - restore durante Activity recreation;
-- assenza dei permessi vietati già controllati dal build job.
+- assenza dei permessi vietati verificata dal build job.
 
 Non dimostra:
 
@@ -313,49 +342,51 @@ Non dimostra:
 - process death completo;
 - accessibilità manuale con TalkBack;
 - batteria o termiche;
-- GPS;
-- rete assente durante un viaggio;
-- sicurezza di interazione alla guida;
+- GPS, rete o guida;
 - affidabilità su strada.
 
 ## Failure mode da studiare
 
 ### System image non disponibile
 
-`sdkmanager` fallisce prima della creazione dell'AVD. Il package dichiarato deve
-essere aggiornato in una PR revisionata, non scelto dinamicamente.
+`sdkmanager` fallisce o raggiunge il timeout prima della creazione dell'AVD.
 
-### Emulatore termina durante il boot
+### AVD non visibile
 
-Il PID viene controllato durante l'attesa. Il log dell'emulatore viene conservato.
+La lista AVD non contiene il nome dichiarato; il runner fallisce prima di avviare
+un processo destinato a terminare.
+
+### Emulatore termina prima di ADB
+
+Il PID viene controllato durante la registrazione e il runner fallisce subito.
 
 ### Boot non completa
 
-Il timeout chiude il run e raccoglie diagnosi.
+La deadline condivisa chiude il run e raccoglie diagnosi.
 
 ### Test non trova un nodo
 
-Il report instrumentation identifica il test e l'asserzione. Prima di cambiare il
-test bisogna verificare se è cambiato un contratto semantico o solo il testo.
+Il report instrumentation identifica test e asserzione; bisogna verificare il
+contratto semantico prima di cambiare il test.
 
 ### Stato non ripristinato
 
-Il test di recreation fallisce sulla superficie `Demo`. La correzione deve
-preservare ownership e serializzabilità dello stato, non aggiungere storage globale.
+Il test di recreation fallisce sulla superficie `Demo`; la correzione deve
+preservare ownership e serializzabilità senza aggiungere storage globale.
 
 ## Esercizi
 
-1. Aggiungere una destinazione fittizia in una branch e aggiornare test e tag.
+1. Aggiungere una destinazione fittizia e aggiornare test e tag.
 2. Dimostrare che una route sconosciuta non causa crash.
 3. Rompere volontariamente un tag e leggere il report instrumentation.
-4. Ridurre il timeout di boot e osservare gli artifact diagnostici.
-5. Spiegare la differenza tra Activity recreation e process death.
-6. Proporre una matrice fisica minima senza dichiarare equivalenza con l'emulatore.
+4. Usare un nome AVD non valido e verificare il fail-fast.
+5. Ridurre il timeout di boot e osservare gli artifact diagnostici.
+6. Spiegare Activity recreation, process death e reboot.
+7. Proporre una matrice fisica minima senza equipararla all'emulatore.
 
 ## Passo successivo
 
-Dopo il merge di questa slice il Pilot 0 possiede evidenza automatizzata di
-runtime. Restano separati:
+Dopo il merge della slice restano separati:
 
 ```text
 installazione su telefono fisico
@@ -364,8 +395,7 @@ installazione su telefono fisico
 -> eventuale candidate APK interna
 ```
 
-GPS, servizi foreground e navigatori esterni appartengono alle slice successive e
-non devono entrare per comodità nel test emulatore.
+GPS, servizi foreground e navigatori esterni appartengono alle slice successive.
 
 ## Riferimenti interni
 
