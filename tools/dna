@@ -61,7 +61,7 @@ commands:
   check-travel-revision   verify the recorded and checked-out TDNA commit
   check-travel            run the TDNA non-emulator verification suite
   check-travel-emulator   run the isolated Android emulator verification
-  check                   run CI action, core contract and Travel checks
+  check                   run all non-emulator DNA and Travel checks
 EOF
     ;;
   doctor)
@@ -100,6 +100,7 @@ EOF
   check)
     "$0" check-ci-actions
     "$0" check-core-contracts
+    "$0" check-core-reference
     "$0" check-travel
     ;;
   *)
