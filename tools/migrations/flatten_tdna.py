@@ -73,7 +73,7 @@ def verify_phase_a() -> None:
 def remove_submodule_bridge() -> None:
     run("git", "submodule", "deinit", "-f", "--", "domains/travel")
     run("git", "rm", "-f", "domains/travel")
-    run("git", "rm", ".gitmodules")
+    run("git", "rm", "-f", ".gitmodules")
     shutil.rmtree(ROOT / ".git" / "modules" / "domains" / "travel", ignore_errors=True)
     run("git", "commit", "-m", "Remove transitional Travel submodule")
 
