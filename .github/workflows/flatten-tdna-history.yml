@@ -173,8 +173,10 @@ jobs:
           GH_PUSH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          # Keep the one-shot workflow temporarily: GITHUB_TOKEN cannot modify
-          # workflow files. The committed marker makes the next run inert.
+          # GITHUB_TOKEN cannot publish commits that modify workflow files.
+          # Restore the branch versions; the connector will apply reviewed
+          # workflow updates after this history/code candidate is published.
+          git checkout -- .github/workflows/travel-ci.yml .github/workflows/travel-emulator.yml
           git rm tools/migrations/flatten_tdna.py
           rmdir tools/migrations 2>/dev/null || true
           git add -A
