@@ -1,9 +1,9 @@
 name: One-shot TDNA history flattening
 
 on:
-  push:
-    branches:
-      - agent/flatten-travel-history
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
 
 concurrency:
   group: tdna-history-flattening
@@ -14,7 +14,9 @@ permissions:
 
 jobs:
   flatten:
-    if: github.event.head_commit.message == 'Trigger TDNA history flattening'
+    if: >-
+      github.event.pull_request.head.ref == 'agent/flatten-travel-history' &&
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 120
 
@@ -26,18 +28,32 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
+      - name: Decide whether the one-shot migration still needs to run
+        id: gate
+        shell: bash
+        run: |
+          if [ -f docs/migration/.tdna-flattened ]; then
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "The migration marker already exists; skipping the one-shot job."
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Configure migration commit identity
+        if: steps.gate.outputs.run == 'true'
         run: |
           git config user.name "DNA migration automation"
           git config user.email "actions@users.noreply.github.com"
 
       - name: Set up Java 21
+        if: steps.gate.outputs.run == 'true'
         uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
         with:
           distribution: temurin
           java-version: "21"
 
       - name: Verify hosted Android SDK 37
+        if: steps.gate.outputs.run == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -49,32 +65,42 @@ jobs:
           printf 'ANDROID_HOME=%s\nplatform=%s\nbuild-tools=%s\n' "$ANDROID_HOME" "$platform_jar" "$build_tools"
 
       - name: Configure Gradle cache
+        if: steps.gate.outputs.run == 'true'
         uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6
         with:
           cache-provider: basic
           add-job-summary: on-failure
 
       - name: Install stable Rust toolchain
+        if: steps.gate.outputs.run == 'true'
         run: |
           rustup toolchain install stable --profile minimal --component rustfmt
           rustup default stable
 
       - name: Install DNA schema tooling
+        if: steps.gate.outputs.run == 'true'
         run: python3 -m pip install -r requirements-dev.txt
 
       - name: Remove the submodule bridge and import TDNA history
-        run: python3 tools/migrations/flatten_tdna.py
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          python3 tools/migrations/flatten_tdna.py
+          mkdir -p docs/migration
+          printf '%s\n' '85c73ab78dd56506c5595673098adf514765de9c' > docs/migration/.tdna-flattened
 
       - name: Validate root contracts, reference implementation and Actions policy
+        if: steps.gate.outputs.run == 'true'
         run: |
           sh tools/dna check-core-contracts
           sh tools/dna check-core-reference
           sh tools/dna check-ci-actions
 
       - name: Validate imported Travel history and complete non-emulator suite
+        if: steps.gate.outputs.run == 'true'
         run: sh tools/dna check-travel
 
       - name: Enable KVM access
+        if: steps.gate.outputs.run == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -83,21 +109,32 @@ jobs:
           sudo udevadm trigger --name-match=kvm
 
       - name: Execute isolated Android emulator evidence
+        if: steps.gate.outputs.run == 'true'
         env:
-          TDNA_SUBSTANTIVE_SHA: ${{ github.sha }}
+          TDNA_SUBSTANTIVE_SHA: ${{ github.event.pull_request.head.sha }}
           TDNA_EMULATOR_API_LEVEL: "35"
           TDNA_EMULATOR_ABI: x86_64
           TDNA_EMULATOR_BOOT_TIMEOUT_SECONDS: "360"
         run: sh tools/dna check-travel-emulator
 
+      - name: Create a recovery bundle
+        if: steps.gate.outputs.run == 'true'
+        shell: bash
+        run: |
+          mkdir -p build/migration
+          git bundle create build/migration/tdna-flattening.bundle --all
+          git log --graph --oneline --decorate --all -n 200 > build/migration/history.txt
+          git status --short > build/migration/status.txt
+
       - name: Upload bounded migration evidence
-        if: always()
+        if: ${{ always() && steps.gate.outputs.run == 'true' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: tdna-history-flattening-evidence
           if-no-files-found: warn
           retention-days: 14
           path: |
+            build/migration/**
             domains/travel/build/android-emulator/*.json
             domains/travel/build/android-emulator/*.txt
             domains/travel/build/android-emulator/*.log
@@ -106,6 +143,7 @@ jobs:
             domains/travel/apps/android/build/outputs/androidTest-results/connected/**
 
       - name: Remove one-shot migration machinery and publish the candidate branch
+        if: steps.gate.outputs.run == 'true'
         shell: bash
         run: |
           set -euo pipefail
