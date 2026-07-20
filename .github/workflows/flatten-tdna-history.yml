@@ -92,6 +92,10 @@ jobs:
           # Remove it before anonymously fetching the public TDNA repository.
           git config --local --unset-all http.https://github.com/.extraheader || true
 
+          # `git submodule deinit` stages a change to .gitmodules. The bridge
+          # removal must therefore force-delete that already-staged file.
+          sed -i 's/run("git", "rm", ".gitmodules")/run("git", "rm", "-f", ".gitmodules")/' tools/migrations/flatten_tdna.py
+
           set +e
           python3 tools/migrations/flatten_tdna.py 2>&1 | tee build/migration/flatten.log
           status=${PIPESTATUS[0]}
