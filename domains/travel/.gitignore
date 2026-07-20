@@ -1,0 +1,25 @@
+# IDE and operating-system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Local build and generated output
+build/
+out/
+target/
+.gradle/
+.kotlin/
+DerivedData/
+*.xcuserstate
+
+# Local secrets and environment files
+.env
+.env.*
+!.env.example
+local.properties
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp

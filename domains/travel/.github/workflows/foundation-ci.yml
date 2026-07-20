@@ -1,0 +1,211 @@
+# HISTORICAL STANDALONE TDNA WORKFLOW.
+# GitHub ignores nested workflows in the DNA monorepo.
+# Root `.github/workflows/` files are authoritative and executable.
+# This file remains as a supply-chain fixture for Travel documentation and checks.
+
+name: Foundation CI
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  foundation:
+    name: Docs, Java, Rust, Kotlin and Android tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Set up Java 21
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Verify hosted Android SDK 37
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${ANDROID_HOME:-}"
+          platform_jar=$(find "${ANDROID_HOME}/platforms" -maxdepth 2 -type f \
+            -path '*/android-37*/android.jar' | sort | sed -n '1p')
+          build_tools=$(find "${ANDROID_HOME}/build-tools" -maxdepth 1 -type d \
+            -name '36.0.0' | sort | sed -n '1p')
+          test -n "$platform_jar"
+          test -n "$build_tools"
+          printf 'ANDROID_HOME=%s\nplatform=%s\nbuild-tools=%s\n' \
+            "$ANDROID_HOME" "$platform_jar" "$build_tools"
+
+      - name: Configure Gradle cache for the committed wrapper
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6
+        with:
+          cache-provider: basic
+          add-job-summary: on-failure
+
+      - name: Verify build bootstrap policy
+        shell: bash
+        run: |
+          mkdir -p build/kotlin
+          set -o pipefail
+          sh tools/tdna check-gradle-wrapper 2>&1 | tee build/gradle-wrapper-check.log
+          sh tools/tdna check-ci-actions 2>&1 | tee build/ci-actions-check.log
+          ./gradlew --no-daemon --version 2>&1 | tee build/gradle-wrapper-version.log
+          grep -F 'Gradle 9.5.1' build/gradle-wrapper-version.log
+          python3 tools/gradle_wrapper_report.py . > build/kotlin/build-bootstrap-lab.json
+
+      - name: Install stable Rust toolchain
+        run: |
+          rustup toolchain install stable --profile minimal --component rustfmt
+          rustup default stable
+
+      - name: Show toolchain
+        run: sh tools/tdna doctor
+
+      - name: Check documentation
+        shell: bash
+        run: |
+          mkdir -p build
+          set -o pipefail
+          sh tools/tdna check-docs 2>&1 | tee build/docs-check.log
+
+      - name: Check shared architecture boundaries
+        shell: bash
+        run: |
+          mkdir -p build
+          set -o pipefail
+          sh tools/tdna check-architecture 2>&1 | tee build/architecture-check.log
+
+      - name: Check Java reference routing
+        run: sh tools/tdna check-java
+
+      - name: Check Rust reference routing
+        shell: bash
+        run: |
+          mkdir -p build
+          set -o pipefail
+          sh tools/tdna check-rust 2>&1 | tee build/rust-check.log
+
+      - name: Check Java and Rust contract
+        run: sh tools/tdna check-contract
+
+      - name: Check Kotlin Multiplatform contracts
+        shell: bash
+        run: |
+          mkdir -p build
+          set -o pipefail
+          sh tools/tdna check-kotlin 2>&1 | tee build/kotlin-check.log
+
+      - name: Build Android Pilot 0 artifacts
+        shell: bash
+        run: |
+          mkdir -p build
+          set -o pipefail
+          sh tools/tdna check-android 2>&1 | tee build/android-check.log
+
+      - name: Upload build observations and Android APKs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: tdna-build-observations
+          if-no-files-found: ignore
+          retention-days: 14
+          path: |
+            build/kotlin/build-bootstrap-lab.json
+            build/kotlin/location-replay-lab.json
+            build/kotlin/location-replay-benchmark.json
+            build/kotlin/route-progress-lab.json
+            build/kotlin/route-progress-benchmark.json
+            build/kotlin/map-matching-lab.json
+            build/kotlin/map-matching-benchmark.json
+            build/kotlin/missed-exit-lab.json
+            build/kotlin/off-route-benchmark.json
+            build/android/*.apk
+            build/android/*.json
+            build/android/sha256.txt
+
+      - name: Upload diagnostic output on failure
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: tdna-build-diagnostics
+          if-no-files-found: ignore
+          path: build/
+
+  android-emulator:
+    name: Android Pilot 0 emulator smoke
+    needs: foundation
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Check out exact substantive head
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Set up Java 21
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Configure Gradle cache
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6
+        with:
+          cache-provider: basic
+          add-job-summary: on-failure
+
+      - name: Enable KVM access
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Boot emulator and execute instrumentation
+        shell: bash
+        env:
+          TDNA_SUBSTANTIVE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          TDNA_EMULATOR_API_LEVEL: "35"
+          TDNA_EMULATOR_ABI: x86_64
+          TDNA_EMULATOR_BOOT_TIMEOUT_SECONDS: "360"
+        run: sh tools/tdna check-android-emulator
+
+      - name: Upload emulator observations and diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: tdna-android-emulator-observations
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            build/android-emulator/*.json
+            build/android-emulator/*.txt
+            build/android-emulator/*.log
+            build/android-emulator/*.png
+            apps/android/build/reports/androidTests/connected/**
+            apps/android/build/outputs/androidTest-results/connected/**

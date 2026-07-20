@@ -10,8 +10,8 @@ Before changing code or stable documentation, read:
 2. `docs/governance/01-review-and-merge.md`
 3. `docs/it/README.md`
 4. the current issue and the component contract relevant to the task
-5. `docs/migration/tdna-import.md` when touching Travel or repository structure
-6. `docs/governance/02-git-submodules.md` before initializing, updating, repairing or changing the Travel submodule pointer
+5. `docs/migration/tdna-import.md` when touching Travel history or repository structure
+6. `docs/governance/02-git-monorepo.md` before changing repository layout or Travel history
 
 Do not read every document blindly. Select the smallest coherent set for the bounded context and surface involved.
 
@@ -53,9 +53,9 @@ Record:
 - Update behavior, tests and stable documentation together.
 - State expected cost for hot-path changes.
 - Include abuse cases and data-flow review for privacy-sensitive changes.
-- During TDNA migration, do not duplicate a document without classifying its authority.
-- Never use `git submodule update --remote` in the normal workflow; DNA must select a reviewed TDNA commit explicitly.
-- Before running Travel checks, execute `sh tools/dna check-travel-revision`.
+- Do not duplicate a document without classifying its authority.
+- Travel changes are committed directly under `domains/travel`.
+- Before running Travel checks, execute `sh tools/dna check-travel-history`.
 
 ## Serial pull-request workflow
 

@@ -1,0 +1,29 @@
+id: reference-location-replay-v0
+kind: synthetic
+format: TDNA_LOCATION_REPLAY_V0
+coordinate_reference: WGS84
+time_reference: monotonic-milliseconds
+sample_origin: replay
+source: project-generated
+privacy: public-synthetic
+license: project-internal-pending-ADR-0009
+purpose: >-
+  Teach canonical location observations, strict stream ordering, a virtual
+  monotonic clock, rational playback speed and explicit rejection without real
+  GPS or platform location objects.
+expected:
+  processed: 6
+  accepted: 4
+  rejected: 2
+  final_time_ms: 3000
+  playback_delay_ms: 1500
+  last_sequence: 4
+  rejection_counts:
+    non_increasing_sequence: 1
+    non_increasing_monotonic_time: 1
+non_goals:
+  - map matching
+  - route progress
+  - real GPS accuracy
+  - battery measurement
+  - Android or iOS adapters

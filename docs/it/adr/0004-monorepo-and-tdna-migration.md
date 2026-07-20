@@ -1,6 +1,6 @@
 # ADR-0004 — Monorepo DNA e migrazione history-aware di TDNA
 
-- **Stato:** Accettata per la fase di migrazione
+- **Stato:** Implementata; fase submodule storica
 - **Data:** 2026-07-19
 - **Issue:** #3
 
@@ -85,3 +85,10 @@ Scartato come architettura finale perché ostacola modifiche atomiche, refactori
 ## Riesame
 
 Riesaminare questa ADR dopo l'import definitivo. A quel punto lo stato della fase submodule diventa storico e la decisione permanente resta: DNA è il monorepo dei domini applicativi, Alfred rimane un repository autonomo.
+
+## Esito della fase B
+
+Il commit TDNA `85c73ab78dd56506c5595673098adf514765de9c` è stato importato sotto
+`domains/travel` mediante subtree merge. `.gitmodules` e il gitlink sono
+stati rimossi. La cronologia TDNA rimane raggiungibile dalla storia DNA;
+i domini applicativi iniziali vivono ora nello stesso monorepo.

@@ -1,0 +1,72 @@
+# Stato delle funzionalità
+
+Questo documento distingue visione, contratto, laboratorio e capacità di
+prodotto. Lo stato vivo di CI e merge è in
+[development-status.md](../project/development-status.md).
+
+## Legenda
+
+- `documented`: comportamento descritto, nessun codice;
+- `executable lab`: codice, test/dati/policy e comando eseguibili nel ramo che contiene il documento;
+- `prototype planned`: previsto nella milestone tecnica;
+- `future`: direzione approvata ma non pianificata ora;
+- `open`: richiede discussione o spike;
+- `non-goal`: escluso dal perimetro corrente.
+
+## Stato corrente
+
+| Funzionalità | Stato | Nota |
+| --- | --- | --- |
+| Visione e DDD | documented | Diario, guida, navigazione, socialità e bounded context. |
+| Plugin SDK e routing contracts | executable lab | ID, capability, request, plan, legs, maneuvers e provenance. |
+| Fake route planner/testkit | executable lab | Catalogo deterministico e conformance probe. |
+| Dijkstra/A* Java e Rust | executable lab | Implementazioni indipendenti e report byte-identico. |
+| `MapScene` e fake renderer | executable lab | Scena statica, delta, snapshot e conformance. |
+| `LocationSample` e ordering gate | executable lab | Sequence e tempo monotono. |
+| Clock virtuale e replay | executable lab | Rate razionale, stato bounded e fixture ground truth. |
+| `MatchedRoutePosition` | executable lab | Modello provider-neutral associato a una route. |
+| Route progress tracker | executable lab | Leg, manovra, arrival e rifiuti deterministici. |
+| Route-progress map binding | executable lab | Geometria verificata all'installazione e update `O(1)`. |
+| `MapMatcherPort` e sessione route-bound | executable lab | Confine provider-neutral fra sample e matched position. |
+| Fake map matcher/testkit | executable lab | Matched, Unmatched, Failure, fresh-session determinism e diagnostica bounded. |
+| Evidenza e conferma off-route | executable lab | OnRoute/Suspicious/Indeterminate, count+duration e recovery. |
+| Coordinamento reroute | executable lab | Un tentativo correlato, vecchia route preservata e replacement validato. |
+| Benchmark replay/progress/matching/off-route | executable lab | JVM CI diagnostica, nessuna soglia o pretesa mobile. |
+| Tooling foundation | executable lab | Documentazione, architettura, Java, Rust e KMP. |
+| Gradle Wrapper bootstrap | executable lab | Wrapper 9.5.1 committato, checksum e Action SHA verificati; Gradle globale non richiesto. |
+| Map matching stradale reale | prototype planned | Candidate search, scoring, topology, heading e isteresi. |
+| Soglie off-route di produzione | prototype planned | Richiedono replay realistici, field audit e tuning per contesto. |
+| MapLibre adapter | prototype planned | Dopo contratti e benchmark dispositivo. |
+| Valhalla/Ferrostar adapter | prototype planned | Dietro porte Travel DNA. |
+| Navigatore esterno e percorso ombra | prototype planned | Handoff e confidence esplicita. |
+| Diario automatico e pagina del giorno | prototype planned | Event store, soste, foto e pensieri. |
+| Chat reale/automotive | future | Core, outbox e driver policy prima dell'auto. |
+| Road presence e Cartoline DNA | future | Backend, threat model, consenso e revoca. |
+| Mappe/routing offline | future | Provider, licenza e distribuzione. |
+| Contenuti Touring | open | Solo partnership/licenza. |
+| LoRa/LoRaWAN | open | Spike dedicato. |
+| Profili minori e verticali shopping/study | non-goal | Fuori MVP Travel DNA. |
+
+## Cosa è dimostrato
+
+```text
+Java 21 -> Wrapper verificato -> Gradle 9.5.1 -> build locale/CI
+grafo -> Dijkstra/A* -> report Java/Rust
+RouteRequest -> fake planner -> RoutePlan
+RoutePlan -> MapScene -> fake renderer
+Location fixture -> gate -> virtual clock -> replay summary
+MatchedRoutePosition -> progress snapshot -> map binding/delta
+LocationSample -> fake matcher -> Matched/Unmatched/Failure -> progress
+evidenza normalizzata -> false alarm/conferma -> reroute correlato -> replacement
+```
+
+Non sono dimostrati GPS o strade reali, map matching geometrico, distanza/ETA,
+soglie off-route di produzione, traffico, MapLibre, adapter mobile, batteria o
+affidabilità su strada. Il bootstrap verificato non equivale a build ermetico o
+provenance crittografica completa.
+
+## Regola di comunicazione
+
+Usare formulazioni precise: `documentato`, `Lab eseguibile`, `pianificato`,
+`prototipo`, `sperimentale`, `disponibile`. Non dire che il prodotto supporta una
+capacità soltanto perché esiste un Lab.
