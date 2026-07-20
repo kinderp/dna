@@ -166,14 +166,15 @@ jobs:
             domains/travel/apps/android/build/reports/androidTests/connected/**
             domains/travel/apps/android/build/outputs/androidTest-results/connected/**
 
-      - name: Remove one-shot migration machinery and publish the candidate branch
+      - name: Publish the validated candidate branch
         if: steps.gate.outputs.run == 'true'
         shell: bash
         env:
           GH_PUSH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          git rm .github/workflows/flatten-tdna-history.yml
+          # Keep the one-shot workflow temporarily: GITHUB_TOKEN cannot modify
+          # workflow files. The committed marker makes the next run inert.
           git rm tools/migrations/flatten_tdna.py
           rmdir tools/migrations 2>/dev/null || true
           git add -A
