@@ -1,3 +1,7 @@
+> **MONOREPO PRECEDENCE:** the root `AGENTS.md` and `docs/governance/`
+> are authoritative for branches, pull requests, review and merge. This
+> file adds Travel-specific invariants only.
+
 # Travel DNA instructions for contributors and AI coding agents
 
 Travel DNA is a mobile, backend, mapping, navigation and social-travel project.

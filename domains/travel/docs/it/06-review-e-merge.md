@@ -1,3 +1,7 @@
+> **PROCEDURA SUPERATA:** la procedura autorevole di review e merge vive
+> in `../../../../docs/governance/01-review-and-merge.md`. Questo testo è
+> conservato come storia del repository TDNA.
+
 # Review, due round puliti e flusso di merge seriale
 
 ## Scopo

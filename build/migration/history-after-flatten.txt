@@ -1,0 +1,220 @@
+*   27d3abe (HEAD -> agent/flatten-travel-history) Import TDNA history under domains/travel
+|\  
+| * 85c73ab (tdna/main) docs(android): add POI-first Android Auto compliance roadmap (#30)
+| *   6198bd0 test(android): add emulator smoke and bounded navigation evidence (#28)
+| |\  
+| | * 827add2 docs(report): record implementation documentation drift
+| | * b70173d docs(lab): align emulator scenario with isolated device contract
+| | * ad0d21f docs(android): align emulator chapter with isolated runner
+| | * 2b872ed docs(report): record persisted identifier review finding
+| | * e45ac32 test(android): pin saved routes and semantic identifiers
+| | * beb59cc docs(report): record emulator safety review findings
+| | * 2453e15 docs(tooling): document isolated emulator safety contract
+| | * 9472a11 fix(android): isolate AVD state in a temporary directory
+| | * 2c3073f fix(android): bound AVD cleanup and target one emulator
+| | * 7b537d7 docs(report): make emulator report index merge-durable
+| | * 9990899 docs(project): make emulator operational chain durable
+| | * 853bacb docs(status): mark emulator documentation review-backed
+| | * d82f25b docs(status): make emulator milestone record review-durable
+| | * 1e61c54 docs(status): make emulator slice ledger durable
+| | * 1a6f09b docs(readme): make emulator slice status durable after merge
+| | * 7c89fd6 docs(report): record bounded artifact correction
+| | * 5c61da2 docs(android): separate disposable AVD state from evidence
+| | * e8f46f8 docs(tooling): separate AVD data from evidence artifacts
+| | * 8baa8ea ci(android): bound emulator artifact upload scope
+| | * 122a0dd fix(android): keep AVD data out of CI artifacts
+| | * a980e88 docs(lab): bind emulator evidence to exact head
+| | * 417df0e ci(android): pass exact substantive SHA to emulator report
+| | * 30ea193 fix(android): bind emulator evidence to substantive head
+| | * a66d714 docs(report): record AVD discovery timeout finding
+| | * 5035ff3 docs(android): record bounded AVD discovery finding
+| | * ba0ba74 fix(android): bound device wait and pin AVD storage
+| | * cc66a95 docs(project): link active emulator smoke ledger
+| | * 793dd49 docs(status): mark emulator evidence documentation backed
+| | * ecab565 docs(lab): index Android emulator smoke scenario
+| | * eab12f4 docs(tooling): document emulator runtime command and artifacts
+| | * 3374843 docs(readme): surface Android emulator evidence slice
+| | * 1d65c2d docs(report): index Android emulator smoke session
+| | * ab0e9d1 docs(report): add Android emulator smoke development ledger
+| | * a0379f3 docs(status): record active emulator evidence slice
+| | * b5c5e74 docs(status): advance Pilot 0 to emulator smoke slice
+| | * 6f95489 docs(index): add emulator runtime evidence path
+| | * 8aa9a40 docs(index): link Android emulator smoke chapter
+| | * 0c23951 docs(lab): add Android emulator smoke scenario
+| | * 84a0fcf docs(android): explain emulator smoke and bounded navigation
+| | * 7468e58 ci(android): execute Pilot 0 instrumentation on emulator
+| | * b92be63 tooling(android): expose emulator smoke command
+| | * cff99b9 ci(android): add bounded official-SDK emulator smoke runner
+| | * 795b17c test(android): protect bounded destination restoration
+| | * e78c2b3 test(android): exercise navigation and Activity recreation
+| | * 708909c feat(android): add bounded semantic navigation state
+| |/  
+| * cc6f438 feat: add Android-first pilot roadmap and installable teaching shell (#26)
+| *   7090882 build: add reproducible Gradle Wrapper and close Foundations v0 (#24)
+| |\  
+| | * 71963d3 ci: align draft validation with review rules
+| | * 87c8974 ci: cancel superseded draft runs
+| | * 8ffec27 docs: add build bootstrap and Android-first reading paths
+| | * 781ac7a docs: include reproducible bootstrap in repository map
+| | * 1133adb docs: link Foundations v0 closure records
+| | * 1d0aac8 docs: index foundation closure report
+| | * a8a95ec docs: align development status with foundation closure
+| | * ffec508 fix: keep build-bootstrap Lab output canonical
+| | * cfba199 docs: close Foundations v0 criteria and track wrapper slice
+| | * 13be537 docs: document wrapper-based tooling
+| | * 006295d docs: integrate Wrapper and Action supply-chain policy
+| | * 2a35afc docs: record build-bootstrap review status
+| | * ae282e3 docs: mark build bootstrap and closure reports implementation-backed
+| | * 903fe5a docs: mark Gradle Wrapper bootstrap executable
+| | * 9920e67 docs: add build-bootstrap Lab to roadmap
+| | * 109c769 docs: add build-bootstrap Lab to scenario index
+| | * 24513f4 docs: index reproducible build chapter
+| | * 59a525f docs: index build bootstrap and foundation closure
+| | * 318ba97 docs: expose wrapper build and foundation closure
+| | * 3254ada docs: add Gradle Wrapper and foundation-closure daily report
+| | * b18df91 docs: add Foundations v0 closure report
+| | * 73b8178 docs: add reproducible build-bootstrap Lab scenario
+| | * b36972d docs: add reproducible Gradle Wrapper chapter
+| | * 540cd40 ci: use verified wrapper and immutable Action SHAs
+| | * 6d1485d build: make Gradle Wrapper the supported build entry point
+| | * 8128a44 build: add deterministic wrapper Lab report
+| | * 9119565 ci: add immutable GitHub Action reference checker
+| | * bf19687 build: add Gradle Wrapper integrity checker
+| | * 2a76371 build: add reviewed Gradle Wrapper policy
+| | * 5d0b224 build: commit verified Gradle 9.5.1 Wrapper
+| | * d6dfa02 ci: check out PR head before wrapper bootstrap commit
+| | * 5ed50be ci: commit verified wrapper bootstrap on internal PR
+| | * 2840c49 ci: bootstrap verified Gradle Wrapper artifact
+| |/  
+| *   8570eb4 feat: add deterministic missed-exit and reroute coordination (#22)
+| |\  
+| | * 93da2d7 docs: record reroute review findings and final-gate reset
+| | * 5a06f80 docs: add off-route and reroute modules to repository map
+| | * 8fdd04d docs: document missed-exit tooling and benchmark
+| | * 6b265e4 docs: add missed-exit learning path
+| | * 189dfc0 docs: add off-route and reroute tracepoints
+| | * 26df4e6 docs: map off-route and reroute ownership
+| | * 0a8eed9 docs: index missed-exit report and map-matcher merge
+| | * 090e402 docs: record active missed-exit final gate
+| | * e4918ee docs: track missed-exit slice and merged matching boundary
+| | * 8a31137 docs: add executable missed-exit scenario to Lab roadmap
+| | * 67f895a docs: promote missed-exit scenario to executable Lab
+| | * 1786044 docs: record off-route hot-path review status
+| | * b4fa245 docs: promote missed-exit documentation to implementation-backed
+| | * e50c52d docs: record executable off-route and reroute slice
+| | * d18db16 docs: index chapter 49 and seventh executable Lab
+| | * 83cf0ef docs: extend learning sequence with missed-exit runtime
+| | * a964575 docs: add missed-exit Lab to repository entry point
+| | * 94e5338 fix(lab): honor fake planner maneuver capability
+| | * 90cd1c5 test(reroute): cover state and provider capability contracts
+| | * 9cbea42 fix(reroute): enforce provider capabilities and state invariants
+| | * ab313dc test(off-route): align suspicious state naming
+| | * b12cadc refactor(off-route): use explicit suspicious observation name
+| | * 29b364e refactor(off-route): clarify last suspicious observation
+| | * fcb4cc2 docs(navigation): add missed-exit chapter, executable scenario and report
+| | * e7906e4 fix(navigation): harden off-route state and reroute executor
+| | * 6873240 test(navigation): add missed-exit Lab and reroute coverage
+| | * ab0093b feat(navigation): add off-route and reroute core contracts
+| |/  
+| *   95cf2f0 feat: add provider-neutral map-matcher port and deterministic fake (#20)
+| |\  
+| | * f75f9b1 docs(matching): clarify cancellation and bounded testkit reports
+| | * bfb0a2b docs(matching): record final pre-review findings
+| | * 8093ecf fix(matching): bound probe report and document cancellation
+| | * bc9d777 docs(architecture): refresh repository module map
+| | * 7ceb340 docs(architecture): map the matching boundary and reading path
+| | * 7479c02 docs: integrate map-matching slice across repository guides
+| | * d43f00c docs(matching): add chapter, Lab scenario and indexed report
+| | * a77b469 fix(matching): harden fake and conformance evidence
+| | * 4b547fa fix(ci): align map-matching testkit boundary with API
+| | * c246325 fix(ci): declare map-matching testkit API dependencies
+| | * 4641f11 fix(navigation): make fake matcher common-safe and test route rebinding
+| | * 7f60a9a refactor(navigation): bind map matcher once per route
+| | * 288a43b feat(navigation): add map-matcher port and deterministic fake seed
+| |/  
+| * 9921fbc feat: add canonical matched position and route progress tracker (#18)
+| *   020f849 feat: add canonical location samples and deterministic replay (#16)
+| |\  
+| | * 97b15bf docs: keep the Italian index stable across merge
+| | * 2d1ff8f docs(location-replay): close pre-review report and milestone state
+| | * 877d2e4 docs: align repository entry points with four Labs
+| | * 2b27a73 fix(location-replay): commit accepted transitions atomically
+| | * 9905894 docs(location-replay): expose tooling and tracepoint paths
+| | * 78b8e01 fix(location-replay): require accepted baseline after processing
+| | * c93046e fix(location-replay): require an odd benchmark sample count
+| | * ba38aad docs(location-replay): align reading paths, milestone and status
+| | * 641c600 docs(report): add pre-review location replay report
+| | * ec40325 ci(location-replay): retain Lab and benchmark observations
+| | * 1e7b1d9 docs(location-replay): index the fourth executable Lab
+| | * 84f6680 docs(location-replay): add implementation-backed chapter and Lab
+| | * 489246d test(location-replay): capture diagnostic benchmark in CI
+| | * 6f8f259 fix(location-replay): bound summary and fixture counts
+| | * a072f4e feat: add canonical location samples and deterministic replay seed
+| |/  
+| *   7668043 Merge pull request #15 from kinderp/agent/serial-pr-governance
+| |\  
+| | * 272e0b5 docs: make the one-open-PR rule absolute
+| | * e368b8a docs: align governance indexes and report before review
+| | * 447f95a docs: enforce serial PR and gated autonomous merge workflow
+| |/  
+| *   2128f24 Merge pull request #10 from kinderp/agent/provider-neutral-map-scene
+| |\  
+| | * a18e73a test: prove failed scene install preserves active state
+| | * ecd256b docs: record static capability enforcement finding
+| | * c9357d1 fix: enforce map capabilities during scene installation
+| | * 5a91bba docs: record final MapScene reconciliation findings
+| | * 727f30c fix: migrate fake map fixtures to the current contract model
+| | * a203d82 feat: add provider-neutral MapScene and fake renderer
+| |/  
+| *   044e077 Merge pull request #9 from kinderp/agent/two-clean-review-policy
+| |\  
+| | * 53431ec docs: clarify review evidence channels
+| | * 27ea659 docs: clarify PR ledger and report roles
+| | * 98b9a04 docs: align contributor flow with PR review ledger
+| | * 28ea03a docs: make PR reviews the authoritative ledger
+| | * c448e4e docs: make PR ledger authoritative for clean reviews
+| | * d076df9 docs: separate review ledger from historical report
+| | * 4de170e docs: track merged routing slice and review governance
+| | * 7e92455 docs: record merged routing slice and active review policy
+| | * b21c8c9 docs: index review governance report
+| | * 9a78340 docs: add review governance work report
+| | * 1c09596 docs: record review governance chapter
+| | * 2371fe8 docs: index review and merge chapter
+| | * 4fec299 test: reject oversized maneuver labels
+| | * 2a143a0 fix: bound provider maneuver labels
+| | * 201d9f1 docs: enforce clean review rounds for coding agents
+| | * 8a73f64 docs: add mandatory review-round evidence to PR template
+| | * ead39d9 docs: document two-round review workflow
+| | * 5df9040 docs: add clean-review merge gate to contributing guide
+| | * 4d9252a docs: add review and merge procedure
+| | * 9039ab3 docs: require two consecutive clean review rounds
+| * | 2a28d16 Merge pull request #6 from kinderp/agent/provider-neutral-routing-contracts
+| |\| 
+| | * 801962a docs: finalize 2026-07-17 development report
+| | * ece0c6e docs: publish routing-contracts book chapter and daily report
+| | * 07ed739 fix: bound plugin and routing contract metadata
+| | * 156f545 fix: harden routing contract immutability and postconditions
+| | * 3c9824e feat: add provider-neutral routing contract seed
+| |/  
+| *   d122f1b Merge pull request #4 from kinderp/agent/foundation-reference-routing
+| |\  
+| | * 22d03dd docs: close reference-routing review loop
+| | * 3d19262 fix: validate routing fixture ground truth
+| | * 2191230 docs: record green foundation CI
+| | * 2d56698 docs: record first executable Lab
+| | * ad96dc9 style: finish rustfmt test layout
+| | * a5c63b2 style: apply rustfmt to routing tests
+| | * 19d8637 style: apply rustfmt to graph module
+| | * a711f6e style: apply rustfmt to fixture parser
+| | * aac1bdf ci: preserve Rust diagnostics
+| | * 35ddf38 docs: fix project record link casing
+| | * 520940f docs: fix foundation report link casing
+| | * 7069d54 ci: preserve documentation diagnostics
+| | * 85c7666 ci: split foundation checks for diagnostics
+| | * 699ca03 feat: add executable Java and Rust routing lab
+| |/  
+| * 90a210a docs: align publishing guide with private repository
+| * d3e6856 chore: remove temporary bootstrap artifact
+| * 09d3428 docs: add Lab scenarios and fixture policies
+| * 919e404 docs: add milestone and technology roadmaps
+| * 1c80956 docs: add Travel DNA Lab roadmap

@@ -1,3 +1,7 @@
+> **DOMINIO DEL MONOREPO DNA:** Travel è sviluppato in
+> `kinderp/dna/domains/travel`. Governance, issue e PR nuove appartengono
+> al repository DNA; questo README descrive il dominio Travel.
+
 # Travel DNA
 
 Travel DNA è un progetto didattico e di prodotto per costruire una guida-diario

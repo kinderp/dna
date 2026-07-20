@@ -1,8 +1,12 @@
 # DNA
 
-**DNA** è una piattaforma modulare per mettere in relazione persone, luoghi, intenzioni e servizi attraverso frammenti di profilo condivisibili, matching contestuale, mappe, comunità e diversi canali di comunicazione.
+**DNA** è una piattaforma modulare per mettere in relazione persone,
+luoghi, intenzioni e servizi attraverso profili condivisibili, matching
+contestuale, mappe, comunità e diversi canali di comunicazione.
 
-Travel è il primo dominio applicativo della piattaforma. Durante la migrazione, l'intero repository TDNA è disponibile sotto `domains/travel` come riferimento Git fissato a un commit verificabile.
+Travel è il primo dominio applicativo ed è ora incluso direttamente in
+`domains/travel`. La cronologia del precedente repository TDNA è stata
+importata nel monorepo.
 
 ## Principi
 
@@ -12,32 +16,17 @@ Travel è il primo dominio applicativo della piattaforma. Durante la migrazione,
 - Comunicazione transport-agnostic.
 - Un ecosistema e più esperienze specializzate.
 - Alfred come piano asincrono di osservazione e correlazione.
-- Coordinamento umano tramite GeoRoom, topic e gruppi.
 - Privacy, sicurezza, prove e documentazione by design.
 
-## Componenti
-
-- DNA Identity
-- DNA Exchange
-- DNA Discovery
-- DNA Commons
-- Geo & Navigation Core
-- Event Backbone
-- Trust & Moderation
-- DNA–Alfred Bridge
-- domini Travel, Shopping, Social ed Economy
-- superfici mobile, Android Auto e Android Automotive OS
-
-## Checkout completo
+## Checkout
 
 ```bash
-git clone --recurse-submodules https://github.com/kinderp/dna.git
+git clone https://github.com/kinderp/dna.git
 cd dna
-git submodule update --init --recursive
-sh tools/dna check-travel-revision
+sh tools/dna doctor
 ```
 
-Per clone esistenti, cambio branch, aggiornamento del puntatore, detached HEAD e recupero errori leggere la [guida Git submodule](docs/governance/02-git-submodules.md).
+Non sono più necessari Git submodule.
 
 ## Controlli
 
@@ -45,7 +34,7 @@ Per clone esistenti, cambio branch, aggiornamento del puntatore, detached HEAD e
 python3 -m pip install -r requirements-dev.txt
 sh tools/dna check-core-contracts
 sh tools/dna check-core-reference
-sh tools/dna check-travel-revision
+sh tools/dna check-travel-history
 sh tools/dna check-travel
 ```
 
@@ -55,22 +44,26 @@ Il test emulatore Travel è separato e intenzionale:
 sh tools/dna check-travel-emulator
 ```
 
-## Migrazione TDNA
+## Provenienza Travel
 
-- [Manifest e strategia](docs/migration/tdna-import.md)
-- [Comandi Git submodule per studenti e contributori](docs/governance/02-git-submodules.md)
-- sorgente fissata: `kinderp/tdna@85c73ab78dd56506c5595673098adf514765de9c`
-- `kinderp/tdna` non viene archiviato finché l'import history-aware e i test del monorepo non sono completati.
+- commit TDNA importato: `85c73ab78dd56506c5595673098adf514765de9c`;
+- dominio corrente: `domains/travel`;
+- [manifest della migrazione](docs/migration/tdna-import.md);
+- [guida Git del monorepo](docs/governance/02-git-monorepo.md);
+- [guida storica della fase submodule](docs/migration/phase-a-git-submodules.md).
+
+Il repository `kinderp/tdna` resta disponibile finché una successiva
+operazione revisionata non ne stabilirà la modalità read-only e
+l'archiviazione.
 
 ## Risorse
 
 - [Documentazione italiana](docs/it/README.md)
 - [Governance](docs/governance/00-operational-rules.md)
 - [Review e merge](docs/governance/01-review-and-merge.md)
-- [Guida Git submodule](docs/governance/02-git-submodules.md)
+- [Guida Git del monorepo](docs/governance/02-git-monorepo.md)
 - [Schemi JSON v0.1](schemas/v0.1/README.md)
 - [Implementazione Kotlin di riferimento](reference/kotlin/README.md)
-- [Issue di migrazione](https://github.com/kinderp/dna/issues/3)
 
 ## Licenza
 

@@ -1,3 +1,7 @@
+> **DOCUMENTO STORICO DELLA FASE A.** `domains/travel` non è più un
+> submodule. Questa guida resta per ricostruire la migrazione e non deve
+> essere usata per il flusso Git corrente.
+
 # Git submodule in DNA: guida operativa e didattica
 
 ## 1. Perché esiste il submodule Travel

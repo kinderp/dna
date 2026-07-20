@@ -1,3 +1,7 @@
+> **GOVERNANCE SUPERATA:** per branch, PR, review e merge usare
+> `../../../../docs/governance/`. Le sezioni seguenti restano utili per
+> invarianti e percorsi caldi specifici di Travel.
+
 # Regole operative di Travel DNA
 
 Questo documento è la costituzione pratica del progetto. Deve restare più breve

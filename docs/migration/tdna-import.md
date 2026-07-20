@@ -2,132 +2,56 @@
 
 ## Stato
 
-Fase A attiva: `domains/travel` è un riferimento Git al repository `kinderp/tdna`, fissato al commit:
+**Fase B implementata nella branch di migrazione, in attesa di review e
+merge.** Il submodule transitorio è stato rimosso e TDNA è stato importato
+sotto `domains/travel` con storia raggiungibile.
+
+Commit sorgente fissato:
 
 ```text
 85c73ab78dd56506c5595673098adf514765de9c
 ```
 
-Questa scelta non è l'architettura finale. È un ponte conservativo che rende l'intero contenuto TDNA disponibile da un checkout DNA senza copiarlo in modo parziale o perdere la tracciabilità.
-
-## Guida operativa del submodule
-
-I comandi completi per studenti e contributori sono documentati in:
-
-- [Git submodule in DNA: guida operativa e didattica](../governance/02-git-submodules.md)
-
-La guida copre:
-
-- primo clone e repository già clonato;
-- aggiornamento di `main` e cambio branch;
-- detached HEAD;
-- verifica del gitlink;
-- lavoro sul repository Travel;
-- aggiornamento intenzionale del puntatore;
-- recupero da checkout errato o conflitto;
-- fork, Windows e comportamento CI.
-
-## Checkout minimo
+## Verifica
 
 ```bash
-git clone --recurse-submodules https://github.com/kinderp/dna.git
-cd dna
-git submodule update --init --recursive
-sh tools/dna check-travel-revision
+test ! -e .gitmodules
+sh tools/dna check-travel-history
+git cat-file -e 85c73ab78dd56506c5595673098adf514765de9c^{commit}
+git merge-base --is-ancestor 85c73ab78dd56506c5595673098adf514765de9c HEAD
 ```
 
-Non usare nel flusso normale:
-
-```bash
-git submodule update --remote
-```
-
-DNA deve scegliere esplicitamente un commit TDNA revisionato.
-
-## Fonti autorevoli durante la fase A
+## Fonti autorevoli
 
 | Tema | Fonte autorevole |
 |---|---|
-| governance comune | `AGENTS.md`, `docs/governance/` in DNA |
+| governance comune | `AGENTS.md`, `docs/governance/` |
 | architettura piattaforma | `docs/it/` e ADR di DNA |
-| contratti Travel implementati | `domains/travel/shared`, `apps/android`, test e fixture TDNA |
-| documentazione didattica Travel | `domains/travel/docs` |
+| contratti e codice Travel | `domains/travel/` |
+| documentazione didattica Travel | `domains/travel/docs/` |
 | roadmap cross-domain | DNA |
-| roadmap tecnica Travel corrente | TDNA, salvo decisione trasversale successiva |
-| Alfred | repository autonomo `kinderp/alfred` e bridge documentato in DNA |
+| Alfred | `kinderp/alfred` e bridge documentato in DNA |
 
-Una decisione trasversale nuova non deve essere aggiunta soltanto alla documentazione TDNA.
+## Metodo usato
 
-## Verifica della revisione
+La migrazione ha seguito una subtree merge history-aware:
 
-```bash
-sh tools/dna doctor
-sh tools/dna check-travel-revision
+```text
+verifica commit TDNA
+-> rimozione del gitlink transitorio
+-> fetch della storia TDNA
+-> import sotto domains/travel
+-> riallineamento di tooling, CI e documentazione
+-> test core, Travel ed emulatore
 ```
 
-La verifica confronta:
+La guida submodule della fase A è conservata come documento storico in
+[`phase-a-git-submodules.md`](phase-a-git-submodules.md).
 
-1. revisione attesa dalla fase di migrazione;
-2. gitlink registrato nell'indice Git di DNA;
-3. commit effettivamente aperto in `domains/travel`.
+## Lavoro residuo
 
-I tre valori devono coincidere.
-
-## Perché non copiare subito uno snapshot
-
-Una copia manuale perderebbe blame, collegamenti a commit e certezza sulla completezza. Il riferimento Git conserva il commit esatto mentre prepariamo l'import definitivo.
-
-## Fase B: appiattimento definitivo
-
-`git subtree add` richiede che il prefisso di destinazione non sia già occupato. La fase B deve quindi rimuovere prima il ponte submodule in una branch dedicata e soltanto dopo importare la cronologia TDNA.
-
-Sequenza candidata, da riesaminare nella PR della fase B:
-
-```bash
-git switch main
-git pull --ff-only
-git switch -c agent/flatten-travel-history
-
-# Verificare prima che non esista lavoro locale dentro il submodule.
-git -C domains/travel status --short
-
-# Rimuovere il ponte submodule dal repository DNA.
-git submodule deinit -f -- domains/travel
-git rm -f domains/travel
-git rm .gitmodules
-
-# Pulizia soltanto locale dei metadati del vecchio submodule.
-rm -rf .git/modules/domains/travel
-
-git commit -m "Remove transitional Travel submodule"
-
-# Importare la storia TDNA sotto il prefisso definitivo.
-git remote add tdna https://github.com/kinderp/tdna.git
-git fetch tdna main
-git subtree add --prefix=domains/travel tdna main \
-  -m "Import TDNA history under domains/travel"
-```
-
-Se in futuro esisteranno altri submodule, `.gitmodules` non dovrà essere rimosso interamente: dovrà essere eliminata soltanto la sezione `domains/travel`.
-
-Prima dell'esecuzione verrà verificato se usare subtree completo o history rewrite con prefisso. Dopo l'import:
-
-1. verificare che `.gitmodules` e il gitlink Travel non esistano più;
-2. mantenere nel commit di migrazione il riferimento al commit sorgente;
-3. riallineare script e Gradle dalla root;
-4. spostare le decisioni comuni in DNA;
-5. correggere link e path;
-6. eseguire CI, emulator smoke e review;
-7. lasciare TDNA accessibile finché la nuova `main` non è stabile;
-8. archiviare TDNA con una PR/operazione separata.
-
-La pulizia con `rm -rf .git/modules/domains/travel` riguarda soltanto metadati locali dopo `deinit` e `git rm`; non deve essere eseguita prima di avere verificato e conservato eventuale lavoro locale.
-
-## Non-obiettivi della fase A
-
-- rinominare package Kotlin;
-- fondere subito i due sistemi Gradle;
-- dichiarare TDNA deprecato;
-- modificare la roadmap Android;
-- eseguire automaticamente l'emulatore su ogni PR;
-- perdere issue o cronologia del repository sorgente.
+- review e merge della branch di flattening;
+- verifica di `main` dopo il merge;
+- eventuale riconciliazione di issue e link storici;
+- operazione separata per rendere `kinderp/tdna` read-only;
+- archiviazione soltanto dopo un periodo di stabilità del monorepo.
