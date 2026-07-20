@@ -1,0 +1,117 @@
+name: One-shot TDNA history flattening
+
+on:
+  push:
+    branches:
+      - agent/flatten-travel-history
+
+concurrency:
+  group: tdna-history-flattening
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  flatten:
+    if: github.event.head_commit.message == 'Trigger TDNA history flattening'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Check out the migration branch with complete history
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: agent/flatten-travel-history
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Configure migration commit identity
+        run: |
+          git config user.name "DNA migration automation"
+          git config user.email "actions@users.noreply.github.com"
+
+      - name: Set up Java 21
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Verify hosted Android SDK 37
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${ANDROID_HOME:-}"
+          platform_jar=$(find "${ANDROID_HOME}/platforms" -maxdepth 2 -type f -path '*/android-37*/android.jar' | sort | sed -n '1p')
+          build_tools=$(find "${ANDROID_HOME}/build-tools" -maxdepth 1 -type d -name '36.0.0' | sort | sed -n '1p')
+          test -n "$platform_jar"
+          test -n "$build_tools"
+          printf 'ANDROID_HOME=%s\nplatform=%s\nbuild-tools=%s\n' "$ANDROID_HOME" "$platform_jar" "$build_tools"
+
+      - name: Configure Gradle cache
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6
+        with:
+          cache-provider: basic
+          add-job-summary: on-failure
+
+      - name: Install stable Rust toolchain
+        run: |
+          rustup toolchain install stable --profile minimal --component rustfmt
+          rustup default stable
+
+      - name: Install DNA schema tooling
+        run: python3 -m pip install -r requirements-dev.txt
+
+      - name: Remove the submodule bridge and import TDNA history
+        run: python3 tools/migrations/flatten_tdna.py
+
+      - name: Validate root contracts, reference implementation and Actions policy
+        run: |
+          sh tools/dna check-core-contracts
+          sh tools/dna check-core-reference
+          sh tools/dna check-ci-actions
+
+      - name: Validate imported Travel history and complete non-emulator suite
+        run: sh tools/dna check-travel
+
+      - name: Enable KVM access
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Execute isolated Android emulator evidence
+        env:
+          TDNA_SUBSTANTIVE_SHA: ${{ github.sha }}
+          TDNA_EMULATOR_API_LEVEL: "35"
+          TDNA_EMULATOR_ABI: x86_64
+          TDNA_EMULATOR_BOOT_TIMEOUT_SECONDS: "360"
+        run: sh tools/dna check-travel-emulator
+
+      - name: Upload bounded migration evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: tdna-history-flattening-evidence
+          if-no-files-found: warn
+          retention-days: 14
+          path: |
+            domains/travel/build/android-emulator/*.json
+            domains/travel/build/android-emulator/*.txt
+            domains/travel/build/android-emulator/*.log
+            domains/travel/build/android-emulator/*.png
+            domains/travel/apps/android/build/reports/androidTests/connected/**
+            domains/travel/apps/android/build/outputs/androidTest-results/connected/**
+
+      - name: Remove one-shot migration machinery and publish the candidate branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm .github/workflows/flatten-tdna-history.yml
+          git rm tools/migrations/flatten_tdna.py
+          rmdir tools/migrations 2>/dev/null || true
+          git add -A
+          git commit -m "Complete TDNA history flattening candidate"
+          git push origin HEAD:agent/flatten-travel-history
