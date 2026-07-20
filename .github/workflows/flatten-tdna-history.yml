@@ -83,8 +83,25 @@ jobs:
 
       - name: Remove the submodule bridge and import TDNA history
         if: steps.gate.outputs.run == 'true'
+        shell: bash
         run: |
-          python3 tools/migrations/flatten_tdna.py
+          set -o pipefail
+          mkdir -p build/migration
+
+          # actions/checkout stores an auth header scoped to the DNA repository.
+          # Remove it before anonymously fetching the public TDNA repository.
+          git config --local --unset-all http.https://github.com/.extraheader || true
+
+          set +e
+          python3 tools/migrations/flatten_tdna.py 2>&1 | tee build/migration/flatten.log
+          status=${PIPESTATUS[0]}
+          git status --short > build/migration/status-after-flatten.txt
+          git log --graph --oneline --decorate --all -n 200 > build/migration/history-after-flatten.txt
+          set -e
+          if [ "$status" -ne 0 ]; then
+            exit "$status"
+          fi
+
           mkdir -p docs/migration
           printf '%s\n' '85c73ab78dd56506c5595673098adf514765de9c' > docs/migration/.tdna-flattened
 
@@ -145,6 +162,8 @@ jobs:
       - name: Remove one-shot migration machinery and publish the candidate branch
         if: steps.gate.outputs.run == 'true'
         shell: bash
+        env:
+          GH_PUSH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           git rm .github/workflows/flatten-tdna-history.yml
@@ -152,4 +171,4 @@ jobs:
           rmdir tools/migrations 2>/dev/null || true
           git add -A
           git commit -m "Complete TDNA history flattening candidate"
-          git push origin HEAD:agent/flatten-travel-history
+          git push "https://x-access-token:${GH_PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:agent/flatten-travel-history
