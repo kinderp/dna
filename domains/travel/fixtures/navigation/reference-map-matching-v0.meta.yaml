@@ -1,0 +1,40 @@
+id: reference-map-matching-v0
+kind: synthetic-code-fixture
+coordinate_reference: WGS84
+source: project-generated
+privacy: public-synthetic
+license: project-internal-pending-ADR-0009
+implementation:
+  route: shared/fake-map-matcher/src/commonMain/kotlin/org/traveldna/navigation/matching/fake/FakeMapMatchFixtures.kt#Route
+  samples: shared/fake-map-matcher/src/commonMain/kotlin/org/traveldna/navigation/matching/fake/FakeMapMatchFixtures.kt#Samples
+  lab: labs/map-matching-cli/src/main/kotlin/org/traveldna/lab/matching/Main.kt
+purpose: >-
+  Teach the provider-neutral boundary between canonical LocationSample input,
+  explicit Matched/Unmatched/Failure outcomes and downstream route progress
+  without implementing geometric map matching.
+route:
+  route_id: reference-map-match-route-v0
+  geometry_points: 4
+  legs: 2
+input:
+  samples: 6
+expected:
+  contract_checks: 6
+  matched: 4
+  unmatched: 1
+  failed: 1
+  unmatched_reason: NoCandidate
+  failure_code: ProviderUnavailable
+  progress_accepted: 4
+  final_geometry_index: 3
+  arrived: true
+  calls: 6
+non_goals:
+  - real map matching
+  - candidate road search
+  - spatial index
+  - HMM or Viterbi
+  - GPS filtering
+  - off-route detection
+  - rerouting
+  - production accuracy

@@ -1,0 +1,21 @@
+[package]
+name = "tdna-reference-routing"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "Deterministic Travel DNA reference-routing Lab implementation"
+
+[lib]
+name = "tdna_reference_routing"
+path = "src/lib.rs"
+
+[[bin]]
+name = "tdna-reference-routing"
+path = "src/main.rs"
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+all = "deny"
+pedantic = "warn"
