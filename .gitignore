@@ -1,0 +1,12 @@
+# Repository-wide generated output
+/build/
+**/build/
+
+# Python caches
+**/__pycache__/
+*.py[cod]
+
+# Local IDE and OS files
+.idea/
+.vscode/
+.DS_Store
